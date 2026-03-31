@@ -2,6 +2,7 @@ import { addToast } from './toastStore.js';
 
 import { authStore, clearAuth } from './store.js';
 import { get } from 'svelte/store';
+import { env } from '$env/dynamic/public';
 
 /**
  * Simple wrapper for fetch calls to backend
@@ -13,6 +14,9 @@ import { get } from 'svelte/store';
 export const apiRequest = async (endpoint, method = 'GET', body = null, isFormData = false) => {
     const auth = get(authStore);
     const headers = {};
+
+    const BASE_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
+
     if (!isFormData) {
         headers['Content-Type'] = 'application/json';
     }
@@ -23,7 +27,7 @@ export const apiRequest = async (endpoint, method = 'GET', body = null, isFormDa
 
     // Handle relative URLs for backend
     const url = endpoint.startsWith('/api') && !endpoint.startsWith('http')
-        ? `http://localhost:3000${endpoint}`
+        ? `${BASE_URL}${endpoint}`
         : endpoint;
 
     const config = {
