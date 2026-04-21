@@ -1,7 +1,7 @@
 <script>
   import { addToast } from "$lib/toastStore";
   import { authStore } from "$lib/store";
-  import { apiRequest } from "$lib/api";
+  import { apiRequest, API_BASE_URL } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
 
@@ -153,7 +153,7 @@
                 <td class="px-6 py-4 text-center">
                   {#if rec.finalFileUrl}
                     <a 
-                      href={`http://localhost:3000${rec.finalFileUrl}`} 
+                      href={`${API_BASE_URL}${rec.finalFileUrl}`} 
                       target="_blank" 
                       class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 transition-all text-xs font-bold"
                     >

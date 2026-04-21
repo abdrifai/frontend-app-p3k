@@ -1,7 +1,7 @@
 <script>
   import { addToast } from "$lib/toastStore";
   import { authStore } from "$lib/store";
-  import { apiRequest } from "$lib/api";
+  import { apiRequest, API_BASE_URL } from "$lib/api";
   import { onMount, tick } from "svelte";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
@@ -1296,7 +1296,7 @@
                           .arsipSkPensiun.tanggalSk})
                       </dd>
                       <a
-                        href={`http://localhost:3000${selectedRecord.arsipSkPensiun.fileUrl}`}
+                        href={`${API_BASE_URL}${selectedRecord.arsipSkPensiun.fileUrl}`}
                         target="_blank"
                         class="inline-block mt-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-md transition-colors"
                       >
@@ -1466,7 +1466,7 @@
                     <div class="flex items-center gap-1 ml-2">
                       {#if contract.arsipKontrak?.fileUrl}
                         <a
-                          href={`http://localhost:3000${contract.arsipKontrak.fileUrl}`}
+                          href={`${API_BASE_URL}${contract.arsipKontrak.fileUrl}`}
                           target="_blank"
                           class="p-1.5 rounded-lg text-indigo-500 hover:bg-indigo-100 transition-colors"
                           title="Lihat PDF Kontrak"

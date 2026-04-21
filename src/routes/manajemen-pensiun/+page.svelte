@@ -2,10 +2,10 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { authStore } from "$lib/store";
-  import { apiRequest } from "$lib/api";
+  import { apiRequest, API_BASE_URL } from "$lib/api";
   import { addToast } from "$lib/toastStore";
 
-  const API_BASE = "http://localhost:3000/api/v1/data-p3k";
+  const API_BASE = `${API_BASE_URL}/api/v1/data-p3k`;
 
   // State
   let activeTab = "set-pensiun"; // 'set-pensiun' | 'data-pensiun'
@@ -687,7 +687,7 @@
                         <!-- View PDF -->
                         {#if rec.arsipSkPensiun?.fileUrl}
                           <a
-                            href={`http://localhost:3000${rec.arsipSkPensiun.fileUrl}`}
+                            href={`${API_BASE_URL}${rec.arsipSkPensiun.fileUrl}`}
                             target="_blank"
                             class="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
                             title="Lihat SK PDF"
@@ -1072,7 +1072,7 @@
             {#if editRecord.arsipSkPensiun?.fileUrl}
               <p class="text-xs text-slate-400 mb-2">
                 File saat ini: <a
-                  href={`http://localhost:3000${editRecord.arsipSkPensiun.fileUrl}`}
+                  href={`${API_BASE_URL}${editRecord.arsipSkPensiun.fileUrl}`}
                   target="_blank"
                   class="text-blue-500 hover:underline">Lihat PDF</a
                 >
@@ -1354,7 +1354,7 @@
                     </dd>
                     {#if detailRecord.arsipSkPensiun.fileUrl}
                       <a
-                        href={`http://localhost:3000${detailRecord.arsipSkPensiun.fileUrl}`}
+                        href={`${API_BASE_URL}${detailRecord.arsipSkPensiun.fileUrl}`}
                         target="_blank"
                         class="inline-flex items-center gap-1.5 mt-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
                       >

@@ -11,11 +11,11 @@ import { env } from '$env/dynamic/public';
  * @param {object|null} body The request body
  * @returns {Promise<any>}
  */
+export const API_BASE_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
+
 export const apiRequest = async (endpoint, method = 'GET', body = null, isFormData = false) => {
     const auth = get(authStore);
     const headers = {};
-
-    const BASE_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
 
     if (!isFormData) {
         headers['Content-Type'] = 'application/json';
@@ -27,7 +27,7 @@ export const apiRequest = async (endpoint, method = 'GET', body = null, isFormDa
 
     // Handle relative URLs for backend
     const url = endpoint.startsWith('/api') && !endpoint.startsWith('http')
-        ? `${BASE_URL}${endpoint}`
+        ? `${API_BASE_URL}${endpoint}`
         : endpoint;
 
     const config = {

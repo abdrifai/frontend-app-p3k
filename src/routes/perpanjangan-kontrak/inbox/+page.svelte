@@ -1,7 +1,7 @@
 <script>
   import { addToast } from "$lib/toastStore";
   import { authStore } from "$lib/store";
-  import { apiRequest } from "$lib/api";
+  import { apiRequest, API_BASE_URL } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
 
@@ -147,7 +147,7 @@
         addToast("Dokumen berhasil di-generate", "success");
         fetchData();
         if (result.data?.fileUrl) {
-          window.open(`http://localhost:3000${result.data.fileUrl}`, "_blank");
+          window.open(`${API_BASE_URL}${result.data.fileUrl}`, "_blank");
         }
       } else {
         addToast(result.message || "Gagal", "error");
@@ -438,7 +438,7 @@
                   <div class="flex items-center gap-1">
                     {#if rec.finalFileUrl}
                       <a
-                        href={`http://localhost:3000${rec.finalFileUrl}`}
+                        href={`${API_BASE_URL}${rec.finalFileUrl}`}
                         target="_blank"
                         on:click|stopPropagation
                         class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors border border-red-100"
@@ -811,7 +811,7 @@
         {#if selectedRecord.finalFileUrl}
           <div class="mt-4">
             <a
-              href={`http://localhost:3000${selectedRecord.finalFileUrl}`}
+              href={`${API_BASE_URL}${selectedRecord.finalFileUrl}`}
               target="_blank"
               class="bg-red-600 hover:bg-red-700 text-white w-full text-sm gap-2 justify-center py-2.5 rounded-lg transition-colors flex items-center font-semibold"
             >
