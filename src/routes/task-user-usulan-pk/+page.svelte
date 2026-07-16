@@ -28,6 +28,7 @@
     nipBaru: "",
     namaDisplay: "",
     jabatanNama: "",
+    unorIndukNama: "",
     tanggalMulai: "",
     tanggalSelesai: "",
     nomorKontrak: "",
@@ -125,6 +126,7 @@
       nipBaru: task.dataP3k?.nipBaru || "",
       namaDisplay: task.dataP3k?.nama || "",
       jabatanNama: task.dataP3k?.jabatanNama || "",
+      unorIndukNama: task.dataP3k?.unorInduk?.nama || "-",
       tanggalMulai: "",
       tanggalSelesai: "",
       nomorKontrak: "Memuat...",
@@ -647,6 +649,9 @@
                 </p>
                 <p class="text-sm font-mono text-blue-700 mt-1">
                   {form.jabatanNama}
+                </p>
+                <p class="text-sm font-mono text-blue-700 mt-1">
+                  Unor Induk: {form.unorIndukNama}
                 </p>
               </div>
             </div>

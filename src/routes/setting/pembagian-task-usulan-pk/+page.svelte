@@ -70,7 +70,7 @@
 
   const fetchUsers = async () => {
     try {
-      const result = await apiRequest("/api/users");
+      const result = await apiRequest("/api/users?limit=all");
       if (result.success) {
         users = result.data.filter((u) => !u.isDeleted);
         // Initialize selected users logic
