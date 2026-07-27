@@ -24,10 +24,44 @@
   let manualAssignments = [];
 
   // TMT Configuration states
-  let activeTab = "assignment"; // 'assignment' or 'perangkatan'
+  let activeTab = "assignment"; // 'assignment' or 'perangkatan' or 'search'
   let unassignedStats = [];
   let tmtFilters = []; // array of filterValue strings
   let isLoadingStats = false;
+
+  // Search Pegawai states
+  let searchPegawaiQuery = "";
+  let searchPegawaiResults = [];
+  let isSearchingPegawai = false;
+  let searchMeta = { page: 1, limit: 10, total: 0, totalPages: 1 };
+
+  const handleSearchPegawai = async (page = 1) => {
+    isSearchingPegawai = true;
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(searchMeta.limit),
+        search: searchPegawaiQuery
+      });
+      const result = await apiRequest(`/api/tasks-usulan/search-assigned?${params.toString()}`);
+      if (result.success) {
+        searchPegawaiResults = result.data;
+        searchMeta = result.meta;
+      } else {
+        addToast(result.message || "Gagal memuat hasil pencarian", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("Terjadi kesalahan saat memuat data", "error");
+    } finally {
+      isSearchingPegawai = false;
+    }
+  };
+
+  const submitSearchPegawai = (e) => {
+    if (e) e.preventDefault();
+    handleSearchPegawai(1);
+  };
 
   onMount(() => {
     if (!$authStore.isAuthenticated || $authStore.user?.role !== "admin") {
@@ -326,6 +360,33 @@
             >{tmtFilters.length}</span
           >
         {/if}
+      </span>
+    </button>
+    <button
+      type="button"
+      class="px-5 py-2 text-sm font-semibold rounded-lg transition-all {activeTab ===
+      'search'
+        ? 'bg-white shadow-sm text-blue-600'
+        : 'text-slate-500 hover:text-slate-700'}"
+      on:click={() => {
+        activeTab = "search";
+        handleSearchPegawai(1);
+      }}
+    >
+      <span class="flex items-center gap-2">
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          /></svg
+        >
+        Pencarian Pegawai
       </span>
     </button>
   </div>
@@ -765,6 +826,160 @@
           {/each}
         </div>
       {/if}
+    </div>
+  {:else if activeTab === "search"}
+    <div class="space-y-6">
+      <!-- Search Form Card -->
+      <div class="card p-5 space-y-4">
+        <div>
+          <h3 class="font-semibold text-slate-800 text-lg">Pencarian Pegawai Terbagi</h3>
+          <p class="text-xs text-slate-500 mt-1">
+            Cari pegawai aktif yang telah didelegasikan ke user penginput dan pantau status penyelesaian tugasnya.
+          </p>
+        </div>
+
+        <form on:submit={submitSearchPegawai} class="flex gap-2 max-w-lg">
+          <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              bind:value={searchPegawaiQuery}
+              placeholder="Masukkan Nama atau NIP Pegawai..."
+              class="input-field pl-10 w-full"
+            />
+          </div>
+          <button type="submit" class="btn-primary flex items-center gap-1.5 px-5">
+            Cari
+          </button>
+          {#if searchPegawaiQuery}
+            <button
+              type="button"
+              on:click={() => {
+                searchPegawaiQuery = "";
+                submitSearchPegawai();
+              }}
+              class="btn-secondary"
+            >
+              Reset
+            </button>
+          {/if}
+        </form>
+      </div>
+
+      <!-- Results Table Card -->
+      <div class="card overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h4 class="font-semibold text-slate-800">Daftar Pegawai & Penugasan</h4>
+          <span class="text-xs text-slate-500">
+            Ditemukan <strong class="text-blue-600">{searchMeta.total}</strong> data
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                <th class="px-5 py-3 w-16">No</th>
+                <th class="px-5 py-3">Pegawai P3K</th>
+                <th class="px-5 py-3">Dibagikan Kepada</th>
+                <th class="px-5 py-3">Status Tugas</th>
+                <th class="px-5 py-3">Tanggal Selesai</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700 text-sm">
+              {#if isSearchingPegawai}
+                <tr>
+                  <td colspan="5" class="px-5 py-12 text-center text-slate-400">
+                    <div class="flex flex-col items-center justify-center gap-3">
+                      <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Sedang mencari data...</span>
+                    </div>
+                  </td>
+                </tr>
+              {:else if searchPegawaiResults.length === 0}
+                <tr>
+                  <td colspan="5" class="px-5 py-12 text-center text-slate-400 italic">
+                    Belum ada data pegawai yang dibagikan atau tidak ada data yang cocok dengan pencarian.
+                  </td>
+                </tr>
+              {:else}
+                {#each searchPegawaiResults as task, index}
+                  {@const no = (searchMeta.page - 1) * searchMeta.limit + index + 1}
+                  <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-5 py-4 text-slate-500 font-medium">{no}</td>
+                    <td class="px-5 py-4">
+                      <div class="font-medium text-slate-800">
+                        {task.dataP3k.gelarDepan ? task.dataP3k.gelarDepan + ' ' : ''}{task.dataP3k.nama}{task.dataP3k.gelarBelakang ? ', ' + task.dataP3k.gelarBelakang : ''}
+                      </div>
+                      <div class="text-xs text-slate-400 font-mono mt-0.5">NIP. {task.dataP3k.nipBaru}</div>
+                    </td>
+                    <td class="px-5 py-4">
+                      {#if task.assignedToUser}
+                        <div class="font-medium text-slate-800">{task.assignedToUser.namaLengkap || task.assignedToUser.username}</div>
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">{task.assignedToUser.role}</div>
+                      {:else}
+                        <span class="text-slate-400 italic">Tidak Diketahui</span>
+                      {/if}
+                    </td>
+                    <td class="px-5 py-4">
+                      {#if task.isCompleted}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          Selesai
+                        </span>
+                      {:else}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-100">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                          Belum Selesai
+                        </span>
+                      {/if}
+                    </td>
+                    <td class="px-5 py-4 text-slate-500">
+                      {#if task.isCompleted && task.completedAt}
+                        {new Date(task.completedAt).toLocaleString("id-ID", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      {:else}
+                        <span class="text-slate-400 italic font-mono">-</span>
+                      {/if}
+                    </td>
+                  </tr>
+                {/each}
+              {/if}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Pagination -->
+        {#if searchMeta.totalPages > 1}
+          <div class="px-5 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-xs text-slate-500">
+              Halaman <strong class="text-slate-700">{searchMeta.page}</strong> dari <strong class="text-slate-700">{searchMeta.totalPages}</strong>
+            </span>
+            <div class="flex items-center gap-2">
+              <button
+                disabled={searchMeta.page === 1 || isSearchingPegawai}
+                on:click={() => handleSearchPegawai(searchMeta.page - 1)}
+                class="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm disabled:opacity-50 transition-all"
+              >
+                Sebelumnya
+              </button>
+              <button
+                disabled={searchMeta.page === searchMeta.totalPages || isSearchingPegawai}
+                on:click={() => handleSearchPegawai(searchMeta.page + 1)}
+                class="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm disabled:opacity-50 transition-all"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
+        {/if}
+      </div>
     </div>
   {/if}
 </div>
