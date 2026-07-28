@@ -521,14 +521,14 @@
     </div>
   </div>
 
-  <!-- Search -->
+  <!-- Search & Limit Selector -->
   <div class="card p-4">
     <form
       on:submit|preventDefault={() => {
         meta.page = 1;
-        fetchData();
+        fetchData(1);
       }}
-      class="flex gap-3"
+      class="flex flex-col sm:flex-row gap-3"
     >
       <input
         type="text"
@@ -536,7 +536,23 @@
         placeholder="Cari nama / NIP pegawai..."
         class="input-field flex-1"
       />
-      <button type="submit" class="btn-primary text-sm">Cari</button>
+      <div class="flex gap-2">
+        <select
+          bind:value={meta.limit}
+          on:change={() => {
+            meta.page = 1;
+            fetchData(1);
+          }}
+          class="input-field !w-auto text-sm font-medium text-slate-700 bg-white"
+        >
+          <option value={10}>10 baris</option>
+          <option value={25}>25 baris</option>
+          <option value={50}>50 baris</option>
+          <option value={100}>100 baris</option>
+          <option value="all">Semua baris</option>
+        </select>
+        <button type="submit" class="btn-primary text-sm">Cari</button>
+      </div>
     </form>
   </div>
 
@@ -831,54 +847,78 @@
         </tbody>
       </table>
     </div>
-    {#if meta.totalPages > 1}
+    {#if meta.total > 0}
       <div
-        class="border-t border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between gap-3"
+        class="border-t border-slate-100 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3"
       >
-        <p class="text-sm text-slate-500">
-          Hal. <span class="font-medium text-slate-700">{meta.page}</span> dari
-          <span class="font-medium text-slate-700">{meta.totalPages}</span>
-        </p>
-        <div class="flex gap-1">
-          <button
-            disabled={meta.page === 1}
-            on:click={() => fetchData(meta.page - 1)}
-            class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
-            aria-label="Halaman Sebelumnya"
+        <div class="flex items-center gap-3">
+          <p class="text-sm text-slate-500">
+            Menampilkan <span class="font-medium text-slate-700">{records.length}</span> dari
+            <span class="font-medium text-slate-700">{meta.total}</span> usulan
+          </p>
+          <select
+            bind:value={meta.limit}
+            on:change={() => {
+              meta.page = 1;
+              fetchData(1);
+            }}
+            class="input-field !w-auto !py-1 text-xs font-medium text-slate-700 bg-white"
           >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              /></svg
-            >
-          </button>
-          <button
-            disabled={meta.page === meta.totalPages}
-            on:click={() => fetchData(meta.page + 1)}
-            class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
-            aria-label="Halaman Selanjutnya"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              /></svg
-            >
-          </button>
+            <option value={10}>10 / hal</option>
+            <option value={25}>25 / hal</option>
+            <option value={50}>50 / hal</option>
+            <option value={100}>100 / hal</option>
+            <option value="all">Semua</option>
+          </select>
         </div>
+        {#if meta.totalPages > 1}
+          <div class="flex items-center gap-2">
+            <p class="text-xs text-slate-500">
+              Hal. <span class="font-medium text-slate-700">{meta.page}</span> dari
+              <span class="font-medium text-slate-700">{meta.totalPages}</span>
+            </p>
+            <div class="flex gap-1">
+              <button
+                disabled={meta.page === 1}
+                on:click={() => fetchData(meta.page - 1)}
+                class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
+                aria-label="Halaman Sebelumnya"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  ><path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 19l-7-7 7-7"
+                  /></svg
+                >
+              </button>
+              <button
+                disabled={meta.page === meta.totalPages}
+                on:click={() => fetchData(meta.page + 1)}
+                class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
+                aria-label="Halaman Selanjutnya"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  ><path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  /></svg
+                >
+              </button>
+            </div>
+          </div>
+        {/if}
       </div>
     {/if}
   </div>
