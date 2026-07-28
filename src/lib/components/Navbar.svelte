@@ -1,6 +1,7 @@
 <script>
   import { page } from "$app/stores";
   import { authStore, clearAuth } from "$lib/store";
+  import { API_BASE_URL } from "$lib/api";
   import { goto } from "$app/navigation";
   import favicon from "$lib/assets/favicon.svg";
 
@@ -1252,7 +1253,7 @@
               >
                 {#if $authStore.user?.foto}
                   <img
-                    src="{import.meta.env.VITE_API_URL}{$authStore.user.foto}"
+                    src="{API_BASE_URL}{$authStore.user.foto}"
                     alt="Avatar"
                     class="w-full h-full object-cover"
                   />
@@ -1299,7 +1300,7 @@
               >
                 {#if $authStore.user?.foto}
                   <img
-                    src="{import.meta.env.VITE_API_URL}{$authStore.user.foto}"
+                    src="{API_BASE_URL}{$authStore.user.foto}"
                     alt="Avatar"
                     class="w-full h-full object-cover"
                   />
@@ -2233,7 +2234,7 @@
               >
                 {#if $authStore.user?.foto}
                   <img
-                    src="{import.meta.env.VITE_API_URL}{$authStore.user.foto}"
+                    src="{API_BASE_URL}{$authStore.user.foto}"
                     alt="Avatar"
                     class="w-full h-full object-cover"
                   />

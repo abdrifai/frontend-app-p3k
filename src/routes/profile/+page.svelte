@@ -1,6 +1,6 @@
 <script>
   import { authStore, updateAuthUser } from "$lib/store";
-  import { apiRequest } from "$lib/api";
+  import { apiRequest, API_BASE_URL } from "$lib/api";
   import { addToast } from "$lib/toastStore";
   import { onMount } from "svelte";
 
@@ -10,7 +10,7 @@
   let password = "";
   let confirmPassword = "";
   let photoFile = null;
-  let photoPreview = user.foto ? `${import.meta.env.VITE_API_URL}${user.foto}` : null;
+  let photoPreview = user.foto ? `${API_BASE_URL}${user.foto}` : null;
   let isLoading = false;
 
   async function handleUpdateProfile() {
@@ -31,18 +31,7 @@
         formData.append("foto", photoFile);
       }
 
-      // We use a custom fetch here because apiRequest might not handle FormData automatically depending on implementation
-      // But let's check apiRequest first
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-        method: "PUT",
-        headers: {
-          // authStore should have token, but we might need to get it from cookies or localStorage
-          // Usually apiRequest handles this. Let's assume it's in a cookie as per backend rules.
-        },
-        body: formData,
-      });
-
-      const result = await response.json();
+      const result = await apiRequest("/api/users/profile", "PUT", formData, true);
 
       if (result.success) {
         addToast("Profil berhasil diperbarui", "success");

@@ -13,7 +13,7 @@ import { env } from '$env/dynamic/public';
  */
 // export const API_BASE_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
 
-export const API_BASE_URL = env.PUBLIC_API_URL || "";
+export const API_BASE_URL = "";
 
 export const apiRequest = async (endpoint, method = 'GET', body = null, isFormData = false) => {
     const auth = get(authStore);
