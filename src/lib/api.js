@@ -11,7 +11,9 @@ import { env } from '$env/dynamic/public';
  * @param {object|null} body The request body
  * @returns {Promise<any>}
  */
-export const API_BASE_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
+// export const API_BASE_URL = env.PUBLIC_API_URL || 'http://localhost:3000';
+
+export const API_BASE_URL = env.PUBLIC_API_URL || "";
 
 export const apiRequest = async (endpoint, method = 'GET', body = null, isFormData = false) => {
     const auth = get(authStore);
@@ -42,7 +44,7 @@ export const apiRequest = async (endpoint, method = 'GET', body = null, isFormDa
     try {
         const response = await fetch(url, config);
         const data = await response.json();
-        
+
         if (!response.ok) {
             if (response.status === 401) {
                 clearAuth();
@@ -58,7 +60,7 @@ export const apiRequest = async (endpoint, method = 'GET', body = null, isFormDa
         return data;
     } catch (error) {
         if (!error.message || error.message === 'Network error' || error.message.includes('fetch')) {
-             addToast('Network error, please try again.', 'error');
+            addToast('Network error, please try again.', 'error');
         }
         throw new Error(error.message || 'Network error');
     }
