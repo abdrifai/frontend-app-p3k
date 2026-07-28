@@ -397,6 +397,9 @@
                   <p class="text-xs text-slate-400 font-mono">
                     {rec.dataP3k?.nipBaru || "-"}
                   </p>
+                  <p class="text-[11px] text-slate-500 mt-0.5">
+                    {rec.dataP3k?.jabatanNama || "-"}
+                  </p>
                 </td>
                 <td
                   class="hidden md:table-cell px-4 sm:px-6 py-3 text-sm text-slate-600"

@@ -505,6 +505,9 @@
                   <div class="text-xs text-slate-500 font-mono mt-0.5">
                     {task.dataP3k?.nipBaru}
                   </div>
+                  <div class="text-[11px] text-slate-400 mt-0.5">
+                    {task.dataP3k?.jabatanNama || "-"}
+                  </div>
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                   <div class="text-sm text-slate-600">

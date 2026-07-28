@@ -556,6 +556,10 @@
             >
             <th
               class="hidden md:table-cell px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase"
+              >Jabatan</th
+            >
+            <th
+              class="hidden md:table-cell px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase"
               >Periode</th
             >
             <th
@@ -581,7 +585,7 @@
         <tbody class="divide-y divide-slate-100">
           {#if isLoading}
             <tr
-              ><td colspan="6" class="px-6 py-16 text-center"
+              ><td colspan="8" class="px-6 py-16 text-center"
                 ><div class="flex flex-col items-center gap-3">
                   <div
                     class="w-8 h-8 border-[3px] border-blue-600 border-t-transparent rounded-full animate-spin"
@@ -592,7 +596,7 @@
             >
           {:else if records.length === 0}
             <tr
-              ><td colspan="6" class="px-6 py-16 text-center"
+              ><td colspan="8" class="px-6 py-16 text-center"
                 ><p class="text-sm text-slate-400">
                   Belum ada usulan perpanjangan.
                 </p></td
@@ -611,6 +615,14 @@
                   <p class="text-xs text-slate-400 font-mono">
                     {rec.dataP3k?.nipBaru || "-"}
                   </p>
+                  <p class="text-[10px] text-slate-500 mt-0.5 md:hidden">
+                    {rec.dataP3k?.jabatanNama || "-"}
+                  </p>
+                </td>
+                <td
+                  class="hidden md:table-cell px-4 sm:px-6 py-3 text-sm text-slate-600"
+                >
+                  {rec.dataP3k?.jabatanNama || "-"}
                 </td>
                 <td
                   class="hidden md:table-cell px-4 sm:px-6 py-3 text-sm text-slate-600"

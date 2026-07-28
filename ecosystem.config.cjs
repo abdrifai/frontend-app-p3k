@@ -10,7 +10,8 @@ module.exports = {
                 // Pastikan IP di bawah ini adalah IP yang Anda ketik di browser
                 ORIGIN: "http://33.33.33.5",
                 // Sesuaikan dengan endpoint API backend Anda
-                PUBLIC_API_URL: "http://33.33.33.5"
+                //PUBLIC_API_URL: "http://33.33.33.5",
+                PUBLIC_API_URL: "http://36.92.162.234:8585"
             }
         }
     ]
