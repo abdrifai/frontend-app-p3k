@@ -44,7 +44,6 @@
     isActive("/data-p3k") ||
     isActive("/statistik-p3k") ||
     isActive("/statistik-task") ||
-    isActive("/estimasi-pensiun") ||
     isActive("/manajemen-pensiun") ||
     isActive("/perbedaan-data") ||
     isActive("/ref-unor");
@@ -66,6 +65,7 @@
     isActive("/setting/activity-log");
 
   const isPerpanjanganActive = () =>
+    isActive("/perpanjangan-kontrak/dashboard") ||
     isActive("/perpanjangan-kontrak/usulan") ||
     isActive("/perpanjangan-kontrak/inbox");
 
@@ -73,7 +73,8 @@
     isActive("/task-user-peremajaan") || isActive("/task-user-usulan-pk");
 
   const isLaporanActive = () =>
-    isActive("/laporan/perpanjangan-pk");
+    isActive("/laporan/perpanjangan-pk") ||
+    isActive("/estimasi-pensiun");
 
   // Delayed close for dropdown menus
   let utamaCloseTimer = null;
@@ -361,40 +362,7 @@
                       </p>
                     </div>
                   </a>
-                  <a
-                    href="/estimasi-pensiun"
-                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
-                      '/estimasi-pensiun',
-                    )
-                      ? 'text-blue-700 bg-blue-50 font-medium'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
-                    onclick={() => (utamaMenuOpen = false)}
-                  >
-                    <div
-                      class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0"
-                    >
-                      <svg
-                        class="w-3.5 h-3.5 text-amber-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        /></svg
-                      >
-                    </div>
-                    <div>
-                      <p class="font-medium leading-tight">Estimasi Pensiun</p>
-                      <p
-                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
-                      >
-                        Data usia pensiun pegawai
-                      </p>
-                    </div>
-                  </a>
+
                   <a
                     href="/manajemen-pensiun"
                     class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
@@ -592,6 +560,42 @@
                   >
                     Perpanjangan Kontrak
                   </p>
+                  <a
+                    href="/perpanjangan-kontrak/dashboard"
+                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                      '/perpanjangan-kontrak/dashboard',
+                    )
+                      ? 'text-blue-700 bg-blue-50 font-medium'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                    onclick={() => (perpanjanganMenuOpen = false)}
+                  >
+                    <div
+                      class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-3.5 h-3.5 text-blue-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        ><path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        /></svg
+                      >
+                    </div>
+                    <div>
+                      <p class="font-medium leading-tight">
+                        Dashboard Progres
+                      </p>
+                      <p
+                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                      >
+                        Monitoring status usulan PK
+                      </p>
+                    </div>
+                  </a>
                   <a
                     href="/perpanjangan-kontrak/usulan"
                     class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
@@ -877,6 +881,41 @@
                         class="text-[10px] text-slate-400 leading-tight mt-0.5"
                       >
                         Daftar kontrak yang sudah selesai
+                      </p>
+                    </div>
+                  </a>
+
+                  <a
+                    href="/estimasi-pensiun"
+                    class="flex items-start gap-3 p-3 rounded-lg transition-all {isActive(
+                      '/estimasi-pensiun',
+                    )
+                      ? 'bg-blue-50/80 text-blue-700 font-medium'
+                      : 'hover:bg-slate-50 text-slate-700'}"
+                    onclick={() => (laporanMenuOpen = false)}
+                  >
+                    <div
+                      class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5"
+                    >
+                      <svg
+                        class="w-4 h-4 text-amber-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        ><path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        /></svg
+                      >
+                    </div>
+                    <div>
+                      <p class="font-medium leading-tight">Estimasi Pensiun</p>
+                      <p
+                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                      >
+                        Laporan data usia pensiun pegawai
                       </p>
                     </div>
                   </a>
