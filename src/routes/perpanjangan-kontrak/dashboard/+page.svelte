@@ -483,7 +483,7 @@
               <table class="w-full text-left border-collapse">
                 <thead>
                   <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th class="py-3.5 px-4">Unit Kerja (Unor)</th>
+                    <th class="py-3.5 px-4">Unit Kerja Induk (Unor Induk)</th>
                     <th class="py-3.5 px-4 text-center">Pegawai</th>
                     <th class="py-3.5 px-4 text-center">Usulan</th>
                     <th class="py-3.5 px-4 text-center">Selesai</th>
@@ -717,8 +717,8 @@
                       <p class="font-bold text-slate-800">{u.dataP3k?.nama || '-'}</p>
                       <p class="text-[10px] text-slate-400 font-mono">NIP: {u.dataP3k?.nipBaru || '-'}</p>
                     </td>
-                    <td class="py-3.5 px-4 text-slate-600">
-                      {u.dataP3k?.unorNama || '-'}
+                    <td class="py-3.5 px-4 text-slate-600 font-medium">
+                      {u.dataP3k?.unorInduk?.nama || '-'}
                     </td>
                     <td class="py-3.5 px-4 font-mono text-[11px] text-slate-700">
                       {u.nomorKontrak || '-'}
