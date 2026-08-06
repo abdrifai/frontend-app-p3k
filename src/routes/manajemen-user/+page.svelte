@@ -33,6 +33,12 @@
   let reactivateUserData = null;
   let isReactivating = false;
 
+  // Permanent Delete modal state
+  let showPermanentDeleteModal = false;
+  let permanentDeleteUser = null;
+  let permanentSecurityKey = "";
+  let isPermanentDeleting = false;
+
   let searchTimeout = null;
 
   onMount(() => {
@@ -56,15 +62,12 @@
 
       const result = await apiRequest(`/api/users?${params.toString()}`, "GET");
       
-      if (result.success) {
-        users = result.data;
-        meta = result.meta;
-      } else {
-        addToast(result.message || "Gagal memuat data user", "error");
+      if (result && result.success) {
+        users = result.data || [];
+        meta = result.meta || { page: 1, limit: 10, total: 0, totalPages: 1 };
       }
     } catch (err) {
       console.error("Fetch users error:", err);
-      addToast("Terjadi kesalahan sistem", "error");
     } finally {
       isLoading = false;
     }
@@ -122,16 +125,13 @@
         };
         closeAddModal();
         showReactivateModal = true;
-      } else if (result.success) {
+      } else if (result && result.success) {
         addToast("User berhasil ditambahkan", "success");
         closeAddModal();
         fetchUsers(1);
-      } else {
-        addToast(result.message || "Gagal menambahkan user", "error");
       }
     } catch (err) {
       console.error("Add user error:", err);
-      addToast("Terjadi kesalahan sistem", "error");
     } finally {
       isAdding = false;
     }
@@ -169,18 +169,54 @@
     try {
       const payload = reactivateUserData.newForm || {};
       const result = await apiRequest(`/api/users/${reactivateUserData.id}/reactivate`, "POST", payload);
-      if (result.success) {
+      if (result && result.success) {
         addToast("User berhasil diaktifkan kembali", "success");
         closeReactivateModal();
         fetchUsers(1);
-      } else {
-        addToast(result.message || "Gagal mengaktifkan kembali user", "error");
       }
     } catch (err) {
       console.error("Reactivate user error:", err);
-      addToast("Terjadi kesalahan sistem", "error");
     } finally {
       isReactivating = false;
+    }
+  };
+
+  const openPermanentDeleteModal = (user) => {
+    permanentDeleteUser = user;
+    permanentSecurityKey = "";
+    showPermanentDeleteModal = true;
+  };
+
+  const closePermanentDeleteModal = () => {
+    showPermanentDeleteModal = false;
+    permanentDeleteUser = null;
+    permanentSecurityKey = "";
+  };
+
+  const handlePermanentDelete = async (e) => {
+    if (e) e.preventDefault();
+    if (!permanentDeleteUser) return;
+
+    if (permanentSecurityKey !== "234") {
+      addToast("Kunci keamanan salah! Masukkan kunci keamanan yang benar ('234')", "error");
+      return;
+    }
+
+    isPermanentDeleting = true;
+    try {
+      const result = await apiRequest(`/api/users/${permanentDeleteUser.id}/permanent?securityKey=${encodeURIComponent(permanentSecurityKey)}`, "DELETE", {
+        securityKey: permanentSecurityKey
+      });
+
+      if (result.success) {
+        addToast("User berhasil dihapus secara permanen dari database", "success");
+        closePermanentDeleteModal();
+        fetchUsers(meta.page);
+      }
+    } catch (err) {
+      console.error("Permanent delete user error:", err);
+    } finally {
+      isPermanentDeleting = false;
     }
   };
 
@@ -195,16 +231,13 @@
       if (editForm.role) payload.role = editForm.role;
 
       const result = await apiRequest(`/api/users/${editUser.id}`, "PUT", payload);
-      if (result.success) {
+      if (result && result.success) {
         addToast("User berhasil diperbarui", "success");
         closeEditModal();
         fetchUsers(meta.page);
-      } else {
-        addToast(result.message || "Gagal memperbarui user", "error");
       }
     } catch (err) {
       console.error("Update user error:", err);
-      addToast("Terjadi kesalahan sistem", "error");
     } finally {
       isSubmitting = false;
     }
@@ -224,16 +257,13 @@
     isDeleting = true;
     try {
       const result = await apiRequest(`/api/users/${deleteUser.id}`, "DELETE");
-      if (result.success) {
+      if (result && result.success) {
         addToast("User berhasil dihapus", "success");
         closeDeleteModal();
         fetchUsers(meta.page);
-      } else {
-        addToast(result.message || "Gagal menghapus user", "error");
       }
     } catch (err) {
       console.error("Delete user error:", err);
-      addToast("Terjadi kesalahan sistem", "error");
     } finally {
       isDeleting = false;
     }
@@ -493,6 +523,15 @@
                         </svg>
                         Aktifkan
                       </button>
+                      <button
+                        on:click|stopPropagation={() => openPermanentDeleteModal(user)}
+                        class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors"
+                        title="Hapus Permanen (Kunci Keamanan: 234)"
+                      >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     {:else}
                       <button
                         on:click|stopPropagation={() => openEditModal(user)}
@@ -516,7 +555,7 @@
                       <button
                         on:click|stopPropagation={() => openDeleteModal(user)}
                         class="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                        title="Hapus user"
+                        title="Hapus user (Soft Delete)"
                       >
                         <svg
                           class="w-4 h-4"
@@ -1082,6 +1121,88 @@
                   <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                 {/if}
                 Aktifkan Kembali
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Permanent Delete Confirmation Modal -->
+{#if showPermanentDeleteModal && permanentDeleteUser}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div
+    class="fixed inset-0 z-[70] overflow-y-auto"
+    on:keydown={(e) => e.key === "Escape" && closePermanentDeleteModal()}
+  >
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+      <button
+        type="button"
+        class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm w-full h-full border-none cursor-default"
+        on:click={closePermanentDeleteModal}
+        aria-label="Tutup modal"
+      ></button>
+
+      <div
+        class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden"
+      >
+        <div
+          class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-600 to-rose-600"
+        ></div>
+
+        <div class="p-6 text-center space-y-4">
+          <div class="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center text-red-600 shadow-inner">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">Hapus User Permanen?</h3>
+            <p class="text-xs text-rose-600 font-semibold mt-1">⚠️ PERINGATAN: TIDAK DAPAT DIBATALKAN</p>
+          </div>
+
+          <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200">
+            Tindakan ini akan menghapus akun <span class="font-bold text-slate-800">{permanentDeleteUser.username.includes('_del_') ? permanentDeleteUser.username.split('_del_')[0] : permanentDeleteUser.username}</span> ({permanentDeleteUser.namaLengkap || '-'}) secara <b class="text-red-600">PERMANEN</b> dari database.
+          </p>
+
+          <form on:submit={handlePermanentDelete} class="space-y-4 text-left pt-2">
+            <div>
+              <label for="permanentSecurityKeyInput" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Masukkan Kunci Keamanan: <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="permanentSecurityKeyInput"
+                type="password"
+                bind:value={permanentSecurityKey}
+                placeholder="Masukkan kunci keamanan (234)"
+                required
+                class="input-field text-center font-mono font-bold text-base text-red-600 tracking-widest border-red-300 focus:ring-red-500 focus:border-red-500"
+              />
+              <p class="text-[11px] text-slate-400 mt-1">
+                Kunci keamanan penghapusan permanen: <code class="font-bold text-slate-700 bg-slate-100 px-1 py-0.5 rounded">234</code>
+              </p>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button
+                type="button"
+                on:click={closePermanentDeleteModal}
+                class="btn-secondary flex-1"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={isPermanentDeleting || permanentSecurityKey !== "234"}
+                class="btn-primary !bg-red-600 hover:!bg-red-700 flex-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-red-500/20"
+              >
+                {#if isPermanentDeleting}
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                {/if}
+                Hapus Permanen
               </button>
             </div>
           </form>
