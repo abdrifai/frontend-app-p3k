@@ -43,7 +43,6 @@
   const isUtamaActive = () =>
     isActive("/data-p3k") ||
     isActive("/statistik-p3k") ||
-    isActive("/statistik-task") ||
     isActive("/manajemen-pensiun") ||
     isActive("/perbedaan-data") ||
     isActive("/ref-unor");
@@ -74,7 +73,8 @@
 
   const isLaporanActive = () =>
     isActive("/laporan/perpanjangan-pk") ||
-    isActive("/estimasi-pensiun");
+    isActive("/estimasi-pensiun") ||
+    isActive("/statistik-task");
 
   // Delayed close for dropdown menus
   let utamaCloseTimer = null;
@@ -431,40 +431,7 @@
                       </p>
                     </div>
                   </a>
-                  <a
-                    href="/statistik-task"
-                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
-                      '/statistik-task',
-                    )
-                      ? 'text-blue-700 bg-blue-50 font-medium'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
-                    onclick={() => (utamaMenuOpen = false)}
-                  >
-                    <div
-                      class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0"
-                    >
-                      <svg
-                        class="w-3.5 h-3.5 text-indigo-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                        /></svg
-                      >
-                    </div>
-                    <div>
-                      <p class="font-medium leading-tight">Statistik Task</p>
-                      <p
-                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
-                      >
-                        Laporan performa task per user
-                      </p>
-                    </div>
-                  </a>
+
                   <a
                     href="/ref-unor"
                     class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
@@ -916,6 +883,41 @@
                         class="text-[10px] text-slate-400 leading-tight mt-0.5"
                       >
                         Laporan data usia pensiun pegawai
+                      </p>
+                    </div>
+                  </a>
+
+                  <a
+                    href="/statistik-task"
+                    class="flex items-start gap-3 p-3 rounded-lg transition-all {isActive(
+                      '/statistik-task',
+                    )
+                      ? 'bg-blue-50/80 text-blue-700 font-medium'
+                      : 'hover:bg-slate-50 text-slate-700'}"
+                    onclick={() => (laporanMenuOpen = false)}
+                  >
+                    <div
+                      class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-0.5"
+                    >
+                      <svg
+                        class="w-4 h-4 text-indigo-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        ><path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        /></svg
+                      >
+                    </div>
+                    <div>
+                      <p class="font-medium leading-tight">Statistik Task</p>
+                      <p
+                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                      >
+                        Laporan performa task per operator
                       </p>
                     </div>
                   </a>
@@ -1954,19 +1956,19 @@
                 class="mt-1 mb-1 ml-5 pl-4 border-l-2 border-blue-200 space-y-0.5"
               >
                 <a
-                  href="/laporan/perpanjangan-pk"
+                  href="/estimasi-pensiun"
                   onclick={closeMobile}
                   class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
-                    '/laporan/perpanjangan-pk',
+                    '/estimasi-pensiun',
                   )
                     ? 'text-blue-700 bg-blue-50 font-semibold'
                     : 'text-slate-600 hover:bg-slate-50'}"
                 >
                   <div
-                    class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center"
+                    class="w-6 h-6 rounded-md bg-amber-50 flex items-center justify-center"
                   >
                     <svg
-                      class="w-3 h-3 text-blue-500"
+                      class="w-3 h-3 text-amber-500"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1974,11 +1976,38 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       /></svg
                     >
                   </div>
-                  Perpanjangan PK
+                  Estimasi Pensiun
+                </a>
+                <a
+                  href="/statistik-task"
+                  onclick={closeMobile}
+                  class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                    '/statistik-task',
+                  )
+                    ? 'text-blue-700 bg-blue-50 font-semibold'
+                    : 'text-slate-600 hover:bg-slate-50'}"
+                >
+                  <div
+                    class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
+                  >
+                    <svg
+                      class="w-3 h-3 text-indigo-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      ><path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      /></svg
+                    >
+                  </div>
+                  Statistik Task
                 </a>
               </div>
             {/if}
