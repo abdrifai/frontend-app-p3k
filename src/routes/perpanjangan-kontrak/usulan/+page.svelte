@@ -31,6 +31,12 @@
   let isSubmitting = false;
   let isUploadingTemplate = false;
   let editingId = null;
+
+  // Secure delete modal (for SELESAI status)
+  let showSecureDeleteModal = false;
+  let secureDeleteId = null;
+  let secureDeleteInput = '';
+  let secureDeleteError = false;
   let form = {
     nipBaru: "",
     namaDisplay: "",
@@ -213,7 +219,15 @@
     }
   };
 
-  const confirmDeleteApprovedUsulan = (id) => {
+  const confirmDeleteApprovedUsulan = (id, status) => {
+    if (status === 'SELESAI') {
+      // Route to secure delete modal — requires secret key
+      secureDeleteId       = id;
+      secureDeleteInput    = '';
+      secureDeleteError    = false;
+      showSecureDeleteModal = true;
+      return;
+    }
     deleteConfirmId = id;
     deleteModalConfig = {
       title: "Hapus Permanen?",
@@ -223,6 +237,34 @@
       confirmText: "Ya, Hapus"
     };
     showDeleteConfirmModal = true;
+  };
+
+  const submitSecureDelete = async () => {
+    if (secureDeleteInput.trim().toLowerCase() !== 'setuju') {
+      secureDeleteError = true;
+      return;
+    }
+    isDeleting = true;
+    try {
+      const result = await apiRequest(
+        `/api/v1/perpanjangan/usulan/${secureDeleteId}/approved`,
+        'DELETE',
+      );
+      if (result.success) {
+        addToast(result.message || 'Usulan berhasil dihapus', 'success');
+        fetchData(meta.page);
+      } else {
+        addToast(result.message || 'Gagal menghapus', 'error');
+      }
+    } catch (e) {
+      addToast(e.message || 'Terjadi kesalahan sistem', 'error');
+    } finally {
+      isDeleting = false;
+      showSecureDeleteModal = false;
+      secureDeleteId    = null;
+      secureDeleteInput = '';
+      secureDeleteError = false;
+    }
   };
 
   const handleDeleteApprovedUsulan = async () => {
@@ -780,11 +822,11 @@
                     {#if isAdmin}
                       <button
                         on:click={() =>
-                          rec.status === "PENDING" || rec.status === "REJECTED"
+                          rec.status === 'PENDING' || rec.status === 'REJECTED'
                             ? confirmDeleteUsulan(rec.id)
-                            : confirmDeleteApprovedUsulan(rec.id)}
+                            : confirmDeleteApprovedUsulan(rec.id, rec.status)}
                         class="p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                        title={rec.status === "PENDING" || rec.status === "REJECTED" ? "Hapus": "Hapus Permanen"}
+                        title={rec.status === 'PENDING' || rec.status === 'REJECTED' ? 'Hapus' : 'Hapus Permanen'}
                       >
                         <svg
                           class="w-5 h-5"
@@ -1311,6 +1353,118 @@
   on:confirm={executeDelete}
 />
 
+<!-- ── Secure Delete Modal (status SELESAI) ──────────────────────────── -->
+{#if showSecureDeleteModal}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    on:click|self={() => { showSecureDeleteModal = false; secureDeleteInput = ''; secureDeleteError = false; }}
+  >
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+
+    <!-- Dialog -->
+    <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+      <!-- Top danger bar -->
+      <div class="h-1.5 w-full bg-gradient-to-r from-red-500 to-rose-600"></div>
+
+      <div class="p-6 space-y-5">
+        <!-- Icon + title -->
+        <div class="flex items-start gap-4">
+          <div class="w-11 h-11 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-800">Hapus Permanen — Usulan Selesai</h2>
+            <p class="text-sm text-slate-500 mt-1 leading-relaxed">
+              Tindakan ini akan menghapus usulan beserta seluruh dokumen kontrak terkait secara permanen.
+              <strong class="text-slate-700">Tidak dapat dibatalkan.</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Warning box -->
+        <div class="rounded-xl bg-red-50 border border-red-200 p-3.5 flex gap-2.5">
+          <svg class="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-xs text-red-700 leading-relaxed">
+            Usulan dengan status <span class="font-semibold">Selesai</span> memerlukan verifikasi tambahan.
+            Masukkan kunci keamanan untuk melanjutkan penghapusan.
+          </p>
+        </div>
+
+        <!-- Security input — NO placeholder, NO hint about the keyword -->
+        <div class="space-y-1.5">
+          <label for="secure-delete-input" class="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            Kunci Keamanan
+          </label>
+          <input
+            id="secure-delete-input"
+            type="text"
+            bind:value={secureDeleteInput}
+            on:input={() => (secureDeleteError = false)}
+            on:keydown={(e) => { if (e.key === 'Enter') submitSecureDelete(); }}
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            class="w-full px-3.5 py-2.5 rounded-xl border text-sm text-slate-800 font-mono tracking-wider
+              outline-none transition-all
+              {secureDeleteError
+                ? 'border-red-400 bg-red-50 ring-2 ring-red-300'
+                : 'border-slate-300 bg-white focus:border-red-400 focus:ring-2 focus:ring-red-200'}"
+          />
+          {#if secureDeleteError}
+            <p class="text-xs text-red-600 font-medium flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Kunci keamanan tidak valid.
+            </p>
+          {/if}
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 pt-1">
+          <button
+            type="button"
+            on:click={() => { showSecureDeleteModal = false; secureDeleteInput = ''; secureDeleteError = false; }}
+            class="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600
+              hover:bg-slate-50 transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            on:click={submitSecureDelete}
+            disabled={isDeleting || !secureDeleteInput.trim()}
+            class="flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white
+              bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800
+              shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed
+              flex items-center justify-center gap-2"
+          >
+            {#if isDeleting}
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Menghapus...
+            {:else}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              Hapus Permanen
+            {/if}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <!-- Hidden File Input -->
 <input
   type="file"
@@ -1319,3 +1473,4 @@
   bind:this={fileInput}
   on:change={handleFileUpload}
 />
+

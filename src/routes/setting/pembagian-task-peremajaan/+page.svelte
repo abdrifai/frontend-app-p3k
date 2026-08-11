@@ -9,6 +9,57 @@
   let users = [];
   let isLoading = true;
   let isSubmitting = false;
+  let kegiatan = '';       // nilai label yang terpilih / diketik
+  let kegiatanId = null;   // id kegiatan terpilih
+
+  // Combobox kegiatan
+  let kegiatanList = [];
+  let kegiatanSearch = '';
+  let showKegiatanDropdown = false;
+  let kegiatanLoading = false;
+  let kegiatanDebounce;
+
+  const fetchKegiatanList = async (q = '') => {
+    kegiatanLoading = true;
+    try {
+      const params = new URLSearchParams({ page: '1', limit: '20' });
+      if (q) params.append('search', q);
+      const result = await apiRequest(`/api/kegiatan?${params.toString()}`);
+      if (result.success) {
+        kegiatanList = result.data?.data ?? result.data ?? [];
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      kegiatanLoading = false;
+    }
+  };
+
+  const onKegiatanInput = () => {
+    kegiatanId = null;          // reset pilihan jika user mengetik manual
+    showKegiatanDropdown = true;
+    clearTimeout(kegiatanDebounce);
+    kegiatanDebounce = setTimeout(() => fetchKegiatanList(kegiatan), 300);
+  };
+
+  const selectKegiatan = (k) => {
+    kegiatan = k.label ?? k.nama;
+    kegiatanId = k.id;
+    showKegiatanDropdown = false;
+    fetchUnassignedStats(kegiatan); // refresh stats untuk kegiatan terpilih
+  };
+
+  const clearKegiatan = () => {
+    kegiatan = '';
+    kegiatanId = null;
+    showKegiatanDropdown = false;
+    fetchUnassignedStats(''); // kembali ke hitungan umum
+  };
+
+  const closeKegiatanDropdown = () => {
+    setTimeout(() => { showKegiatanDropdown = false; }, 150);
+  };
+
 
   // Assignment states
   let assignMode = "auto"; // 'auto' or 'manual'
@@ -42,11 +93,14 @@
     fetchUsers();
     fetchFieldConfigs();
     fetchUnassignedStats();
+    fetchKegiatanList();
   });
 
-  const fetchUnassignedStats = async () => {
+  const fetchUnassignedStats = async (kegiatanLabel = '') => {
     try {
-      const result = await apiRequest("/api/tasks/unassigned-count");
+      const params = new URLSearchParams();
+      if (kegiatanLabel) params.set('kegiatan', kegiatanLabel);
+      const result = await apiRequest(`/api/tasks/unassigned-count?${params.toString()}`);
       if (result.success) {
         totalAvailable = result.data.totalAvailable;
       }
@@ -180,6 +234,7 @@
       const result = await apiRequest("/api/tasks/assign/auto", "POST", {
         userIds: selectedIds,
         amountPerUser: finalAmount,
+        kegiatan,
       });
       if (result.success) {
         addToast(result.message, "success");
@@ -213,6 +268,7 @@
     try {
       const result = await apiRequest("/api/tasks/assign/manual", "POST", {
         assignments: validAssignments,
+        kegiatan,
       });
       if (result.success) {
         addToast(result.message, "success");
@@ -393,14 +449,123 @@
             </button>
           </div>
 
-          <div
-            class="mb-4 gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg flex justify-between items-center text-xs"
-          >
-            <span class="text-slate-500 italic">Sisa Pegawai Aktif </span>
-            <strong class="text-slate-700"
-              >{(totalAvailable || 0).toLocaleString("id-ID")} Data Tersedia</strong
-            >
+          <div class="mb-4 gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg flex justify-between items-center text-xs">
+            <span class="text-slate-500 italic">
+              {#if kegiatan}
+                Sisa untuk kegiatan <strong class="text-violet-600">{kegiatan}</strong>
+              {:else}
+                Total Pegawai P3K Aktif
+              {/if}
+            </span>
+            <strong class="text-slate-700">{(totalAvailable || 0).toLocaleString("id-ID")} Pegawai</strong>
           </div>
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="kegiatan-input" class="block text-sm font-medium text-slate-700">
+                Kegiatan
+              </label>
+              <a
+                href="/setting/kegiatan"
+                class="text-[10px] text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1"
+              >
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Kelola
+              </a>
+            </div>
+
+            <!-- Combobox wrapper -->
+            <div class="relative">
+              <div class="relative">
+                <!-- Search icon / selected indicator -->
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  {#if kegiatanId}
+                    <div class="w-2 h-2 rounded-full bg-violet-500"></div>
+                  {:else}
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                  {/if}
+                </div>
+
+                <input
+                  id="kegiatan-input"
+                  type="text"
+                  bind:value={kegiatan}
+                  on:input={onKegiatanInput}
+                  on:focus={() => { showKegiatanDropdown = true; fetchKegiatanList(kegiatan); }}
+                  on:blur={closeKegiatanDropdown}
+                  placeholder="Cari atau pilih kegiatan..."
+                  class="input-field w-full pl-8 pr-8"
+                  autocomplete="off"
+                />
+
+                <!-- Clear button -->
+                {#if kegiatan}
+                  <button
+                    type="button"
+                    on:click={clearKegiatan}
+                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-300 hover:text-slate-500 transition-colors"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                {/if}
+              </div>
+
+              <!-- Dropdown -->
+              {#if showKegiatanDropdown}
+                <div class="absolute z-30 w-full mt-1 bg-white rounded-lg shadow-xl shadow-slate-200/60 border border-slate-200 overflow-hidden">
+                  {#if kegiatanLoading}
+                    <div class="px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
+                      <div class="w-3.5 h-3.5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></div>
+                      Memuat...
+                    </div>
+                  {:else if kegiatanList.length === 0}
+                    <div class="px-4 py-3 text-xs text-slate-400">
+                      {kegiatan ? `Tidak ada hasil untuk "${kegiatan}"` : 'Belum ada kegiatan tersedia.'}
+                    </div>
+                  {:else}
+                    <ul class="max-h-48 overflow-y-auto py-1">
+                      {#each kegiatanList as k}
+                        <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
+                        <li
+                          role="option"
+                          aria-selected={kegiatanId === k.id}
+                          on:mousedown={() => selectKegiatan(k)}
+                          class="flex items-center gap-2.5 px-3 py-2.5 text-sm cursor-pointer transition-colors
+                            {kegiatanId === k.id
+                              ? 'bg-violet-50 text-violet-700 font-medium'
+                              : 'text-slate-700 hover:bg-slate-50'}"
+                        >
+                          <div class="w-1.5 h-1.5 rounded-full flex-shrink-0
+                            {kegiatanId === k.id ? 'bg-violet-500' : 'bg-slate-300'}">
+                          </div>
+                          {k.label ?? k.nama}
+                          {#if kegiatanId === k.id}
+                            <svg class="w-3.5 h-3.5 ml-auto text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                            </svg>
+                          {/if}
+                        </li>
+                      {/each}
+                    </ul>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+
+            <!-- Selected badge -->
+            {#if kegiatanId}
+              <div class="mt-1.5 flex items-center gap-1.5 text-[10px] text-violet-600">
+                <div class="w-1.5 h-1.5 rounded-full bg-violet-400"></div>
+                Kegiatan terpilih: <strong>{kegiatan}</strong>
+              </div>
+            {/if}
+          </div>
+
 
           {#if assignMode === "auto"}
             <div class="space-y-4">

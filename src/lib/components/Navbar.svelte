@@ -61,7 +61,9 @@
     isActive("/setting/pembagian-task-peremajaan") ||
     isActive("/setting/pembagian-task-usulan-pk") ||
     isActive("/setting/referensi-gaji") ||
-    isActive("/setting/activity-log");
+    isActive("/setting/kegiatan") ||
+    isActive("/setting/activity-log") ||
+    isActive("/setting/backup");
 
   const isPerpanjanganActive = () =>
     isActive("/perpanjangan-kontrak/dashboard") ||
@@ -1242,6 +1244,29 @@
                       </div>
                     </a>
                     <a
+                      href="/setting/kegiatan"
+                      class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                        '/setting/kegiatan',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-medium'
+                        : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                      onclick={() => (settingMenuOpen = false)}
+                    >
+                      <div
+                        class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0"
+                      >
+                        <svg class="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="font-medium leading-tight">Kegiatan</p>
+                        <p class="text-[10px] text-slate-400 leading-tight mt-0.5">
+                          Kelola label kegiatan tugas
+                        </p>
+                      </div>
+                    </a>
+                    <a
                       href="/setting/activity-log"
                       class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
                         '/setting/activity-log',
@@ -1263,6 +1288,29 @@
                           class="text-[10px] text-slate-400 leading-tight mt-0.5"
                         >
                           Riwayat manipulasi data
+                        </p>
+                      </div>
+                    </a>
+                    <a
+                      href="/setting/backup"
+                      class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                        '/setting/backup',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-medium'
+                        : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                      onclick={() => (settingMenuOpen = false)}
+                    >
+                      <div
+                        class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0"
+                      >
+                        <svg class="w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="font-medium leading-tight">Backup Data</p>
+                        <p class="text-[10px] text-slate-400 leading-tight mt-0.5">
+                          Ekspor database ke JSON / CSV
                         </p>
                       </div>
                     </a>
