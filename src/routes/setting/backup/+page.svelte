@@ -3,6 +3,8 @@
   import { goto }    from '$app/navigation';
   import { authStore }  from '$lib/store';
   import { addToast }   from '$lib/toastStore';
+  import { get }        from 'svelte/store';
+  import { API_BASE_URL } from '$lib/api';
 
   // ── State ──────────────────────────────────────────────────────────────
   let stats         = null;
@@ -32,10 +34,22 @@
     await fetchStats();
   });
 
+  // Helper: fetch dengan Bearer token
+  function authFetch(url, options = {}) {
+    const auth = get(authStore);
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        'Authorization': auth.token ? `Bearer ${auth.token}` : '',
+      },
+    });
+  }
+
   async function fetchStats() {
     loadingStats = true;
     try {
-      const res  = await fetch('/api/backup/stats', { credentials: 'include' });
+      const res  = await authFetch('/api/backup/stats');
       const json = await res.json();
       if (json.success) stats = json.data;
     } catch (e) {
@@ -49,8 +63,11 @@
   async function downloadSql() {
     downloadingSql = true;
     try {
-      const res = await fetch('/api/backup/sql', { method: 'POST', credentials: 'include' });
-      if (!res.ok) throw new Error(await res.text());
+      const res = await authFetch('/api/backup/sql', { method: 'POST' });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(JSON.stringify(json) || res.statusText);
+      }
       triggerDownload(await res.blob(), `backup_db_p3k_${today()}.sql`);
       addToast('Backup database SQL berhasil diunduh!', 'success');
     } catch (e) {
@@ -66,12 +83,15 @@
     else downloadingArchive = { ...downloadingArchive, [labelKey]: true };
 
     try {
-      const res = await fetch('/api/backup/archive', {
-        method: 'POST', credentials: 'include',
+      const res = await authFetch('/api/backup/archive', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ folders }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(JSON.stringify(json) || res.statusText);
+      }
       const suffix = labelKey === 'all' ? 'semua' : labelKey;
       triggerDownload(await res.blob(), `backup_arsip_${suffix}_${today()}.zip`);
       addToast(`Backup arsip ${suffix} berhasil diunduh!`, 'success');
