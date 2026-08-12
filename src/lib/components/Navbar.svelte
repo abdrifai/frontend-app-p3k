@@ -81,6 +81,7 @@
 
   const isLaporanActive = () =>
     isActive("/laporan/perpanjangan-pk") ||
+    isActive("/laporan/per-unit-kerja") ||
     isActive("/estimasi-pensiun") ||
     isActive("/statistik-task");
 
@@ -668,77 +669,49 @@
 
             <!-- Task User Dropdown Menu -->
             {#if taskUserMenuOpen}
-              <div
-                class="absolute left-1/2 -translate-x-1/2 mt-1 w-[280px] origin-top bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] ring-1 ring-slate-200/50 focus:outline-none transition-all duration-200 z-50 overflow-hidden"
-              >
-                <div class="p-2 space-y-1">
-                  <!-- Peremajaan Data (Original Task User) -->
+              <div class="absolute left-1/2 -translate-x-1/2 top-full pt-1 z-50">
+                <div class="w-60 bg-white rounded-xl shadow-2xl shadow-slate-200/60 border border-slate-100 py-2 ring-1 ring-black/[0.03]">
+                  <p class="px-4 pt-1.5 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Task User
+                  </p>
                   <a
                     href="/task-user-peremajaan"
-                    class="flex items-start gap-3 p-3 rounded-lg transition-all {isActive(
+                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
                       '/task-user-peremajaan',
                     )
-                      ? 'bg-blue-50/80 text-blue-700 font-medium'
-                      : 'hover:bg-slate-50 text-slate-700'}"
+                      ? 'text-blue-700 bg-blue-50 font-medium'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                    onclick={() => (taskUserMenuOpen = false)}
                   >
-                    <div
-                      class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    >
-                      <svg
-                        class="w-4 h-4 text-orange-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
+                    <div class="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        /></svg
-                      >
+                        /></svg>
                     </div>
                     <div>
                       <p class="font-medium leading-tight">Peremajaan</p>
-                      <p
-                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
-                      >
-                        Penugasan update Data P3K
-                      </p>
+                      <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Penugasan update Data P3K</p>
                     </div>
                   </a>
-
-                  <!-- Usulan Perpanjangan Kontrak -->
                   <a
                     href="/task-user-usulan-pk"
-                    class="flex items-start gap-3 p-3 rounded-lg transition-all {isActive(
+                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
                       '/task-user-usulan-pk',
                     )
-                      ? 'bg-blue-50/80 text-blue-700 font-medium'
-                      : 'hover:bg-slate-50 text-slate-700'}"
+                      ? 'text-blue-700 bg-blue-50 font-medium'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                    onclick={() => (taskUserMenuOpen = false)}
                   >
-                    <div
-                      class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    >
-                      <svg
-                        class="w-4 h-4 text-indigo-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
+                    <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        /></svg
-                      >
+                        /></svg>
                     </div>
                     <div>
                       <p class="font-medium leading-tight">Usulan PK</p>
-                      <p
-                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
-                      >
-                        Penugasan persetujuan kontrak
-                      </p>
+                      <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Penugasan persetujuan kontrak</p>
                     </div>
                   </a>
                 </div>
@@ -793,112 +766,89 @@
             </button>
 
             {#if laporanMenuOpen}
-              <div
-                class="absolute left-1/2 -translate-x-1/2 mt-1 w-[280px] origin-top bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] ring-1 ring-slate-200/50 focus:outline-none transition-all duration-200 z-50 overflow-hidden"
-              >
-                <div class="p-2 space-y-1">
+              <div class="absolute left-1/2 -translate-x-1/2 top-full pt-1 z-50">
+                <div class="w-60 bg-white rounded-xl shadow-2xl shadow-slate-200/60 border border-slate-100 py-2 ring-1 ring-black/[0.03]">
+                  <p class="px-4 pt-1.5 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Laporan
+                  </p>
                   <a
                     href="/laporan/perpanjangan-pk"
-                    class="flex items-start gap-3 p-3 rounded-lg transition-all {isActive(
+                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
                       '/laporan/perpanjangan-pk',
                     )
-                      ? 'bg-blue-50/80 text-blue-700 font-medium'
-                      : 'hover:bg-slate-50 text-slate-700'}"
+                      ? 'text-blue-700 bg-blue-50 font-medium'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
                     onclick={() => (laporanMenuOpen = false)}
                   >
-                    <div
-                      class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    >
-                      <svg
-                        class="w-4 h-4 text-blue-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
+                    <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        /></svg
-                      >
+                        /></svg>
                     </div>
                     <div>
                       <p class="font-medium leading-tight">Perpanjangan PK</p>
-                      <p
-                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
-                      >
-                        Daftar kontrak yang sudah selesai
-                      </p>
+                      <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Daftar kontrak yang sudah selesai</p>
                     </div>
                   </a>
-
                   <a
                     href="/estimasi-pensiun"
-                    class="flex items-start gap-3 p-3 rounded-lg transition-all {isActive(
+                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
                       '/estimasi-pensiun',
                     )
-                      ? 'bg-blue-50/80 text-blue-700 font-medium'
-                      : 'hover:bg-slate-50 text-slate-700'}"
+                      ? 'text-blue-700 bg-blue-50 font-medium'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
                     onclick={() => (laporanMenuOpen = false)}
                   >
-                    <div
-                      class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    >
-                      <svg
-                        class="w-4 h-4 text-amber-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
+                    <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                        /></svg
-                      >
+                        /></svg>
                     </div>
                     <div>
                       <p class="font-medium leading-tight">Estimasi Pensiun</p>
-                      <p
-                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
-                      >
-                        Laporan data usia pensiun pegawai
-                      </p>
+                      <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Laporan data usia pensiun pegawai</p>
                     </div>
                   </a>
-
                   <a
                     href="/statistik-task"
-                    class="flex items-start gap-3 p-3 rounded-lg transition-all {isActive(
+                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
                       '/statistik-task',
                     )
-                      ? 'bg-blue-50/80 text-blue-700 font-medium'
-                      : 'hover:bg-slate-50 text-slate-700'}"
+                      ? 'text-blue-700 bg-blue-50 font-medium'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
                     onclick={() => (laporanMenuOpen = false)}
                   >
-                    <div
-                      class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-0.5"
-                    >
-                      <svg
-                        class="w-4 h-4 text-indigo-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
+                    <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                        /></svg
-                      >
+                        /></svg>
                     </div>
                     <div>
                       <p class="font-medium leading-tight">Statistik Task</p>
-                      <p
-                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
-                      >
-                        Laporan performa task per operator
-                      </p>
+                      <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Laporan performa task per operator</p>
+                    </div>
+                  </a>
+                  <a
+                    href="/laporan/per-unit-kerja"
+                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                      '/laporan/per-unit-kerja',
+                    )
+                      ? 'text-blue-700 bg-blue-50 font-medium'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                    onclick={() => (laporanMenuOpen = false)}
+                  >
+                    <div class="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                        /></svg>
+                    </div>
+                    <div>
+                      <p class="font-medium leading-tight">Per Unit Kerja</p>
+                      <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Daftar pegawai per unit kerja induk</p>
                     </div>
                   </a>
                 </div>
@@ -960,272 +910,235 @@
 
               {#if settingMenuOpen}
                 <div class="absolute top-full right-0 pt-1 z-50">
-                  <div class="w-72 bg-white rounded-2xl shadow-2xl shadow-slate-200/80 border border-slate-100 overflow-hidden ring-1 ring-black/[0.03]">
+                  <div class="w-64 bg-white rounded-xl shadow-2xl shadow-slate-200/60 border border-slate-100 py-2 ring-1 ring-black/[0.03]">
 
-                    <!-- ── Header ───────────────────────────────────────────── -->
-                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/60">
-                      <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Pengaturan Sistem
-                      </p>
+                    <!-- ══ Kategori 1: Import SIASN ══ -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+                    <div
+                      class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer hover:bg-slate-50 transition-colors select-none"
+                      onclick={() => (settingCollapseImport = !settingCollapseImport)}
+                    >
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Import SIASN</p>
+                      <svg class="w-3 h-3 text-slate-400 transition-transform duration-200 {settingCollapseImport ? 'rotate-180' : ''}"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                      </svg>
                     </div>
-
-                    <div class="py-2">
-
-                      <!-- ══ Kategori 1: Import SIASN ══════════════════════════ -->
-                      <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-                      <div
-                        class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer
-                          hover:bg-slate-50 transition-colors select-none"
-                        onclick={() => (settingCollapseImport = !settingCollapseImport)}
-                      >
-                        <span class="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                          <span class="w-5 h-5 rounded-md bg-violet-100 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                            </svg>
-                          </span>
-                          Import SIASN
-                        </span>
-                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 {settingCollapseImport ? 'rotate-180' : ''}"
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                      </div>
-                      {#if settingCollapseImport}
-                        <div class="mx-2 mb-1 grid grid-cols-2 gap-1">
-                          <a href="/data-p3k-import"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all
-                              {isActive('/data-p3k-import') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Data Import</span>
-                          </a>
-                          <a href="/import-p3k-csv"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all
-                              {isActive('/import-p3k-csv') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-cyan-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Import CSV</span>
-                          </a>
-                          <a href="/statistik-p3k-import"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all col-span-2
-                              {isActive('/statistik-p3k-import') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Statistik Import</span>
-                          </a>
+                    {#if settingCollapseImport}
+                      <a href="/data-p3k-import"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/data-p3k-import') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                          </svg>
                         </div>
-                      {/if}
-
-                      <div class="my-1 mx-3 border-t border-slate-100"></div>
-
-                      <!-- ══ Kategori 2: Manajemen Task ══════════════════════════ -->
-                      <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-                      <div
-                        class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer
-                          hover:bg-slate-50 transition-colors select-none"
-                        onclick={() => (settingCollapseTask = !settingCollapseTask)}
-                      >
-                        <span class="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                          <span class="w-5 h-5 rounded-md bg-orange-100 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
-                          </span>
-                          Manajemen Task
-                        </span>
-                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 {settingCollapseTask ? 'rotate-180' : ''}"
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                      </div>
-                      {#if settingCollapseTask}
-                        <div class="mx-2 mb-1 grid grid-cols-2 gap-1">
-                          <a href="/setting/pembagian-task-peremajaan"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all
-                              {isActive('/setting/pembagian-task-peremajaan') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Task Peremajaan</span>
-                          </a>
-                          <a href="/setting/pembagian-task-usulan-pk"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all
-                              {isActive('/setting/pembagian-task-usulan-pk') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Task Usulan PK</span>
-                          </a>
-                          <a href="/setting/kegiatan"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all col-span-2
-                              {isActive('/setting/kegiatan') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Kegiatan</span>
-                          </a>
+                        <div>
+                          <p class="font-medium leading-tight">Data Import</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Lihat data hasil import</p>
                         </div>
-                      {/if}
-
-                      <div class="my-1 mx-3 border-t border-slate-100"></div>
-
-                      <!-- ══ Kategori 3: Referensi ══════════════════════════════════ -->
-                      <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-                      <div
-                        class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer
-                          hover:bg-slate-50 transition-colors select-none"
-                        onclick={() => (settingCollapseReferensi = !settingCollapseReferensi)}
-                      >
-                        <span class="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                          <span class="w-5 h-5 rounded-md bg-teal-100 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                            </svg>
-                          </span>
-                          Referensi
-                        </span>
-                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 {settingCollapseReferensi ? 'rotate-180' : ''}"
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                      </div>
-                      {#if settingCollapseReferensi}
-                        <div class="mx-2 mb-1 grid grid-cols-2 gap-1">
-                          <a href="/setting/referensi-gaji"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all
-                              {isActive('/setting/referensi-gaji') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Referensi Gaji</span>
-                          </a>
-                          <a href="/ref-unor"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all
-                              {isActive('/ref-unor') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Ref Unit Kerja</span>
-                          </a>
+                      </a>
+                      <a href="/import-p3k-csv"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/import-p3k-csv') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                          </svg>
                         </div>
-                      {/if}
-
-                      <div class="my-1 mx-3 border-t border-slate-100"></div>
-
-                      <!-- ══ Kategori 3: Sistem ══════════════════════════════════ -->
-                      <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-                      <div
-                        class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer
-                          hover:bg-slate-50 transition-colors select-none"
-                        onclick={() => (settingCollapseSystem = !settingCollapseSystem)}
-                      >
-                        <span class="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                          <span class="w-5 h-5 rounded-md bg-slate-200 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                          </span>
-                          Sistem
-                        </span>
-                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 {settingCollapseSystem ? 'rotate-180' : ''}"
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                      </div>
-                      {#if settingCollapseSystem}
-                        <div class="mx-2 mb-1 grid grid-cols-2 gap-1">
-                          <a href="/manajemen-user"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all
-                              {isActive('/manajemen-user') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Manajemen User</span>
-                          </a>
-                          <a href="/setting/activity-log"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs transition-all
-                              {isActive('/setting/activity-log') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Log Aktivitas</span>
-                          </a>
-                          <a href="/setting/backup"
-                            class="flex flex-col items-center gap-1.5 p-2.5 rounded-lg text-center text-xs col-span-2 transition-all
-                              {isActive('/setting/backup') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
-                              <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-                              </svg>
-                            </div>
-                            <span class="font-medium leading-tight">Backup & Restore</span>
-                          </a>
+                        <div>
+                          <p class="font-medium leading-tight">Import CSV</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Upload file data SIASN</p>
                         </div>
-                      {/if}
+                      </a>
+                      <a href="/statistik-p3k-import"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/statistik-p3k-import') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Statistik Import</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Ringkasan data import</p>
+                        </div>
+                      </a>
+                    {/if}
 
-                     </div>
-                   </div>
-                 </div>
-               {/if}
-             </div>
+                    <div class="my-1.5 mx-3 border-t border-slate-100"></div>
+
+                    <!-- ══ Kategori 2: Manajemen Task ══ -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+                    <div
+                      class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer hover:bg-slate-50 transition-colors select-none"
+                      onclick={() => (settingCollapseTask = !settingCollapseTask)}
+                    >
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manajemen Task</p>
+                      <svg class="w-3 h-3 text-slate-400 transition-transform duration-200 {settingCollapseTask ? 'rotate-180' : ''}"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </div>
+                    {#if settingCollapseTask}
+                      <a href="/setting/pembagian-task-peremajaan"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/pembagian-task-peremajaan') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Task Peremajaan</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Bagi task edit P3K</p>
+                        </div>
+                      </a>
+                      <a href="/setting/pembagian-task-usulan-pk"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/pembagian-task-usulan-pk') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Task Usulan PK</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Bagi task usulan kontrak</p>
+                        </div>
+                      </a>
+                      <a href="/setting/kegiatan"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/kegiatan') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Kegiatan</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Kelola label kegiatan tugas</p>
+                        </div>
+                      </a>
+                    {/if}
+
+                    <div class="my-1.5 mx-3 border-t border-slate-100"></div>
+
+                    <!-- ══ Kategori 3: Referensi ══ -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+                    <div
+                      class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer hover:bg-slate-50 transition-colors select-none"
+                      onclick={() => (settingCollapseReferensi = !settingCollapseReferensi)}
+                    >
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Referensi</p>
+                      <svg class="w-3 h-3 text-slate-400 transition-transform duration-200 {settingCollapseReferensi ? 'rotate-180' : ''}"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </div>
+                    {#if settingCollapseReferensi}
+                      <a href="/setting/referensi-gaji"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/referensi-gaji') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Referensi Gaji</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Tabel referensi gaji P3K</p>
+                        </div>
+                      </a>
+                      <a href="/ref-unor"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/ref-unor') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Ref Unit Kerja</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Master referensi unit kerja</p>
+                        </div>
+                      </a>
+                    {/if}
+
+                    <div class="my-1.5 mx-3 border-t border-slate-100"></div>
+
+                    <!-- ══ Kategori 4: Sistem ══ -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+                    <div
+                      class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer hover:bg-slate-50 transition-colors select-none"
+                      onclick={() => (settingCollapseSystem = !settingCollapseSystem)}
+                    >
+                      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sistem</p>
+                      <svg class="w-3 h-3 text-slate-400 transition-transform duration-200 {settingCollapseSystem ? 'rotate-180' : ''}"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </div>
+                    {#if settingCollapseSystem}
+                      <a href="/manajemen-user"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/manajemen-user') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Manajemen User</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Kelola akun pengguna</p>
+                        </div>
+                      </a>
+                      <a href="/setting/activity-log"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/activity-log') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Log Aktivitas</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Riwayat manipulasi data</p>
+                        </div>
+                      </a>
+                      <a href="/setting/backup"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/backup') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (settingMenuOpen = false)}>
+                        <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Backup & Restore</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Ekspor database & arsip</p>
+                        </div>
+                      </a>
+                    {/if}
+
+                  </div>
+                </div>
+              {/if}
+            </div>
           {/if}
         {/if}
       </nav>
+
 
       <!-- Right side -->
       <div class="flex items-center gap-2">
@@ -1612,23 +1525,30 @@
                     ? 'text-blue-700 bg-blue-50 font-semibold'
                     : 'text-slate-600 hover:bg-slate-50'}"
                 >
-                  <div
-                    class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-3 h-3 text-indigo-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      ><path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
+                  <div class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center">
+                    <svg class="w-3 h-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      /></svg
-                    >
+                      /></svg>
                   </div>
                   Statistik Task
+                </a>
+                <a
+                  href="/laporan/per-unit-kerja"
+                  onclick={closeMobile}
+                  class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                    '/laporan/per-unit-kerja',
+                  )
+                    ? 'text-blue-700 bg-blue-50 font-semibold'
+                    : 'text-slate-600 hover:bg-slate-50'}"
+                >
+                  <div class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center">
+                    <svg class="w-3 h-3 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                      /></svg>
+                  </div>
+                  Per Unit Kerja
                 </a>
               </div>
             {/if}
