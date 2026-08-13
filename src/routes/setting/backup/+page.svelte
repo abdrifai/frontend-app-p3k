@@ -11,7 +11,7 @@
   let loadingStats  = true;
 
   let downloadingSql        = false;
-  let downloadingArchive    = {};   // { 'final-pk': bool, 'pension-sk': bool }
+  let downloadingArchive    = {};   // { 'final-pk': bool, 'pensiun-sk': bool }
   let downloadingAllArchive = false;
 
   const today = () => new Date().toISOString().slice(0, 10);
@@ -267,8 +267,8 @@
             badge:  'bg-blue-100 text-blue-700 border-blue-200',
           },
           {
-            key:    'pension-sk',
-            label:  'Pension SK (SK Pensiun)',
+            key:    'pensiun-sk',
+            label:  'SK Pensiun',
             icon:   '🗂️',
             desc:   'Dokumen SK pensiun pegawai P3K yang telah diarsipkan',
             bg:     'bg-violet-50',
@@ -329,7 +329,7 @@
         <!-- Download ALL button -->
         <button
           id="btn-download-arsip-all"
-          on:click={() => downloadArchive(['final-pk', 'pension-sk'], 'all')}
+          on:click={() => downloadArchive(['final-pk', 'pensiun-sk'], 'all')}
           disabled={downloadingAllArchive}
           class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white
             bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700

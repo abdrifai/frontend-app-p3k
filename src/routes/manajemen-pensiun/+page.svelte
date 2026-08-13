@@ -11,19 +11,19 @@
   let activeTab = "set-pensiun"; // 'set-pensiun' | 'data-pensiun'
   let isLoading = false;
   let records = [];
-  let pensionedRecords = [];
+  let pensiunRecords = [];
   let meta = { total: 0, page: 1, limit: 10, totalPages: 0 };
-  let pensionedMeta = { total: 0, page: 1, limit: 10, totalPages: 0 };
+  let pensiunMeta = { total: 0, page: 1, limit: 10, totalPages: 0 };
   let searchTerm = "";
-  let pensionedSearchTerm = "";
+  let pensiunSearchTerm = "";
 
-  // Set Pension Modal
-  let showSetPensionModal = false;
+  // Set Pensiun Modal
+  let showSetPensiunModal = false;
   let selectedRecord = null;
-  let pensionForm = { nomorSk: "", tanggalSk: "", file: null };
+  let pensiunForm = { nomorSk: "", tanggalSk: "", file: null };
   let isSubmitting = false;
 
-  // Edit Pension Modal
+  // Edit Pensiun Modal
   let showEditModal = false;
   let editRecord = null;
   let editForm = { nomorSk: "", tanggalSk: "", file: null };
@@ -61,16 +61,16 @@
     }
   };
 
-  const fetchPensionedEmployees = async (page = 1) => {
+  const fetchPegawaiPensiun = async (page = 1) => {
     isLoading = true;
     try {
       const params = new URLSearchParams({ page, limit: 10 });
-      if (pensionedSearchTerm) params.set("search", pensionedSearchTerm);
+      if (pensiunSearchTerm) params.set("search", pensiunSearchTerm);
 
-      const result = await apiRequest(`/api/v1/data-p3k/pensioned?${params.toString()}`, "GET");
+      const result = await apiRequest(`/api/v1/data-p3k/pensiun?${params.toString()}`, "GET");
       if (result.success) {
-        pensionedRecords = result.data;
-        pensionedMeta = result.meta;
+        pensiunRecords = result.data;
+        pensiunMeta = result.meta;
       }
     } catch (err) {
       addToast("Gagal memuat data pegawai pensiun", "error");
@@ -79,8 +79,8 @@
     }
   };
 
-  const handleSetPension = async () => {
-    if (!pensionForm.nomorSk || !pensionForm.tanggalSk || !pensionForm.file) {
+  const handleSetPensiun = async () => {
+    if (!pensiunForm.nomorSk || !pensiunForm.tanggalSk || !pensiunForm.file) {
       addToast("Semua field wajib diisi termasuk file SK", "error");
       return;
     }
@@ -88,30 +88,28 @@
     try {
       const fd = new FormData();
       fd.append("nipBaru", selectedRecord.nipBaru);
-      fd.append("nomorSk", pensionForm.nomorSk);
-      fd.append("tanggalSk", pensionForm.tanggalSk);
-      fd.append("file", pensionForm.file);
+      fd.append("nomorSk", pensiunForm.nomorSk);
+      fd.append("tanggalSk", pensiunForm.tanggalSk);
+      fd.append("file", pensiunForm.file);
 
-      const result = await apiRequest("/api/v1/data-p3k/set-pension", "POST", fd, true);
+      const result = await apiRequest("/api/v1/data-p3k/set-pensiun", "POST", fd, true);
       if (result.success) {
         addToast(
           `${selectedRecord.nama} berhasil diubah menjadi PENSIUN`,
           "success",
         );
-        closeSetPensionModal();
+        closeSetPensiunModal();
         fetchActiveEmployees(meta.page);
-        fetchPensionedEmployees(pensionedMeta.page);
-      } else {
-        addToast(result.message || "Gagal mengubah status", "error");
+        fetchPegawaiPensiun(pensiunMeta.page);
       }
     } catch (err) {
-      addToast("Terjadi kesalahan sistem", "error");
+      console.error("handleSetPensiun error:", err);
     } finally {
       isSubmitting = false;
     }
   };
 
-  const handleUpdatePension = async () => {
+  const handleUpdatePensiun = async () => {
     if (!editForm.nomorSk && !editForm.tanggalSk && !editForm.file) {
       addToast("Minimal satu field harus diubah", "error");
       return;
@@ -124,25 +122,23 @@
       if (editForm.tanggalSk) fd.append("tanggalSk", editForm.tanggalSk);
       if (editForm.file) fd.append("file", editForm.file);
 
-      const result = await apiRequest("/api/v1/data-p3k/update-pension", "PUT", fd, true);
+      const result = await apiRequest("/api/v1/data-p3k/update-pensiun", "PUT", fd, true);
       if (result.success) {
         addToast("Data SK Pensiun berhasil diperbarui", "success");
         closeEditModal();
-        fetchPensionedEmployees(pensionedMeta.page);
-      } else {
-        addToast(result.message || "Gagal memperbarui data", "error");
+        fetchPegawaiPensiun(pensiunMeta.page);
       }
     } catch (err) {
-      addToast("Terjadi kesalahan sistem", "error");
+      console.error("handleUpdatePensiun error:", err);
     } finally {
       isEditing = false;
     }
   };
 
-  const handleRevertPension = async () => {
+  const handleRevertPensiun = async () => {
     isReverting = true;
     try {
-      const result = await apiRequest("/api/v1/data-p3k/revert-pension", "POST", { nipBaru: revertRecord.nipBaru });
+      const result = await apiRequest("/api/v1/data-p3k/revert-pensiun", "POST", { nipBaru: revertRecord.nipBaru });
       if (result.success) {
         addToast(
           `${revertRecord.nama} berhasil dikembalikan ke status AKTIF`,
@@ -150,25 +146,23 @@
         );
         closeRevertModal();
         fetchActiveEmployees(meta.page);
-        fetchPensionedEmployees(pensionedMeta.page);
-      } else {
-        addToast(result.message || "Gagal membatalkan status", "error");
+        fetchPegawaiPensiun(pensiunMeta.page);
       }
     } catch (err) {
-      addToast("Terjadi kesalahan sistem", "error");
+      console.error("handleRevertPensiun error:", err);
     } finally {
       isReverting = false;
     }
   };
 
   // --- Modal handlers ---
-  const openSetPensionModal = (rec) => {
+  const openSetPensiunModal = (rec) => {
     selectedRecord = rec;
-    pensionForm = { nomorSk: "", tanggalSk: "", file: null };
-    showSetPensionModal = true;
+    pensiunForm = { nomorSk: "", tanggalSk: "", file: null };
+    showSetPensiunModal = true;
   };
-  const closeSetPensionModal = () => {
-    showSetPensionModal = false;
+  const closeSetPensiunModal = () => {
+    showSetPensiunModal = false;
     selectedRecord = null;
   };
 
@@ -209,17 +203,17 @@
     e.preventDefault();
     fetchActiveEmployees(1);
   };
-  const handleSearchPensioned = (e) => {
+  const handleSearchPensiun = (e) => {
     e.preventDefault();
-    fetchPensionedEmployees(1);
+    fetchPegawaiPensiun(1);
   };
 
   // --- Tab switch ---
   const switchTab = (tab) => {
     activeTab = tab;
     if (tab === "set-pensiun" && records.length === 0) fetchActiveEmployees();
-    if (tab === "data-pensiun" && pensionedRecords.length === 0)
-      fetchPensionedEmployees();
+    if (tab === "data-pensiun" && pensiunRecords.length === 0)
+      fetchPegawaiPensiun();
   };
 
   onMount(() => {
@@ -229,7 +223,7 @@
       return;
     }
     fetchActiveEmployees();
-    fetchPensionedEmployees();
+    fetchPegawaiPensiun();
   });
 </script>
 
@@ -285,7 +279,7 @@
         <p class="text-[10px] uppercase font-bold text-red-500 tracking-wider">
           Pensiun
         </p>
-        <p class="text-lg font-bold text-red-700">{pensionedMeta.total}</p>
+        <p class="text-lg font-bold text-red-700">{pensiunMeta.total}</p>
       </div>
     </div>
   </div>
@@ -340,10 +334,10 @@
           /></svg
         >
         Data Pensiun
-        {#if pensionedMeta.total > 0}
+        {#if pensiunMeta.total > 0}
           <span
             class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-            >{pensionedMeta.total}</span
+            >{pensiunMeta.total}</span
           >
         {/if}
       </span>
@@ -451,7 +445,7 @@
                     >
                     <td class="px-4 sm:px-6 py-3 text-right">
                       <button
-                        on:click={() => openSetPensionModal(rec)}
+                        on:click={() => openSetPensiunModal(rec)}
                         class="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 px-3.5 py-1.5 rounded-lg transition-all shadow-sm shadow-amber-500/20 hover:shadow-md hover:shadow-amber-500/30"
                       >
                         <svg
@@ -533,7 +527,7 @@
   {#if activeTab === "data-pensiun"}
     <div class="space-y-4">
       <!-- Search bar -->
-      <form on:submit={handleSearchPensioned} class="card p-4">
+      <form on:submit={handleSearchPensiun} class="card p-4">
         <div class="flex gap-3">
           <div class="flex-1 relative">
             <svg
@@ -550,7 +544,7 @@
             >
             <input
               type="text"
-              bind:value={pensionedSearchTerm}
+              bind:value={pensiunSearchTerm}
               placeholder="Cari pegawai pensiun..."
               class="input-field !pl-10"
             />
@@ -605,7 +599,7 @@
                     <p class="text-sm text-slate-400 mt-3">Memuat data...</p>
                   </td>
                 </tr>
-              {:else if pensionedRecords.length === 0}
+              {:else if pensiunRecords.length === 0}
                 <tr>
                   <td colspan="6" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center gap-2">
@@ -628,11 +622,11 @@
                   </td>
                 </tr>
               {:else}
-                {#each pensionedRecords as rec, i}
+                {#each pensiunRecords as rec, i}
                   <tr class="hover:bg-red-50/30 transition-colors">
                     <td
                       class="px-4 sm:px-6 py-3 text-sm text-slate-400 font-mono"
-                      >{(pensionedMeta.page - 1) * pensionedMeta.limit +
+                      >{(pensiunMeta.page - 1) * pensiunMeta.limit +
                         i +
                         1}</td
                     >
@@ -753,21 +747,21 @@
           </table>
         </div>
         <!-- Pagination -->
-        {#if pensionedMeta.totalPages > 1}
+        {#if pensiunMeta.totalPages > 1}
           <div
             class="border-t border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between"
           >
             <p class="text-sm text-slate-500">
               Hal. <span class="font-semibold text-slate-700"
-                >{pensionedMeta.page}</span
+                >{pensiunMeta.page}</span
               >
-              / {pensionedMeta.totalPages}
-              <span class="text-slate-400">({pensionedMeta.total} data)</span>
+              / {pensiunMeta.totalPages}
+              <span class="text-slate-400">({pensiunMeta.total} data)</span>
             </p>
             <div class="flex gap-1">
               <button
-                disabled={pensionedMeta.page === 1}
-                on:click={() => fetchPensionedEmployees(pensionedMeta.page - 1)}
+                disabled={pensiunMeta.page === 1}
+                on:click={() => fetchPegawaiPensiun(pensiunMeta.page - 1)}
                 class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
               >
                 <svg
@@ -784,8 +778,8 @@
                 >
               </button>
               <button
-                disabled={pensionedMeta.page === pensionedMeta.totalPages}
-                on:click={() => fetchPensionedEmployees(pensionedMeta.page + 1)}
+                disabled={pensiunMeta.page === pensiunMeta.totalPages}
+                on:click={() => fetchPegawaiPensiun(pensiunMeta.page + 1)}
                 class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
               >
                 <svg
@@ -811,8 +805,8 @@
 
 <!-- ==================== MODALS ==================== -->
 
-<!-- SET PENSION MODAL -->
-{#if showSetPensionModal && selectedRecord}
+<!-- SET PENSIUN MODAL -->
+{#if showSetPensiunModal && selectedRecord}
   <div
     class="fixed z-[60] inset-0 overflow-y-auto"
     role="dialog"
@@ -822,7 +816,7 @@
       <button
         type="button"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm w-full h-full border-none cursor-default"
-        on:click={closeSetPensionModal}
+        on:click={closeSetPensiunModal}
       ></button>
       <div
         class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 z-10"
@@ -853,7 +847,7 @@
             </p>
           </div>
           <button
-            on:click={closeSetPensionModal}
+            on:click={closeSetPensiunModal}
             class="ml-auto p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <svg
@@ -871,7 +865,7 @@
           </button>
         </div>
         <form
-          on:submit|preventDefault={handleSetPension}
+          on:submit|preventDefault={handleSetPensiun}
           class="mt-6 space-y-4"
         >
           <div>
@@ -883,7 +877,7 @@
             <input
               id="sp-nomorSk"
               type="text"
-              bind:value={pensionForm.nomorSk}
+              bind:value={pensiunForm.nomorSk}
               placeholder="Contoh: 800/123/BKPSDM/2024"
               class="input-field"
               required
@@ -898,7 +892,7 @@
             <input
               id="sp-tanggalSk"
               type="date"
-              bind:value={pensionForm.tanggalSk}
+              bind:value={pensiunForm.tanggalSk}
               class="input-field"
               required
             />
@@ -930,11 +924,11 @@
                   Klik untuk upload SK Pensiun
                 </p>
                 <p class="text-xs text-slate-500">PDF, maksimal 5MB</p>
-                {#if pensionForm.file}
+                {#if pensiunForm.file}
                   <p
                     class="text-sm text-emerald-600 font-semibold bg-emerald-50 px-3 py-1 rounded-md inline-block mt-2 border border-emerald-100"
                   >
-                    ✓ {pensionForm.file.name}
+                    ✓ {pensiunForm.file.name}
                   </p>
                 {/if}
               </div>
@@ -944,14 +938,14 @@
               type="file"
               accept="application/pdf"
               class="sr-only"
-              on:change={(e) => (pensionForm.file = e.target.files[0])}
+              on:change={(e) => (pensiunForm.file = e.target.files[0])}
               required
             />
           </div>
           <div class="pt-4 flex gap-3">
             <button
               type="button"
-              on:click={closeSetPensionModal}
+              on:click={closeSetPensiunModal}
               class="flex-1 btn-secondary">Batal</button
             >
             <button
@@ -975,7 +969,7 @@
   </div>
 {/if}
 
-<!-- EDIT PENSION MODAL -->
+<!-- EDIT PENSIUN MODAL -->
 {#if showEditModal && editRecord}
   <div
     class="fixed z-[60] inset-0 overflow-y-auto"
@@ -1035,7 +1029,7 @@
           </button>
         </div>
         <form
-          on:submit|preventDefault={handleUpdatePension}
+          on:submit|preventDefault={handleUpdatePensiun}
           class="mt-6 space-y-4"
         >
           <div>
@@ -1200,7 +1194,7 @@
           >
           <button
             type="button"
-            on:click={handleRevertPension}
+            on:click={handleRevertPensiun}
             disabled={isReverting}
             class="flex-1 btn-primary !bg-red-600 hover:!bg-red-700 shadow-red-200 disabled:opacity-50"
           >
