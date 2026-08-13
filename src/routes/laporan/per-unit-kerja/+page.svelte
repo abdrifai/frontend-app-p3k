@@ -222,29 +222,43 @@
             </div>
 
             {#if showUnorDropdown}
-              <div class="absolute z-30 w-full mt-1 bg-white rounded-xl shadow-xl shadow-slate-200/80 border border-slate-200 overflow-hidden">
+              <div class="absolute z-50 left-0 w-full min-w-[320px] sm:min-w-[480px] md:min-w-[580px] max-w-[90vw] mt-1.5 bg-white rounded-2xl shadow-2xl shadow-slate-300/80 border border-slate-200 overflow-hidden">
+                <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+                  <span>Hasil Pencarian ({filteredUnorList.length} unit kerja)</span>
+                  {#if unorSearchText}
+                    <span class="text-[11px] text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md font-normal truncate max-w-[200px]">"{unorSearchText}"</span>
+                  {/if}
+                </div>
+
                 {#if filteredUnorList.length === 0}
-                  <div class="px-4 py-3 text-xs text-slate-400 text-center">
-                    Tidak ada unit kerja yang cocok dengan "{unorSearchText}"
+                  <div class="px-5 py-8 text-center">
+                    <p class="text-sm font-medium text-slate-600">Tidak ada unit kerja yang cocok</p>
+                    <p class="text-xs text-slate-400 mt-1">Coba kata kunci pencarian yang lain</p>
                   </div>
                 {:else}
-                  <ul class="max-h-60 overflow-y-auto py-1 divide-y divide-slate-50">
+                  <ul class="max-h-80 sm:max-h-96 overflow-y-auto py-1.5 divide-y divide-slate-100">
                     {#each filteredUnorList as u}
                       <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
                       <li
                         role="option"
                         aria-selected={selectedUnorId === u.id}
                         onmousedown={() => selectUnor(u)}
-                        class="flex items-center justify-between px-3.5 py-2.5 text-sm cursor-pointer transition-colors
+                        class="flex items-start justify-between gap-3 px-4 py-3 text-sm cursor-pointer transition-colors
                           {selectedUnorId === u.id
-                            ? 'bg-teal-50 text-teal-800 font-semibold'
-                            : 'text-slate-700 hover:bg-slate-50'}"
+                            ? 'bg-teal-50/90 text-teal-900 font-semibold'
+                            : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}"
                       >
-                        <span class="truncate">{u.nama}</span>
+                        <div class="flex items-start gap-3 flex-1 min-w-0">
+                          <span class="text-base mt-0.5 flex-shrink-0 text-teal-600">🏢</span>
+                          <span class="text-sm font-medium leading-relaxed break-words">{u.nama}</span>
+                        </div>
                         {#if selectedUnorId === u.id}
-                          <svg class="w-4 h-4 text-teal-600 flex-shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                          </svg>
+                          <span class="inline-flex items-center gap-1 text-[11px] font-bold text-teal-700 bg-teal-100 px-2.5 py-1 rounded-full flex-shrink-0 ml-2">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Terpilih
+                          </span>
                         {/if}
                       </li>
                     {/each}
