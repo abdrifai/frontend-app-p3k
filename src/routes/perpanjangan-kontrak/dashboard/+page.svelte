@@ -1115,74 +1115,128 @@
           </button>
         </div>
 
-        <!-- Filter & Search Toolbar -->
-        <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 flex-shrink-0">
-          <!-- Status Selector Pills -->
-          <div class="flex flex-wrap items-center gap-1.5">
-            <span class="text-xs font-semibold text-slate-500 mr-1 hidden sm:inline">Status:</span>
+        <!-- 1. Baris Atas: Pilihan Semua Status -->
+        <div class="px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+          <div class="flex items-center gap-2 mb-2">
+            <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Pilih Status Usulan:</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            <!-- Semua Status -->
             <button
               type="button"
               on:click={() => handleDetailStatusChange('')}
-              class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {detailStatus === '' ? 'bg-slate-800 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'}"
+              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === '' ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/20' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300'}"
             >
-              Semua
+              <div class="flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full {detailStatus === '' ? 'bg-white' : 'bg-slate-400'}"></span>
+                <span class="truncate">Semua</span>
+              </div>
+              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === '' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}">
+                {stats.summary.totalUsulan}
+              </span>
             </button>
+
+            <!-- 1. Pending -->
             <button
               type="button"
               on:click={() => handleDetailStatusChange('PENDING')}
-              class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {detailStatus === 'PENDING' ? getStatusColorClass('PENDING').activeTab : 'bg-white text-amber-700 border border-amber-200 hover:bg-amber-50'}"
+              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'PENDING' ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20' : 'bg-white text-amber-800 border-amber-200/80 hover:bg-amber-50 hover:border-amber-300'}"
             >
-              1. Pending ({stats.summary.pendingCount})
+              <div class="flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full {detailStatus === 'PENDING' ? 'bg-white' : 'bg-amber-500'}"></span>
+                <span class="truncate">1. Pending</span>
+              </div>
+              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'PENDING' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'}">
+                {stats.summary.pendingCount}
+              </span>
             </button>
+
+            <!-- 2. Approved -->
             <button
               type="button"
               on:click={() => handleDetailStatusChange('APPROVED')}
-              class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {detailStatus === 'APPROVED' ? getStatusColorClass('APPROVED').activeTab : 'bg-white text-blue-700 border border-blue-200 hover:bg-blue-50'}"
+              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'APPROVED' ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20' : 'bg-white text-blue-800 border-blue-200/80 hover:bg-blue-50 hover:border-blue-300'}"
             >
-              2. Approved ({stats.summary.approvedCount})
+              <div class="flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full {detailStatus === 'APPROVED' ? 'bg-white' : 'bg-blue-500'}"></span>
+                <span class="truncate">2. Approved</span>
+              </div>
+              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'APPROVED' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}">
+                {stats.summary.approvedCount}
+              </span>
             </button>
+
+            <!-- 3. Srikandi -->
             <button
               type="button"
               on:click={() => handleDetailStatusChange('UPLOAD_SRIKANDI')}
-              class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {detailStatus === 'UPLOAD_SRIKANDI' ? getStatusColorClass('UPLOAD_SRIKANDI').activeTab : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-50'}"
+              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/20' : 'bg-white text-purple-800 border-purple-200/80 hover:bg-purple-50 hover:border-purple-300'}"
             >
-              3. Srikandi ({stats.summary.srikandiCount})
+              <div class="flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-white' : 'bg-purple-500'}"></span>
+                <span class="truncate">3. Srikandi</span>
+              </div>
+              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-700'}">
+                {stats.summary.srikandiCount}
+              </span>
             </button>
+
+            <!-- 4. Selesai -->
             <button
               type="button"
               on:click={() => handleDetailStatusChange('SELESAI')}
-              class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {detailStatus === 'SELESAI' ? getStatusColorClass('SELESAI').activeTab : 'bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50'}"
+              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'SELESAI' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20' : 'bg-white text-emerald-800 border-emerald-200/80 hover:bg-emerald-50 hover:border-emerald-300'}"
             >
-              4. Selesai ({stats.summary.selesaiCount})
+              <div class="flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full {detailStatus === 'SELESAI' ? 'bg-white' : 'bg-emerald-500'}"></span>
+                <span class="truncate">4. Selesai</span>
+              </div>
+              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'SELESAI' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}">
+                {stats.summary.selesaiCount}
+              </span>
             </button>
+
+            <!-- Ditolak -->
             <button
               type="button"
               on:click={() => handleDetailStatusChange('REJECTED')}
-              class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all {detailStatus === 'REJECTED' ? getStatusColorClass('REJECTED').activeTab : 'bg-white text-rose-700 border border-rose-200 hover:bg-rose-50'}"
+              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'REJECTED' ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20' : 'bg-white text-rose-800 border-rose-200/80 hover:bg-rose-50 hover:border-rose-300'}"
             >
-              Ditolak ({stats.summary.rejectedCount})
+              <div class="flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full {detailStatus === 'REJECTED' ? 'bg-white' : 'bg-rose-500'}"></span>
+                <span class="truncate">Ditolak</span>
+              </div>
+              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'REJECTED' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'}">
+                {stats.summary.rejectedCount}
+              </span>
             </button>
           </div>
+        </div>
 
-          <!-- Search & Limit -->
-          <div class="flex items-center gap-2.5 w-full md:w-auto">
-            <div class="relative flex-grow md:w-72">
+        <!-- 2. Baris Bawah: Form Pencarian Pegawai & Opsi Tampilan -->
+        <div class="px-6 py-3.5 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
+          <div class="flex items-center gap-2 flex-grow max-w-2xl">
+            <div class="relative flex-grow">
               <input
                 type="text"
                 bind:value={detailSearch}
                 on:keydown={(e) => e.key === 'Enter' && handleDetailSearch()}
-                placeholder="Cari Pegawai, NIP, Unor, atau Pengusul..."
-                class="w-full text-xs pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                placeholder="Cari Nama Pegawai, NIP, Unit Kerja, No Kontrak, atau User Pengusul..."
+                class="w-full text-xs pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium text-slate-800"
               />
-              <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               {#if detailSearch}
                 <button
                   type="button"
                   on:click={() => { detailSearch = ''; handleDetailSearch(); }}
-                  class="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600"
-                  title="Hapus"
+                  class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors"
+                  title="Hapus pencarian"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -1194,21 +1248,29 @@
             <button
               type="button"
               on:click={handleDetailSearch}
-              class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
-              title="Cari"
+              class="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0"
+              title="Mulai pencarian"
             >
-              Cari
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Cari Pegawai
             </button>
+          </div>
 
-            <select
-              bind:value={detailLimit}
-              on:change={() => fetchDetailUsulan(1)}
-              class="text-xs border border-slate-200 rounded-xl px-2.5 py-2 bg-white font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
-            >
-              {#each detailLimitOptions as opt}
-                <option value={opt}>{opt} / hal</option>
-              {/each}
-            </select>
+          <div class="flex items-center gap-3 justify-between sm:justify-end">
+            <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <span>Tampilkan:</span>
+              <select
+                bind:value={detailLimit}
+                on:change={() => fetchDetailUsulan(1)}
+                class="text-xs border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
+              >
+                {#each detailLimitOptions as opt}
+                  <option value={opt}>{opt} Data / Halaman</option>
+                {/each}
+              </select>
+            </div>
           </div>
         </div>
 
