@@ -222,6 +222,12 @@
       goto("/login");
       return;
     }
+    const role = String($authStore.user?.role || "").toLowerCase();
+    if (role !== "admin" && role !== "pensiun" && role !== "operator_pensiun") {
+      addToast("Akses ditolak. Anda tidak memiliki izin untuk mengelola data pensiun.", "error");
+      goto("/");
+      return;
+    }
     fetchActiveEmployees();
     fetchPegawaiPensiun();
   });

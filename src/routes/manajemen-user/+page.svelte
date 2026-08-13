@@ -490,9 +490,19 @@
                 >
                 <td class="px-4 sm:px-6 py-3.5 whitespace-nowrap">
                   <div class="flex items-center gap-1.5">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-800'}">
-                      {user.role || "user"}
-                    </span>
+                    {#if user.role === 'admin'}
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        Admin
+                      </span>
+                    {:else if user.role === 'pensiun' || user.role === 'operator_pensiun'}
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                        Pengajuan Pensiun
+                      </span>
+                    {:else}
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                        User
+                      </span>
+                    {/if}
                     {#if user.isDeleted}
                       <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700">
                         Non-Aktif
@@ -769,6 +779,7 @@
               class="input-field"
             >
               <option value="user">User</option>
+              <option value="pensiun">Pengajuan Pensiun</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -902,6 +913,7 @@
               class="input-field"
             >
               <option value="user">User</option>
+              <option value="pensiun">Pengajuan Pensiun</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -1090,6 +1102,7 @@
               <label for="reactivateRole" class="block text-xs font-semibold text-slate-700 mb-1">Role</label>
               <select id="reactivateRole" bind:value={reactivateUserData.newForm.role} class="input-field text-xs">
                 <option value="user">User</option>
+                <option value="pensiun">Pengajuan Pensiun</option>
                 <option value="admin">Admin</option>
               </select>
             </div>

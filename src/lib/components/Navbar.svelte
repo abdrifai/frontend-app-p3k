@@ -58,6 +58,7 @@
     isActive("/statistik-p3k-import");
 
   const isPensiunActive = () => isActive("/manajemen-pensiun");
+  let canAccessPensiun = $derived(['admin', 'pensiun', 'operator_pensiun'].includes(String($authStore.user?.role || '').toLowerCase()));
 
   const isSettingActive = () =>
     isActive("/manajemen-user") ||
@@ -377,40 +378,42 @@
                     </div>
                   </a>
 
-                  <a
-                    href="/manajemen-pensiun"
-                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
-                      '/manajemen-pensiun',
-                    )
-                      ? 'text-blue-700 bg-blue-50 font-medium'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
-                    onclick={() => (utamaMenuOpen = false)}
-                  >
-                    <div
-                      class="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0"
+                  {#if canAccessPensiun}
+                    <a
+                      href="/manajemen-pensiun"
+                      class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                        '/manajemen-pensiun',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-medium'
+                        : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                      onclick={() => (utamaMenuOpen = false)}
                     >
-                      <svg
-                        class="w-3.5 h-3.5 text-red-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        ><path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        /></svg
+                      <div
+                        class="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0"
                       >
-                    </div>
-                    <div>
-                      <p class="font-medium leading-tight">Manajemen Pensiun</p>
-                      <p
-                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
-                      >
-                        Kelola status & SK pensiun
-                      </p>
-                    </div>
-                  </a>
+                        <svg
+                          class="w-3.5 h-3.5 text-red-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          ><path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          /></svg
+                        >
+                      </div>
+                      <div>
+                        <p class="font-medium leading-tight">Manajemen Pensiun</p>
+                        <p
+                          class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                        >
+                          Kelola status & SK pensiun
+                        </p>
+                      </div>
+                    </a>
+                  {/if}
                   <a
                     href="/perbedaan-data"
                     class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
@@ -1461,33 +1464,35 @@
                   </div>
                   Estimasi Pensiun
                 </a>
-                <a
-                  href="/manajemen-pensiun"
-                  onclick={closeMobile}
-                  class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
-                    '/manajemen-pensiun',
-                  )
-                    ? 'text-blue-700 bg-blue-50 font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50'}"
-                >
-                  <div
-                    class="w-6 h-6 rounded-md bg-red-50 flex items-center justify-center"
+                {#if canAccessPensiun}
+                  <a
+                    href="/manajemen-pensiun"
+                    onclick={closeMobile}
+                    class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      '/manajemen-pensiun',
+                    )
+                      ? 'text-blue-700 bg-blue-50 font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50'}"
                   >
-                    <svg
-                      class="w-3 h-3 text-red-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      ><path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      /></svg
+                    <div
+                      class="w-6 h-6 rounded-md bg-red-50 flex items-center justify-center"
                     >
-                  </div>
-                  Manajemen Pensiun
-                </a>
+                      <svg
+                        class="w-3.5 h-3.5 text-red-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        ><path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        /></svg
+                      >
+                    </div>
+                    Manajemen Pensiun
+                  </a>
+                {/if}
                 <a
                   href="/perbedaan-data"
                   onclick={closeMobile}
