@@ -109,7 +109,7 @@
   function getStatusLabel(status) {
     switch (status) {
       case "SELESAI":
-        return "Selesai (SK Terbit)";
+        return "Selesai (PK Terbit)";
       case "UPLOAD_SRIKANDI":
         return "Proses Srikandi";
       case "APPROVED":
@@ -346,13 +346,13 @@
         tabindex="0"
         on:click={() => openDetailModal('SELESAI')}
         class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-300 transition-all relative overflow-hidden group cursor-pointer"
-        title="Klik untuk melihat rincian usulan Selesai (SK Terbit)"
+        title="Klik untuk melihat rincian usulan Selesai (PK Terbit)"
       >
         <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
         <div class="relative z-10 flex flex-col justify-between h-full">
           <div>
             <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Usulan Selesai (SK)</span>
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Usulan Selesai (PK)</span>
               <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -456,7 +456,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-base font-bold text-slate-800">Alur Pipeline Usulan Kontrak</h2>
-          <p class="text-xs text-slate-500">Distribusi status berkas dari pengajuan awal hingga penandatanganan SK final</p>
+          <p class="text-xs text-slate-500">Distribusi status berkas dari pengajuan awal hingga penandatanganan PK final</p>
         </div>
         <div class="text-right">
           <span class="text-xs font-semibold text-slate-400 uppercase">Total Usulan</span>
@@ -568,7 +568,7 @@
           tabindex="0"
           on:click={() => openDetailModal('SELESAI')}
           class="bg-emerald-50/70 hover:bg-emerald-100/90 border border-emerald-200/80 rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm"
-          title="Klik untuk melihat rincian usulan Selesai (SK Terbit)"
+          title="Klik untuk melihat rincian usulan Selesai (PK Terbit)"
         >
           <div class="flex items-center gap-2">
             <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
