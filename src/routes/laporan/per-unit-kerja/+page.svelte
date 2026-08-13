@@ -8,12 +8,19 @@
   let unorList = [];
   let selectedUnorId = "";
   let selectedUnorNama = "";
+  let unorSearchText = "";
+  let showUnorDropdown = false;
+  let unorDropdownRef;
   let records = [];
   let isLoading = false;
   let isLoadingUnor = true;
   let searchTerm = "";
   let meta = { page: 1, limit: 50, total: 0, totalPages: 1 };
   let filterStatus = "";
+
+  $: filteredUnorList = unorSearchText
+    ? unorList.filter((u) => u.nama.toLowerCase().includes(unorSearchText.toLowerCase()))
+    : unorList;
 
   onMount(async () => {
     if (!$authStore.isAuthenticated) {
@@ -65,14 +72,42 @@
     }
   };
 
-  const handleUnorChange = () => {
-    const found = unorList.find((u) => u.id === selectedUnorId);
-    selectedUnorNama = found ? found.nama : "";
+  const selectUnor = (u) => {
+    selectedUnorId = u.id;
+    selectedUnorNama = u.nama;
+    unorSearchText = u.nama;
+    showUnorDropdown = false;
     records = [];
     meta = { page: 1, limit: 50, total: 0, totalPages: 1 };
     searchTerm = "";
     filterStatus = "";
-    if (selectedUnorId) fetchData(1);
+    fetchData(1);
+  };
+
+  const clearUnor = () => {
+    selectedUnorId = "";
+    selectedUnorNama = "";
+    unorSearchText = "";
+    showUnorDropdown = false;
+    records = [];
+    meta = { page: 1, limit: 50, total: 0, totalPages: 1 };
+    searchTerm = "";
+    filterStatus = "";
+  };
+
+  const onUnorInput = () => {
+    showUnorDropdown = true;
+    if (selectedUnorNama && unorSearchText !== selectedUnorNama) {
+      selectedUnorId = "";
+      selectedUnorNama = "";
+      records = [];
+    }
+  };
+
+  const handleDocClick = (e) => {
+    if (unorDropdownRef && !unorDropdownRef.contains(e.target)) {
+      showUnorDropdown = false;
+    }
   };
 
   const handleFilter = () => { meta.page = 1; fetchData(1); };
@@ -83,6 +118,8 @@
       : "bg-emerald-50 text-emerald-700 border border-emerald-200";
   const formatGol = (r) => [r.golAkhirNama, r.ruangAkhirNama].filter(Boolean).join("/") || "-";
 </script>
+
+<svelte:window onclick={handleDocClick} />
 
 <svelte:head>
   <title>Laporan Per Unit Kerja — SIPPPK</title>
@@ -128,26 +165,94 @@
   <!-- Filter Panel -->
   <div class="card p-5 no-print">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- Pilih Unit Kerja -->
-      <div class="md:col-span-1">
+      <!-- Pilih Unit Kerja (Searchable Combobox) -->
+      <div class="md:col-span-1 relative" bind:this={unorDropdownRef}>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
           Unit Kerja Induk <span class="text-red-400">*</span>
         </label>
         {#if isLoadingUnor}
           <div class="input-field flex items-center gap-2 text-slate-400 text-sm">
-            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
             </svg>
-            Memuat...
+            Memuat unit kerja...
           </div>
         {:else}
-          <select bind:value={selectedUnorId} onchange={handleUnorChange} class="input-field w-full">
-            <option value="">-- Pilih Unit Kerja --</option>
-            {#each unorList as u}
-              <option value={u.id}>{u.nama}</option>
-            {/each}
-          </select>
+          <div class="relative">
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                {#if selectedUnorId}
+                  <div class="w-2 h-2 rounded-full bg-teal-500"></div>
+                {:else}
+                  <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                {/if}
+              </div>
+
+              <input
+                type="text"
+                bind:value={unorSearchText}
+                oninput={onUnorInput}
+                onfocus={() => (showUnorDropdown = true)}
+                placeholder="Ketik untuk mencari unit kerja..."
+                class="input-field w-full pl-9 pr-8"
+                autocomplete="off"
+              />
+
+              {#if unorSearchText}
+                <button
+                  type="button"
+                  onclick={clearUnor}
+                  class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                  title="Hapus pilihan"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              {:else}
+                <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              {/if}
+            </div>
+
+            {#if showUnorDropdown}
+              <div class="absolute z-30 w-full mt-1 bg-white rounded-xl shadow-xl shadow-slate-200/80 border border-slate-200 overflow-hidden">
+                {#if filteredUnorList.length === 0}
+                  <div class="px-4 py-3 text-xs text-slate-400 text-center">
+                    Tidak ada unit kerja yang cocok dengan "{unorSearchText}"
+                  </div>
+                {:else}
+                  <ul class="max-h-60 overflow-y-auto py-1 divide-y divide-slate-50">
+                    {#each filteredUnorList as u}
+                      <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
+                      <li
+                        role="option"
+                        aria-selected={selectedUnorId === u.id}
+                        onmousedown={() => selectUnor(u)}
+                        class="flex items-center justify-between px-3.5 py-2.5 text-sm cursor-pointer transition-colors
+                          {selectedUnorId === u.id
+                            ? 'bg-teal-50 text-teal-800 font-semibold'
+                            : 'text-slate-700 hover:bg-slate-50'}"
+                      >
+                        <span class="truncate">{u.nama}</span>
+                        {#if selectedUnorId === u.id}
+                          <svg class="w-4 h-4 text-teal-600 flex-shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                          </svg>
+                        {/if}
+                      </li>
+                    {/each}
+                  </ul>
+                {/if}
+              </div>
+            {/if}
+          </div>
         {/if}
       </div>
 
@@ -253,7 +358,7 @@
               <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-8">No</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">NIP</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Nama</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Jenis Jabatan</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Nama Jabatan</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Gol/Ruang</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Pendidikan</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">TMT CPNS</th>
@@ -275,7 +380,7 @@
                     </p>
                   {/if}
                 </td>
-                <td class="px-4 py-3 text-slate-600 text-xs">{rec.jenisJabatanNama || '-'}</td>
+                <td class="px-4 py-3 text-slate-600 text-xs">{rec.jabatanNama || '-'}</td>
                 <td class="px-4 py-3 text-slate-600 text-xs">{formatGol(rec)}</td>
                 <td class="px-4 py-3 text-slate-600 text-xs">{rec.tingkatPendidikanNama || '-'}</td>
                 <td class="px-4 py-3 text-slate-600 text-xs font-mono">{rec.tmtCpns || '-'}</td>
