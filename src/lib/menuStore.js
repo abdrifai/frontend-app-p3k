@@ -16,35 +16,39 @@ export const menuPermissionsStore = writable(initialState);
 /**
  * Load allowed menus for current authenticated user
  */
-export async function loadMenuPermissions() {
+export async function loadMenuPermissions(force = false) {
   const auth = get(authStore);
   if (!auth.isAuthenticated) {
     menuPermissionsStore.set(initialState);
     return;
   }
 
-  // Admin has full access by default
-  const isAdmin = ['admin', 'ADMIN', 'Admin'].includes(auth.user?.role);
+  const currentRole = String(auth.user?.role || 'user').toLowerCase();
+  const isAdmin = ['admin', 'ADMIN', 'Admin'].includes(currentRole);
+  const current = get(menuPermissionsStore);
 
-  menuPermissionsStore.update(s => ({ ...s, isLoading: true }));
+  // If already loaded for the same role and not forced, skip redundant fetch
+  if (!force && current.isLoaded && current.role === currentRole && !current.isLoading) {
+    return;
+  }
+
+  menuPermissionsStore.update(s => ({ ...s, isLoading: true, role: currentRole }));
 
   try {
     const result = await apiRequest('/api/role-menus/my-menus', 'GET');
     if (result && result.success && result.data) {
       menuPermissionsStore.set({
-        role: result.data.role || auth.user?.role || '',
+        role: result.data.role || currentRole,
         allowedKeys: result.data.allowedKeys || [],
         allowedPaths: result.data.allowedPaths || [],
         isLoading: false,
         isLoaded: true
       });
     } else {
-      // Fallback if API response unexpected
       menuPermissionsStore.update(s => ({ ...s, isLoading: false, isLoaded: true }));
     }
   } catch (err) {
     console.error('Failed to load menu permissions:', err);
-    // If error and user is admin, allow all as fallback
     if (isAdmin) {
       menuPermissionsStore.set({
         role: 'admin',

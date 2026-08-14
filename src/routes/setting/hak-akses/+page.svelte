@@ -130,7 +130,7 @@
       if (result && result.success) {
         addToast(`Hak akses untuk role "${selectedRole.toUpperCase()}" berhasil disimpan!`, "success");
         // Reload current user permissions in navbar
-        await loadMenuPermissions();
+        await loadMenuPermissions(true);
       }
     } catch (err) {
       console.error("Save permissions error:", err);

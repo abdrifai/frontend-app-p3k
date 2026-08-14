@@ -4,12 +4,37 @@
   import { API_BASE_URL } from "$lib/api";
   import { goto } from "$app/navigation";
   import favicon from "$lib/assets/favicon.svg";
-  import { menuPermissionsStore, checkMenuAccess, checkAnyMenuAccess } from "$lib/menuStore";
+  import { menuPermissionsStore } from "$lib/menuStore";
 
   // Reactive menu permission helpers (reactive to store updates)
-  let allowedKeys = $derived($menuPermissionsStore.allowedKeys);
-  const canAccess = (key) => checkMenuAccess(key);
-  const canAccessAny = (keys) => checkAnyMenuAccess(keys);
+  let allowedKeys = $derived($menuPermissionsStore.allowedKeys || []);
+  let isPermissionsLoaded = $derived($menuPermissionsStore.isLoaded);
+  let userRole = $derived(String($authStore.user?.role || '').toLowerCase());
+  let isUserAdmin = $derived(['admin', 'admin_utama', 'superadmin'].includes(userRole));
+
+  function canAccess(key) {
+    if (!$authStore.isAuthenticated) return false;
+    if (isUserAdmin) return true;
+    
+    // When permissions are loaded from server, evaluate allowedKeys
+    if (isPermissionsLoaded) {
+      if (allowedKeys.includes('*')) return true;
+      return allowedKeys.includes(key);
+    }
+
+    // Default fallback while initial permissions are being loaded
+    if (userRole === 'pensiun') {
+      return ['dashboard', 'data-utama', 'profil-pegawai', 'manajemen-pensiun', 'laporan', 'laporan-estimasi-pensiun'].includes(key);
+    }
+    // Default for user/operator role: all main apps except settings and pensiun
+    return !key.startsWith('setting-') && key !== 'manajemen-pensiun';
+  }
+
+  function canAccessAny(keys) {
+    if (!$authStore.isAuthenticated) return false;
+    if (isUserAdmin) return true;
+    return keys.some(k => canAccess(k));
+  }
 
   let mobileMenuOpen = $state(false);
   let utamaMenuOpen = $state(false);
