@@ -1,7 +1,7 @@
 <script>
   import { addToast } from "$lib/toastStore";
   import { authStore } from "$lib/store";
-  import { apiRequest } from "$lib/api";
+  import { apiRequest, API_BASE_URL } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
 
@@ -18,6 +18,7 @@
   let showEditModal = false;
   let isSubmitting = false;
   let editForm = {};
+  let selectedFileSkCpns = null;
 
   // Active field configs from backend
   let activeFields = [];
@@ -116,6 +117,7 @@
     searchResults = {};
     isSearching = {};
     showDropdown = {};
+    selectedFileSkCpns = null;
 
     for (const field of activeFields) {
       if (field.inputType === "search" && field.fieldName === "unorIndukId") {
@@ -134,11 +136,34 @@
     searchTerms = {};
     searchResults = {};
     showDropdown = {};
+    selectedFileSkCpns = null;
+  };
+
+  const handleFileSkCpnsChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        addToast("Hanya file PDF yang diperbolehkan!", "warning");
+        e.target.value = "";
+        selectedFileSkCpns = null;
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        addToast("Ukuran file maksimal 10MB", "warning");
+        e.target.value = "";
+        selectedFileSkCpns = null;
+        return;
+      }
+      selectedFileSkCpns = file;
+    } else {
+      selectedFileSkCpns = null;
+    }
   };
 
   const handleCompleteTask = async (e) => {
     e.preventDefault();
-    // Check if any search fields have valid selections
+
+    // 1. Validation for search fields
     for (const field of activeFields) {
       if (field.inputType === "search" && !editForm[field.fieldName]) {
         addToast(`Silakan pilih ${field.label} dari referensi`, "warning");
@@ -146,12 +171,46 @@
       }
     }
 
+    // 2. Validation for nomorSkCpns & SK CPNS Document upload (if active)
+    const isNomorSkCpnsActive = activeFields.some(f => f.fieldName === "nomorSkCpns");
+    if (isNomorSkCpnsActive) {
+      const nomorVal = editForm.nomorSkCpns ? String(editForm.nomorSkCpns).trim() : "";
+      if (!nomorVal) {
+        addToast("Nomor SK CPNS wajib diisi sebelum data disimpan!", "warning");
+        return;
+      }
+
+      const hasExistingFile = !!selectedTask?.dataP3k?.arsipSkCpns?.fileUrl;
+      if (!selectedFileSkCpns && !hasExistingFile) {
+        addToast("Dokumen berkas SK CPNS (PDF) wajib diunggah sebelum data disimpan!", "warning");
+        return;
+      }
+    }
+
     isSubmitting = true;
     try {
+      let bodyPayload;
+      let isForm = false;
+
+      if (selectedFileSkCpns) {
+        isForm = true;
+        bodyPayload = new FormData();
+        for (const [k, v] of Object.entries(editForm)) {
+          if (v !== null && v !== undefined) {
+            bodyPayload.append(k, v);
+          }
+        }
+        bodyPayload.append("fileSkCpns", selectedFileSkCpns);
+      } else {
+        bodyPayload = editForm;
+        isForm = false;
+      }
+
       const result = await apiRequest(
         `/api/tasks/${selectedTask.id}/complete`,
         "PUT",
-        editForm,
+        bodyPayload,
+        isForm
       );
       if (result.success) {
         addToast("Tugas berhasil diselesaikan!", "success");
@@ -510,6 +569,9 @@
                           for="field-{field.fieldName}"
                         >
                           {field.label}
+                          {#if field.fieldName === "nomorSkCpns"}
+                            <span class="text-rose-600 font-bold ml-1 text-xs">* (Wajib)</span>
+                          {/if}
                         </label>
 
                         {#if field.inputType === "search"}
@@ -584,6 +646,57 @@
                             class="input-field focus:ring-2 focus:ring-indigo-500"
                             placeholder="Masukkan {field.label.toLowerCase()}"
                           />
+                        {/if}
+
+                        {#if field.fieldName === "nomorSkCpns"}
+                          <!-- Upload SK CPNS (PDF) Component -->
+                          <div class="mt-3 p-4 rounded-xl bg-blue-50/75 border border-blue-200 space-y-3 {isLargeModal ? 'col-span-full' : ''}">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                              <span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                Upload Dokumen SK CPNS (PDF) <span class="text-rose-600 font-bold">* (Wajib)</span>
+                              </span>
+                              {#if selectedTask?.dataP3k?.arsipSkCpns?.fileUrl}
+                                <a
+                                  href={`${API_BASE_URL}${selectedTask.dataP3k.arsipSkCpns.fileUrl}`}
+                                  target="_blank"
+                                  class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 transition-colors shadow-xs"
+                                >
+                                  <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  Dokumen Tersedia (Lihat PDF)
+                                </a>
+                              {/if}
+                            </div>
+
+                            <input
+                              type="file"
+                              accept="application/pdf"
+                              on:change={handleFileSkCpnsChange}
+                              class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer cursor-pointer border border-blue-200 rounded-xl bg-white p-1.5 shadow-xs"
+                            />
+
+                            {#if selectedFileSkCpns}
+                              <div class="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50/80 p-2 rounded-lg border border-emerald-200">
+                                <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>File baru dipilih: <strong>{selectedFileSkCpns.name}</strong> ({(selectedFileSkCpns.size / 1024).toFixed(1)} KB)</span>
+                              </div>
+                            {:else if selectedTask?.dataP3k?.arsipSkCpns?.fileUrl}
+                              <p class="text-[11px] text-slate-500">Pilih file baru jika ingin mengganti dokumen SK CPNS yang sudah ada.</p>
+                            {:else}
+                              <p class="text-[11px] text-rose-600 font-medium flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                Format: PDF (Maks. 10MB). Wajib diunggah sebelum menyimpan.
+                              </p>
+                            {/if}
+                          </div>
                         {/if}
                       </div>
                     {/each}
