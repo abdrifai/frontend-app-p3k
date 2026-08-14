@@ -9,8 +9,13 @@
   // Reactive menu permission helpers (reactive to store updates)
   let allowedKeys = $derived($menuPermissionsStore.allowedKeys || []);
   let isPermissionsLoaded = $derived($menuPermissionsStore.isLoaded);
-  let userRole = $derived(String($authStore.user?.role || '').toLowerCase());
-  let isUserAdmin = $derived(['admin', 'admin_utama', 'superadmin'].includes(userRole));
+  let userRoles = $derived(
+    Array.isArray($authStore.user?.roles) && $authStore.user.roles.length > 0
+      ? $authStore.user.roles.map(r => String(r).toLowerCase().trim())
+      : String($authStore.user?.role || '').toLowerCase().split(',').map(r => r.trim()).filter(Boolean)
+  );
+  let isUserAdmin = $derived(userRoles.some(r => ['admin', 'admin_utama', 'superadmin'].includes(r)));
+  let isUserPensiun = $derived(userRoles.some(r => ['pensiun', 'operator_pensiun'].includes(r)));
 
   function canAccess(key) {
     if (!$authStore.isAuthenticated) return false;
@@ -23,11 +28,11 @@
     }
 
     // Default fallback while initial permissions are being loaded
-    if (userRole === 'pensiun') {
+    if (isUserPensiun && !userRoles.includes('user')) {
       return ['dashboard', 'data-utama', 'profil-pegawai', 'manajemen-pensiun', 'laporan', 'laporan-estimasi-pensiun'].includes(key);
     }
-    // Default for user/operator role: all main apps except settings and pensiun
-    return !key.startsWith('setting-') && key !== 'manajemen-pensiun';
+    // Default for user/operator role: all main apps except settings (unless admin)
+    return !key.startsWith('setting-');
   }
 
   function canAccessAny(keys) {
@@ -90,7 +95,7 @@
     isActive("/statistik-p3k-import");
 
   const isPensiunActive = () => isActive("/manajemen-pensiun");
-  let canAccessPensiun = $derived(['admin', 'pensiun', 'operator_pensiun'].includes(String($authStore.user?.role || '').toLowerCase()));
+  let canAccessPensiun = $derived(isUserAdmin || isUserPensiun);
 
   const isSettingActive = () =>
     isActive("/manajemen-user") ||

@@ -13,12 +13,12 @@
   // Edit modal state
   let showEditModal = false;
   let editUser = null;
-  let editForm = { namaLengkap: "", email: "", password: "", role: "user" };
+  let editForm = { namaLengkap: "", email: "", password: "", roles: ["user"] };
   let isSubmitting = false;
 
   // Add modal state
   let showAddModal = false;
-  let addForm = { username: "", namaLengkap: "", email: "", password: "", role: "user" };
+  let addForm = { username: "", namaLengkap: "", email: "", password: "", roles: ["user"] };
   let isAdding = false;
 
   // Delete modal state
@@ -40,6 +40,37 @@
   let isPermanentDeleting = false;
 
   let searchTimeout = null;
+
+  const AVAILABLE_ROLES = [
+    { id: "user", label: "Operator P3K (user)", description: "Data P3K, Usulan Kontrak, Task User, dan Laporan", color: "blue" },
+    { id: "pensiun", label: "Operator Pensiun (pensiun)", description: "Pengajuan & Manajemen Pensiun Pegawai, Estimasi Pensiun", color: "rose" },
+    { id: "admin", label: "Administrator (admin)", description: "Akses penuh seluruh modul, manajemen user, dan pengaturan sistem", color: "purple" }
+  ];
+
+  const getUserRoles = (u) => {
+    if (!u) return ["user"];
+    if (Array.isArray(u.roles) && u.roles.length > 0) {
+      return u.roles.map((r) => String(r).toLowerCase().trim());
+    }
+    return String(u.role || "user")
+      .toLowerCase()
+      .split(",")
+      .map((r) => r.trim())
+      .filter(Boolean);
+  };
+
+  const toggleRole = (targetForm, roleId) => {
+    if (!targetForm.roles) targetForm.roles = [];
+    if (targetForm.roles.includes(roleId)) {
+      if (targetForm.roles.length > 1) {
+        targetForm.roles = targetForm.roles.filter((r) => r !== roleId);
+      } else {
+        addToast("User wajib memiliki minimal 1 role", "warning");
+      }
+    } else {
+      targetForm.roles = [...targetForm.roles, roleId];
+    }
+  };
 
   onMount(() => {
     if (!$authStore.isAuthenticated) {
@@ -89,7 +120,7 @@
       namaLengkap: user.namaLengkap || "",
       email: user.email || "",
       password: "",
-      role: user.role || "user",
+      roles: getUserRoles(user),
     };
     showEditModal = true;
   };
@@ -100,7 +131,7 @@
   };
 
   const openAddModal = () => {
-    addForm = { username: "", namaLengkap: "", email: "", password: "", role: "user" };
+    addForm = { username: "", namaLengkap: "", email: "", password: "", roles: ["user"] };
     showAddModal = true;
   };
 
@@ -110,9 +141,17 @@
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (!addForm.roles || addForm.roles.length === 0) {
+      addToast("Pilih minimal 1 role untuk user", "warning");
+      return;
+    }
     isAdding = true;
     try {
-      const result = await apiRequest("/api/users/register", "POST", addForm);
+      const payload = {
+        ...addForm,
+        role: addForm.roles.join(","),
+      };
+      const result = await apiRequest("/api/users/register", "POST", payload);
       
       if (result.isSoftDeleted) {
         // User exists in soft-deleted state
@@ -152,7 +191,7 @@
       username: cleanUsername,
       namaLengkap: user.namaLengkap,
       email: cleanEmail,
-      newForm: { username: cleanUsername, email: cleanEmail, role: user.role || "user", password: "" }
+      newForm: { username: cleanUsername, email: cleanEmail, roles: getUserRoles(user), password: "" }
     };
     showReactivateModal = true;
   };
@@ -167,7 +206,10 @@
     if (!reactivateUserData) return;
     isReactivating = true;
     try {
-      const payload = reactivateUserData.newForm || {};
+      const payload = {
+        ...reactivateUserData.newForm,
+        role: reactivateUserData.newForm.roles?.join(",") || "user",
+      };
       const result = await apiRequest(`/api/users/${reactivateUserData.id}/reactivate`, "POST", payload);
       if (result && result.success) {
         addToast("User berhasil diaktifkan kembali", "success");
@@ -222,13 +264,20 @@
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (!editForm.roles || editForm.roles.length === 0) {
+      addToast("Pilih minimal 1 role untuk user", "warning");
+      return;
+    }
     isSubmitting = true;
     try {
       const payload = {};
       if (editForm.namaLengkap) payload.namaLengkap = editForm.namaLengkap;
       if (editForm.email) payload.email = editForm.email;
       if (editForm.password) payload.password = editForm.password;
-      if (editForm.role) payload.role = editForm.role;
+      if (editForm.roles && editForm.roles.length > 0) {
+        payload.roles = editForm.roles;
+        payload.role = editForm.roles.join(",");
+      }
 
       const result = await apiRequest(`/api/users/${editUser.id}`, "PUT", payload);
       if (result && result.success) {
@@ -489,20 +538,22 @@
                   >{user.email ? (user.email.includes('_del_') ? user.email.split('_del_')[0] : user.email) : "-"}</td
                 >
                 <td class="px-4 sm:px-6 py-3.5 whitespace-nowrap">
-                  <div class="flex items-center gap-1.5">
-                    {#if user.role === 'admin'}
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                        Admin
-                      </span>
-                    {:else if user.role === 'pensiun' || user.role === 'operator_pensiun'}
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                        Pengajuan Pensiun
-                      </span>
-                    {:else}
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                        User
-                      </span>
-                    {/if}
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    {#each getUserRoles(user) as r}
+                      {#if r === 'admin'}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+                          <i class="ri-shield-keyhole-line text-[11px]"></i> Admin
+                        </span>
+                      {:else if r === 'pensiun' || r === 'operator_pensiun'}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+                          <i class="ri-user-unfollow-line text-[11px]"></i> Pensiun
+                        </span>
+                      {:else}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                          <i class="ri-user-settings-line text-[11px]"></i> Operator P3K
+                        </span>
+                      {/if}
+                    {/each}
                     {#if user.isDeleted}
                       <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700">
                         Non-Aktif
@@ -767,21 +818,32 @@
             />
           </div>
           <div>
-            <label
-              for="addRole"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Role <span class="text-red-500">*</span></label
-            >
-            <select
-              id="addRole"
-              bind:value={addForm.role}
-              required
-              class="input-field"
-            >
-              <option value="user">User</option>
-              <option value="pensiun">Pengajuan Pensiun</option>
-              <option value="admin">Admin</option>
-            </select>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Pilih Role Pengguna <span class="text-red-500">*</span>
+              <span class="text-xs font-normal text-slate-400 block">Dapat memilih lebih dari satu role</span>
+            </label>
+            <div class="space-y-2">
+              {#each AVAILABLE_ROLES as roleItem}
+                {@const isSelected = addForm.roles?.includes(roleItem.id)}
+                <button
+                  type="button"
+                  on:click={() => toggleRole(addForm, roleItem.id)}
+                  class="w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between {isSelected ? 'border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'}"
+                >
+                  <div class="flex items-center gap-3">
+                    <div class="w-5 h-5 rounded flex items-center justify-center border transition-colors {isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'}">
+                      {#if isSelected}
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                      {/if}
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-slate-800">{roleItem.label}</p>
+                      <p class="text-xs text-slate-500">{roleItem.description}</p>
+                    </div>
+                  </div>
+                </button>
+              {/each}
+            </div>
           </div>
           <div class="flex gap-3 pt-2">
             <button
@@ -902,20 +964,32 @@
             />
           </div>
           <div>
-            <label
-              for="editRole"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Role</label
-            >
-            <select
-              id="editRole"
-              bind:value={editForm.role}
-              class="input-field"
-            >
-              <option value="user">User</option>
-              <option value="pensiun">Pengajuan Pensiun</option>
-              <option value="admin">Admin</option>
-            </select>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">
+              Pilih Role Pengguna <span class="text-red-500">*</span>
+              <span class="text-xs font-normal text-slate-400 block">Dapat memilih lebih dari satu role</span>
+            </label>
+            <div class="space-y-2">
+              {#each AVAILABLE_ROLES as roleItem}
+                {@const isSelected = editForm.roles?.includes(roleItem.id)}
+                <button
+                  type="button"
+                  on:click={() => toggleRole(editForm, roleItem.id)}
+                  class="w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between {isSelected ? 'border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'}"
+                >
+                  <div class="flex items-center gap-3">
+                    <div class="w-5 h-5 rounded flex items-center justify-center border transition-colors {isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'}">
+                      {#if isSelected}
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                      {/if}
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-slate-800">{roleItem.label}</p>
+                      <p class="text-xs text-slate-500">{roleItem.description}</p>
+                    </div>
+                  </div>
+                </button>
+              {/each}
+            </div>
           </div>
           <div class="flex gap-3 pt-2">
             <button
@@ -1099,12 +1173,31 @@
               />
             </div>
             <div>
-              <label for="reactivateRole" class="block text-xs font-semibold text-slate-700 mb-1">Role</label>
-              <select id="reactivateRole" bind:value={reactivateUserData.newForm.role} class="input-field text-xs">
-                <option value="user">User</option>
-                <option value="pensiun">Pengajuan Pensiun</option>
-                <option value="admin">Admin</option>
-              </select>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Pilih Role Pengguna <span class="text-red-500">*</span>
+                <span class="text-[11px] font-normal text-slate-400 block">Dapat memilih lebih dari satu role</span>
+              </label>
+              <div class="space-y-1.5">
+                {#each AVAILABLE_ROLES as roleItem}
+                  {@const isSelected = reactivateUserData.newForm.roles?.includes(roleItem.id)}
+                  <button
+                    type="button"
+                    on:click={() => toggleRole(reactivateUserData.newForm, roleItem.id)}
+                    class="w-full text-left p-2.5 rounded-lg border transition-all flex items-center justify-between {isSelected ? 'border-emerald-500 bg-emerald-50/60 ring-1 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'}"
+                  >
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-4 h-4 rounded flex items-center justify-center border transition-colors {isSelected ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'}">
+                        {#if isSelected}
+                          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                        {/if}
+                      </div>
+                      <div>
+                        <p class="text-xs font-semibold text-slate-800">{roleItem.label}</p>
+                      </div>
+                    </div>
+                  </button>
+                {/each}
+              </div>
             </div>
             <div>
               <label for="reactivatePassword" class="block text-xs font-semibold text-slate-700 mb-1">Password Baru <span class="text-slate-400 font-normal">(opsional)</span></label>
