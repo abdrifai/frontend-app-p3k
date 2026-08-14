@@ -1143,24 +1143,37 @@
             <h3 class="text-lg font-bold text-slate-800">Detail Pegawai</h3>
             <p class="text-sm text-slate-400">Informasi profil PPPK</p>
           </div>
-          <button
-            on:click={closeModal}
-            class="ml-auto p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-            aria-label="Tutup detail"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              /></svg
+          <div class="ml-auto flex items-center gap-2">
+            {#if selectedRecord?.nipBaru}
+              <a
+                href={`/profil-pegawai?nip=${selectedRecord.nipBaru}`}
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl transition-colors border border-indigo-200"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Buka Profil Lengkap
+              </a>
+            {/if}
+            <button
+              on:click={closeModal}
+              class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              aria-label="Tutup detail"
             >
-          </button>
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                ><path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                /></svg
+              >
+            </button>
+          </div>
         </div>
 
         <div class="mt-5">

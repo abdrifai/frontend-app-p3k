@@ -310,6 +310,41 @@
                     Data P3K Utama
                   </p>
                   <a
+                    href="/profil-pegawai"
+                    class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                      '/profil-pegawai',
+                    )
+                      ? 'text-blue-700 bg-blue-50 font-medium'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                    onclick={() => (utamaMenuOpen = false)}
+                  >
+                    <div
+                      class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="w-3.5 h-3.5 text-indigo-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="font-medium leading-tight">Profil Pegawai</p>
+                      <p
+                        class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                      >
+                        Pencarian & biodata lengkap
+                      </p>
+                    </div>
+                  </a>
+                  <a
                     href="/data-p3k"
                     class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
                       '/data-p3k',
@@ -1383,6 +1418,34 @@
               <div
                 class="mt-1 mb-1 ml-5 pl-4 border-l-2 border-blue-200 space-y-0.5"
               >
+                <a
+                  href="/profil-pegawai"
+                  onclick={closeMobile}
+                  class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                    '/profil-pegawai',
+                  )
+                    ? 'text-blue-700 bg-blue-50 font-semibold'
+                    : 'text-slate-600 hover:bg-slate-50'}"
+                >
+                  <div
+                    class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
+                  >
+                    <svg
+                      class="w-3 h-3 text-indigo-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </div>
+                  Profil Pegawai
+                </a>
                 <a
                   href="/data-p3k"
                   onclick={closeMobile}
