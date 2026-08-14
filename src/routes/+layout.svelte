@@ -6,10 +6,11 @@
   import { goto } from "$app/navigation";
   import Toast from "$lib/components/Toast.svelte";
   import Navbar from "$lib/components/Navbar.svelte";
+  import { loadMenuPermissions } from "$lib/menuStore";
 
   let { children } = $props();
 
-  // Global auth check for protected routes
+  // Global auth check for protected routes & menu permission loader
   $effect(() => {
     const path = $page.url.pathname;
     const publicPaths = ["/login", "/register", "/", "/forgot-password", "/forget-password", "/reset-password"];
@@ -17,6 +18,8 @@
 
     if (!$authStore.isAuthenticated && !isPublicPath) {
       goto("/login");
+    } else if ($authStore.isAuthenticated) {
+      loadMenuPermissions();
     }
   });
 </script>
