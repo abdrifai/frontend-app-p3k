@@ -115,7 +115,9 @@
     isActive("/perpanjangan-kontrak/inbox");
 
   const isTaskUserActive = () =>
-    isActive("/task-user-peremajaan") || isActive("/task-user-usulan-pk");
+    isActive("/task-peremajaan/dashboard") ||
+    isActive("/task-user-peremajaan") ||
+    isActive("/task-user-usulan-pk");
 
   const isLaporanActive = () =>
     isActive("/laporan/perpanjangan-pk") ||
@@ -680,7 +682,7 @@
           {/if}
 
           <!-- Dropdown: Task User -->
-          {#if canAccess('task-user') && canAccessAny(['task-peremajaan', 'task-usulan-pk'])}
+          {#if canAccess('task-user') && canAccessAny(['task-peremajaan-dashboard', 'task-peremajaan', 'task-usulan-pk'])}
             <div
               class="relative"
               role="group"
@@ -729,10 +731,29 @@
               <!-- Task User Dropdown Menu -->
               {#if taskUserMenuOpen}
                 <div class="absolute left-1/2 -translate-x-1/2 top-full pt-1 z-50">
-                  <div class="w-60 bg-white rounded-xl shadow-2xl shadow-slate-200/60 border border-slate-100 py-2 ring-1 ring-black/[0.03]">
+                  <div class="w-64 bg-white rounded-xl shadow-2xl shadow-slate-200/60 border border-slate-100 py-2 ring-1 ring-black/[0.03]">
                     <p class="px-4 pt-1.5 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       Task User
                     </p>
+                    {#if canAccess('task-peremajaan-dashboard')}
+                      <a
+                        href="/task-peremajaan/dashboard"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                          '/task-peremajaan/dashboard',
+                        )
+                          ? 'text-blue-700 bg-blue-50 font-medium'
+                          : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (taskUserMenuOpen = false)}
+                      >
+                        <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <i class="ri-dashboard-3-line text-blue-600 text-sm"></i>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Dashboard Peremajaan</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Monitoring & statistik progres</p>
+                        </div>
+                      </a>
+                    {/if}
                     {#if canAccess('task-peremajaan')}
                       <a
                         href="/task-user-peremajaan"
@@ -1763,7 +1784,7 @@
           {/if}
 
           <!-- Mobile: Task User Group -->
-          {#if canAccess('task-user') && canAccessAny(['task-peremajaan', 'task-usulan-pk'])}
+          {#if canAccess('task-user') && canAccessAny(['task-peremajaan-dashboard', 'task-peremajaan', 'task-usulan-pk'])}
             <div class="pt-2">
               <button
                 type="button"
@@ -1807,6 +1828,24 @@
                 <div
                   class="mt-1 mb-1 ml-5 pl-4 border-l-2 border-indigo-200 space-y-0.5"
                 >
+                  {#if canAccess('task-peremajaan-dashboard')}
+                    <a
+                      href="/task-peremajaan/dashboard"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        '/task-peremajaan/dashboard',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center"
+                      >
+                        <i class="ri-dashboard-3-line text-blue-600 text-xs"></i>
+                      </div>
+                      Dashboard Peremajaan
+                    </a>
+                  {/if}
                   {#if canAccess('task-peremajaan')}
                     <a
                       href="/task-user-peremajaan"
