@@ -1,6 +1,6 @@
 <script>
   import { addToast } from "$lib/toastStore";
-  import { authStore } from "$lib/store";
+  import { authStore, isUserAdmin } from "$lib/store";
   import { apiRequest, API_BASE_URL } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
@@ -12,7 +12,7 @@
   let meta = { page: 1, limit: 10, total: 0, totalPages: 1 };
   const limitOptions = [10, 25, 50, 100, 250];
   
-  $: isAdmin = $authStore.user?.role === "admin";
+  $: isAdmin = isUserAdmin($authStore.user);
 
   // Detail modal
   let selectedRecord = null;

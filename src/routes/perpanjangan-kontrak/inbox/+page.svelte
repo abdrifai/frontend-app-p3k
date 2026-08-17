@@ -1,6 +1,6 @@
 <script>
   import { addToast } from "$lib/toastStore";
-  import { authStore } from "$lib/store";
+  import { authStore, isUserAdmin } from "$lib/store";
   import { apiRequest, API_BASE_URL } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
@@ -11,7 +11,7 @@
   let filterStatus = "PENDING";
   let meta = { page: 1, limit: 10, total: 0, totalPages: 1 };
 
-  $: isAdmin = $authStore.user?.role === "admin";
+  $: isAdmin = isUserAdmin($authStore.user);
 
   // Detail modal
   let selectedRecord = null;

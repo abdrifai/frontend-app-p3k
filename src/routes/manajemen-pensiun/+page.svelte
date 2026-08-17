@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-  import { authStore } from "$lib/store";
+  import { authStore, hasRole } from "$lib/store";
   import { apiRequest, API_BASE_URL } from "$lib/api";
   import { addToast } from "$lib/toastStore";
 
@@ -222,8 +222,7 @@
       goto("/login");
       return;
     }
-    const role = String($authStore.user?.role || "").toLowerCase();
-    if (role !== "admin" && role !== "pensiun" && role !== "operator_pensiun") {
+    if (!hasRole($authStore.user, "admin", "pensiun", "operator_pensiun")) {
       addToast("Akses ditolak. Anda tidak memiliki izin untuk mengelola data pensiun.", "error");
       goto("/");
       return;

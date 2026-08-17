@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { addToast } from "$lib/toastStore";
-  import { authStore } from "$lib/store";
+  import { authStore, isUserAdmin } from "$lib/store";
   import { apiRequest } from "$lib/api";
   import { goto } from "$app/navigation";
 
@@ -33,7 +33,7 @@
   };
 
   onMount(() => {
-    if (!$authStore.isAuthenticated || $authStore.user?.role !== "admin") {
+    if (!$authStore.isAuthenticated || !isUserAdmin($authStore.user)) {
       addToast("Akses ditolak", "error");
       goto("/");
       return;

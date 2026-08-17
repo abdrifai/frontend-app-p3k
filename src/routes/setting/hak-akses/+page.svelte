@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-  import { authStore } from "$lib/store";
+  import { authStore, isUserAdmin } from "$lib/store";
   import { apiRequest } from "$lib/api";
   import { addToast } from "$lib/toastStore";
   import { loadMenuPermissions } from "$lib/menuStore";
@@ -23,7 +23,7 @@
       return;
     }
 
-    if (!["admin", "ADMIN", "Admin"].includes($authStore.user?.role)) {
+    if (!isUserAdmin($authStore.user)) {
       addToast("Akses ditolak. Hanya administrator yang dapat mengakses halaman ini.", "error");
       goto("/");
       return;

@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { goto }    from '$app/navigation';
-  import { authStore }  from '$lib/store';
+  import { authStore, isUserAdmin }  from '$lib/store';
   import { addToast }   from '$lib/toastStore';
   import { get }        from 'svelte/store';
   import { API_BASE_URL } from '$lib/api';
@@ -26,7 +26,7 @@
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
   onMount(async () => {
-    if (!$authStore.isAuthenticated || $authStore.user?.role !== 'admin') {
+    if (!$authStore.isAuthenticated || !isUserAdmin($authStore.user)) {
       addToast('Akses ditolak. Hanya untuk Admin.', 'error');
       goto('/');
       return;

@@ -65,3 +65,26 @@ export const updateAuthUser = (user) => {
         return newState;
     });
 };
+
+export const getUserRoles = (user) => {
+    if (!user) return [];
+    if (Array.isArray(user.roles) && user.roles.length > 0) {
+        return user.roles.map((r) => String(r).toLowerCase().trim());
+    }
+    return String(user.role || '')
+        .toLowerCase()
+        .split(',')
+        .map((r) => r.trim())
+        .filter(Boolean);
+};
+
+export const hasRole = (user, ...roles) => {
+    const userRoles = getUserRoles(user);
+    const targetRoles = roles.flat().map((r) => String(r).toLowerCase().trim());
+    return targetRoles.some((r) => userRoles.includes(r));
+};
+
+export const isUserAdmin = (user) => {
+    return hasRole(user, 'admin', 'admin_utama', 'superadmin');
+};
+

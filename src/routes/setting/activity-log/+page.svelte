@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { authStore } from "$lib/store";
+  import { authStore, isUserAdmin } from "$lib/store";
   import { goto } from "$app/navigation";
   import { apiRequest } from "$lib/api";
   
@@ -41,7 +41,7 @@
   ];
 
   onMount(async () => {
-    if (!$authStore.isAuthenticated || $authStore.user?.role !== "admin") {
+    if (!$authStore.isAuthenticated || !isUserAdmin($authStore.user)) {
       goto("/");
       return;
     }

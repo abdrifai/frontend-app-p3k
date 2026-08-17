@@ -1,12 +1,12 @@
 <script>
   import { addToast } from "$lib/toastStore";
-  import { authStore } from "$lib/store";
+  import { authStore, isUserAdmin } from "$lib/store";
   import { apiRequest, API_BASE_URL } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import ConfirmDeleteModal from "$lib/components/ConfirmDeleteModal.svelte";
 
-  $: isAdmin = $authStore.user?.role === "admin";
+  $: isAdmin = isUserAdmin($authStore.user);
 
   let records = [];
   let isLoading = true;

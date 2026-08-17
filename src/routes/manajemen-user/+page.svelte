@@ -1,6 +1,6 @@
 <script>
   import { addToast } from "$lib/toastStore";
-  import { authStore } from "$lib/store";
+  import { authStore, isUserAdmin } from "$lib/store";
   import { apiRequest } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
@@ -59,16 +59,65 @@
       .filter(Boolean);
   };
 
-  const toggleRole = (targetForm, roleId) => {
-    if (!targetForm.roles) targetForm.roles = [];
-    if (targetForm.roles.includes(roleId)) {
-      if (targetForm.roles.length > 1) {
-        targetForm.roles = targetForm.roles.filter((r) => r !== roleId);
+  const toggleRole = (target, roleId) => {
+    if (target === "add" || target === addForm) {
+      const current = Array.isArray(addForm.roles) ? [...addForm.roles] : [];
+      if (current.includes(roleId)) {
+        if (current.length > 1) {
+          addForm = {
+            ...addForm,
+            roles: current.filter((r) => r !== roleId),
+          };
+        } else {
+          addToast("User wajib memiliki minimal 1 role", "warning");
+        }
       } else {
-        addToast("User wajib memiliki minimal 1 role", "warning");
+        addForm = {
+          ...addForm,
+          roles: [...current, roleId],
+        };
       }
-    } else {
-      targetForm.roles = [...targetForm.roles, roleId];
+    } else if (target === "edit" || target === editForm) {
+      const current = Array.isArray(editForm.roles) ? [...editForm.roles] : [];
+      if (current.includes(roleId)) {
+        if (current.length > 1) {
+          editForm = {
+            ...editForm,
+            roles: current.filter((r) => r !== roleId),
+          };
+        } else {
+          addToast("User wajib memiliki minimal 1 role", "warning");
+        }
+      } else {
+        editForm = {
+          ...editForm,
+          roles: [...current, roleId],
+        };
+      }
+    } else if (target === "reactivate" || (reactivateUserData && target === reactivateUserData.newForm)) {
+      if (!reactivateUserData?.newForm) return;
+      const current = Array.isArray(reactivateUserData.newForm.roles) ? [...reactivateUserData.newForm.roles] : [];
+      if (current.includes(roleId)) {
+        if (current.length > 1) {
+          reactivateUserData = {
+            ...reactivateUserData,
+            newForm: {
+              ...reactivateUserData.newForm,
+              roles: current.filter((r) => r !== roleId),
+            },
+          };
+        } else {
+          addToast("User wajib memiliki minimal 1 role", "warning");
+        }
+      } else {
+        reactivateUserData = {
+          ...reactivateUserData,
+          newForm: {
+            ...reactivateUserData.newForm,
+            roles: [...current, roleId],
+          },
+        };
+      }
     }
   };
 
@@ -76,6 +125,11 @@
     if (!$authStore.isAuthenticated) {
       addToast("Anda harus login untuk mengakses halaman ini", "error");
       goto("/login");
+      return;
+    }
+    if (!isUserAdmin($authStore.user)) {
+      addToast("Akses ditolak. Hanya administrator yang dapat mengakses halaman ini.", "error");
+      goto("/");
       return;
     }
     fetchUsers();
@@ -827,7 +881,7 @@
                 {@const isSelected = addForm.roles?.includes(roleItem.id)}
                 <button
                   type="button"
-                  on:click={() => toggleRole(addForm, roleItem.id)}
+                  on:click={() => toggleRole('add', roleItem.id)}
                   class="w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between {isSelected ? 'border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'}"
                 >
                   <div class="flex items-center gap-3">
@@ -973,7 +1027,7 @@
                 {@const isSelected = editForm.roles?.includes(roleItem.id)}
                 <button
                   type="button"
-                  on:click={() => toggleRole(editForm, roleItem.id)}
+                  on:click={() => toggleRole('edit', roleItem.id)}
                   class="w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between {isSelected ? 'border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'}"
                 >
                   <div class="flex items-center gap-3">
@@ -1182,7 +1236,7 @@
                   {@const isSelected = reactivateUserData.newForm.roles?.includes(roleItem.id)}
                   <button
                     type="button"
-                    on:click={() => toggleRole(reactivateUserData.newForm, roleItem.id)}
+                    on:click={() => toggleRole('reactivate', roleItem.id)}
                     class="w-full text-left p-2.5 rounded-lg border transition-all flex items-center justify-between {isSelected ? 'border-emerald-500 bg-emerald-50/60 ring-1 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'}"
                   >
                     <div class="flex items-center gap-2.5">
