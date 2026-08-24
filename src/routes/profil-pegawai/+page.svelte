@@ -370,23 +370,23 @@
 
 <svelte:window on:click={handleClickOutside} on:keydown={handleKeydown} />
 
-<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8 animate-fade-in">
+<div class="max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-8 animate-fade-in w-full overflow-x-hidden">
   <!-- Page Header Title & Subtitle -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm">
     <div class="flex items-center gap-3.5">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-blue-600 to-sky-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 flex-shrink-0">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-indigo-600 via-blue-600 to-sky-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 flex-shrink-0">
+        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
       </div>
       <div>
-        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Profil Pegawai PPPK</h1>
-        <p class="text-xs text-slate-500 font-medium">Pencarian biodata, riwayat pendidikan, keluarga, kontrak, dan SK pengangkatan</p>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Profil Pegawai PPPK</h1>
+        <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Pencarian biodata, riwayat pendidikan, keluarga, kontrak, dan SK pengangkatan</p>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
-      <a href="/data-p3k" class="btn-secondary">
+      <a href="/data-p3k" class="btn-secondary w-full sm:w-auto justify-center">
         <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
@@ -396,8 +396,8 @@
   </div>
 
   <!-- Search Card & Autocomplete -->
-  <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-    <div class="flex items-center justify-between">
+  <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/80 shadow-sm space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
       <div>
         <h2 class="text-sm font-bold text-slate-800">Pencarian Pegawai</h2>
         <p class="text-xs text-slate-500">Ketik NIP Baru atau Nama lengkap untuk menampilkan data profil</p>
@@ -406,7 +406,7 @@
         <button
           type="button"
           on:click={clearSearch}
-          class="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+          class="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 self-start sm:self-auto"
         >
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -417,15 +417,15 @@
     </div>
 
     <div class="relative" bind:this={searchContainerRef}>
-      <form on:submit|preventDefault={handleSearchSubmit} class="flex items-center gap-2.5">
-        <div class="relative flex-grow">
+      <form on:submit|preventDefault={handleSearchSubmit} class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        <div class="relative flex-grow min-w-0">
           <input
             type="text"
             bind:value={searchInput}
             on:input={handleSearchInput}
             on:focus={() => { if (searchInput.trim() && searchSuggestions.length > 0) showSuggestions = true; }}
-            placeholder="Cari NIP Baru (contoh: 19900101...) atau Nama Pegawai..."
-            class="w-full text-sm pl-11 pr-10 py-3.5 bg-slate-50/80 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-medium text-slate-800 shadow-inner"
+            placeholder="Cari NIP Baru atau Nama Pegawai..."
+            class="w-full text-sm pl-11 pr-10 py-3 sm:py-3.5 bg-slate-50/80 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-medium text-slate-800 shadow-inner"
             autocomplete="off"
           />
           <div class="absolute left-4 top-3.5 text-slate-400 pointer-events-none">
@@ -454,7 +454,7 @@
 
         <button
           type="submit"
-          class="px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white rounded-2xl text-sm font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center gap-2 flex-shrink-0 active:scale-95"
+          class="w-full sm:w-auto justify-center px-6 py-3 sm:py-3.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white rounded-2xl text-sm font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center gap-2 flex-shrink-0 active:scale-95"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -580,53 +580,53 @@
   <!-- Profile Content -->
   {:else if profile}
     <!-- PROFILE HEADER CARD -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
-      <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-4 sm:space-y-5">
+      <div class="flex flex-col sm:flex-row items-start gap-3.5 sm:gap-5">
         <!-- Avatar Icon -->
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-md shadow-blue-500/20 flex-shrink-0">
+        <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-lg sm:text-2xl font-bold shadow-md shadow-blue-500/20 flex-shrink-0">
           {getAvatarInitial(profile)}
         </div>
 
         <!-- Detail Utama: Nama (NIP), Jabatan, Unit Kerja -->
-        <div class="min-w-0 flex-1 space-y-1.5">
+        <div class="min-w-0 flex-1 space-y-1.5 w-full">
           <!-- Baris 1: Nama Lengkap (NIP) + Badges -->
-          <div class="flex flex-wrap items-center gap-2">
-            <h2 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <h2 class="text-base sm:text-xl font-bold text-slate-900 tracking-tight break-words">
               {getNamaLengkap(profile)}
             </h2>
             <button
               type="button"
               on:click={() => copyNip(cleanValue(profile.nipBaru))}
-              class="font-mono font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-lg border border-slate-200 text-xs transition-colors flex items-center gap-1"
+              class="font-mono font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-lg border border-slate-200 text-xs transition-colors flex items-center gap-1 break-all"
               title="Klik untuk menyalin NIP"
             >
               <span>({cleanValue(profile.nipBaru)})</span>
-              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </button>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide {profile.statusPensiun === 'PENSIUN' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
+            <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide {profile.statusPensiun === 'PENSIUN' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
               {profile.statusPensiun || "AKTIF"}
             </span>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+            <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
               {profile.jenisPegawaiNama || "PPPK"}
             </span>
           </div>
 
           <!-- Baris 2: Jabatan -->
-          <p class="text-xs sm:text-sm font-semibold text-blue-600 flex items-center gap-1.5">
+          <p class="text-xs sm:text-sm font-semibold text-blue-600 flex items-center gap-1.5 break-words">
             <svg class="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            <span>{cleanValue(profile.jabatanNama)}</span>
+            <span class="break-words">{cleanValue(profile.jabatanNama)}</span>
           </p>
 
           <!-- Baris 3: Unit Kerja -->
-          <p class="text-xs text-slate-600 flex items-start gap-1.5 leading-relaxed">
+          <p class="text-xs text-slate-600 flex items-start gap-1.5 leading-relaxed break-words">
             <svg class="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M13 16h.01M13 12h.01" />
             </svg>
-            <span class="font-medium text-slate-700">
+            <span class="font-medium text-slate-700 break-words">
               {profile.unorInduk?.nama ? `${profile.unorInduk.nama} — ${profile.unorNama || ''}` : (profile.unorNama || "Unit Kerja belum diset")}
             </span>
           </p>
@@ -634,31 +634,31 @@
       </div>
 
       <!-- Quick Summary Stats Bar -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-4 border-t border-slate-100">
-        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Jenis Jabatan</span>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs pt-4 border-t border-slate-100">
+        <div class="p-2.5 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+          <span class="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Jenis Jabatan</span>
           <p class="font-bold text-slate-800 mt-0.5 truncate" title={cleanValue(profile.jenisJabatanNama)}>
             {cleanValue(profile.jenisJabatanNama)}
           </p>
         </div>
-        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Golongan Ruang</span>
-          <p class="font-bold text-blue-700 mt-0.5">
+        <div class="p-2.5 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+          <span class="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Golongan Ruang</span>
+          <p class="font-bold text-blue-700 mt-0.5 truncate">
             {cleanValue(profile.golAkhirNama || profile.golAwalNama)}
             {#if profile.tmtGolongan}
               <span class="text-[10px] text-slate-400 font-normal"> (TMT: {profile.tmtGolongan})</span>
             {/if}
           </p>
         </div>
-        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Pendidikan Terakhir</span>
+        <div class="p-2.5 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+          <span class="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Pendidikan Terakhir</span>
           <p class="font-bold text-slate-800 mt-0.5 truncate" title={cleanValue(profile.pendidikanNama || profile.tingkatPendidikanNama)}>
             {cleanValue(profile.pendidikanNama || profile.tingkatPendidikanNama)}
           </p>
         </div>
-        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-          <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Kontrak</span>
-          <p class="font-bold text-emerald-700 mt-0.5">
+        <div class="p-2.5 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+          <span class="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Total Kontrak</span>
+          <p class="font-bold text-emerald-700 mt-0.5 truncate">
             {(profile.riwayatKontrak || []).length} Riwayat Kontrak
           </p>
         </div>
@@ -666,13 +666,13 @@
     </div>
 
     <!-- TABS NAVIGATION BAR -->
-    <div class="p-1.5 bg-slate-100 rounded-2xl flex overflow-x-auto gap-1 border border-slate-200">
+    <div class="p-1 sm:p-1.5 bg-slate-100 rounded-2xl flex overflow-x-auto gap-1 border border-slate-200 max-w-full scrollbar-thin">
       <button
         type="button"
         on:click={() => (activeTab = "utama")}
-        class="flex-1 min-w-[140px] py-2.5 px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'utama' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
+        class="flex-1 min-w-[110px] sm:min-w-[140px] py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap {activeTab === 'utama' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
         Data Utama
@@ -681,9 +681,9 @@
       <button
         type="button"
         on:click={() => (activeTab = "pendidikan")}
-        class="flex-1 min-w-[140px] py-2.5 px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'pendidikan' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
+        class="flex-1 min-w-[110px] sm:min-w-[140px] py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap {activeTab === 'pendidikan' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
         </svg>
@@ -693,9 +693,9 @@
       <button
         type="button"
         on:click={() => (activeTab = "keluarga")}
-        class="flex-1 min-w-[140px] py-2.5 px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'keluarga' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
+        class="flex-1 min-w-[110px] sm:min-w-[140px] py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap {activeTab === 'keluarga' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
         Keluarga
@@ -704,9 +704,9 @@
       <button
         type="button"
         on:click={() => (activeTab = "kontrak")}
-        class="flex-1 min-w-[140px] py-2.5 px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'kontrak' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
+        class="flex-1 min-w-[110px] sm:min-w-[140px] py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap {activeTab === 'kontrak' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         Kontrak ({ (profile.riwayatKontrak || []).length })
@@ -715,9 +715,9 @@
       <button
         type="button"
         on:click={() => (activeTab = "sk_pengangkatan")}
-        class="flex-1 min-w-[140px] py-2.5 px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'sk_pengangkatan' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
+        class="flex-1 min-w-[110px] sm:min-w-[140px] py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap {activeTab === 'sk_pengangkatan' ? 'bg-white shadow-sm text-blue-700 font-bold' : 'text-slate-600 hover:text-slate-900'}"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
         SK Pengangkatan
@@ -726,120 +726,120 @@
 
     <!-- TAB 1: DATA UTAMA -->
     {#if activeTab === "utama"}
-      <div class="space-y-6">
+      <div class="space-y-4 sm:space-y-6">
         <!-- Section 1.1: Identitas Pribadi -->
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4">
           <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
               </svg>
             </div>
-            <h3 class="text-base font-bold text-slate-800">Identitas Pribadi & Kependudukan</h3>
+            <h3 class="text-sm sm:text-base font-bold text-slate-800">Identitas Pribadi & Kependudukan</h3>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Nomor Induk Kependudukan (NIK)</span>
-              <p class="font-mono font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.nik)}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Nomor Induk Kependudukan (NIK)</span>
+              <p class="font-mono font-bold text-slate-800 text-sm mt-1 break-all">{cleanValue(profile.nik)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Tempat & Tanggal Lahir</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Tempat & Tanggal Lahir</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">
                 {cleanValue(profile.tempatLahirNama)}{profile.tanggalLahir ? `, ${cleanValue(profile.tanggalLahir)}` : ""}
               </p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Jenis Kelamin</span>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Jenis Kelamin</span>
               <p class="font-bold text-slate-800 text-sm mt-1">
                 {formatJenisKelamin(profile.jenisKelamin)}
               </p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Agama</span>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Agama</span>
               <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.agamaNama)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Status Pernikahan</span>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Status Pernikahan</span>
               <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.jenisKawinNama)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Nomor WhatsApp / HP</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.nomorHp)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Nomor WhatsApp / HP</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-all">{cleanValue(profile.nomorHp)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Email Pribadi</span>
-              <p class="font-bold text-slate-800 text-sm mt-1 truncate">{cleanValue(profile.email)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Email Pribadi</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-all">{cleanValue(profile.email)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Email Kedinasan (Gov)</span>
-              <p class="font-bold text-slate-800 text-sm mt-1 truncate">{cleanValue(profile.emailGov)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Email Kedinasan (Gov)</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-all">{cleanValue(profile.emailGov)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Nomor NPWP</span>
-              <p class="font-mono font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.npwpNomor)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Nomor NPWP</span>
+              <p class="font-mono font-bold text-slate-800 text-sm mt-1 break-all">{cleanValue(profile.npwpNomor)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Nomor BPJS</span>
-              <p class="font-mono font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.bpjs)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Nomor BPJS</span>
+              <p class="font-mono font-bold text-slate-800 text-sm mt-1 break-all">{cleanValue(profile.bpjs)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Kartu ASN Virtual</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.kartuAsnVirtual)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Kartu ASN Virtual</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">{cleanValue(profile.kartuAsnVirtual)}</p>
             </div>
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs">
             <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Alamat Lengkap</span>
-            <p class="font-semibold text-slate-800 mt-1 leading-relaxed">{cleanValue(profile.alamat) !== '-' ? cleanValue(profile.alamat) : 'Alamat belum tercatat dalam sistem'}</p>
+            <p class="font-semibold text-slate-800 mt-1 leading-relaxed break-words">{cleanValue(profile.alamat) !== '-' ? cleanValue(profile.alamat) : 'Alamat belum tercatat dalam sistem'}</p>
           </div>
         </div>
 
         <!-- Section 1.2: Status Kepegawaian & Unit Kerja -->
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4">
           <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M13 16h.01M13 12h.01" />
               </svg>
             </div>
-            <h3 class="text-base font-bold text-slate-800">Status Kepegawaian & Penempatan</h3>
+            <h3 class="text-sm sm:text-base font-bold text-slate-800">Status Kepegawaian & Penempatan</h3>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Kedudukan Hukum</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.kedudukanHukumNama) || "Aktif"}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Kedudukan Hukum</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">{cleanValue(profile.kedudukanHukumNama) || "Aktif"}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Jenis Pegawai</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.jenisPegawaiNama) || "PPPK"}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Jenis Pegawai</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">{cleanValue(profile.jenisPegawaiNama) || "PPPK"}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Jenis Jabatan</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.jenisJabatanNama)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Jenis Jabatan</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">{cleanValue(profile.jenisJabatanNama)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">TMT Jabatan</span>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">TMT Jabatan</span>
               <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.tmtJabatan)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Golongan Ruang</span>
-              <p class="font-bold text-blue-700 text-sm mt-1">
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Golongan Ruang</span>
+              <p class="font-bold text-blue-700 text-sm mt-1 break-words">
                 {cleanValue(profile.golAkhirNama || profile.golAwalNama)}
                 {#if profile.tmtGolongan}
                   <span class="text-[11px] text-slate-400 font-normal"> (TMT: {cleanValue(profile.tmtGolongan)})</span>
@@ -847,33 +847,33 @@
               </p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">
                 Masa Kerja <span class="text-rose-600 font-bold">(Sampai Saat Ini)</span>
               </span>
-              <p class="font-bold text-slate-800 text-sm mt-1">
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">
                 {calculateMasaKerjaSampaiSaatIni(profile)}
               </p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Kantor Bayar (KPKN / KPPN)</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.kpknNama)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Kantor Bayar (KPKN / KPPN)</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">{cleanValue(profile.kpknNama)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Lokasi Kerja</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.lokasiKerjaNama)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Lokasi Kerja</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">{cleanValue(profile.lokasiKerjaNama)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Instansi Induk</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.instansiIndukNama)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Instansi Induk</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">{cleanValue(profile.instansiIndukNama)}</p>
             </div>
 
-            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Instansi Kerja</span>
-              <p class="font-bold text-slate-800 text-sm mt-1">{cleanValue(profile.instansiKerjaNama)}</p>
+            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+              <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Instansi Kerja</span>
+              <p class="font-bold text-slate-800 text-sm mt-1 break-words">{cleanValue(profile.instansiKerjaNama)}</p>
             </div>
           </div>
         </div>
@@ -881,40 +881,40 @@
 
     <!-- TAB 2: PENDIDIKAN -->
     {:else if activeTab === "pendidikan"}
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+      <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4 sm:space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4">
           <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
               </svg>
             </div>
             <div>
-              <h3 class="text-base font-bold text-slate-800">Riwayat & Data Pendidikan</h3>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800">Riwayat & Data Pendidikan</h3>
               <p class="text-xs text-slate-500">Pendidikan formal yang tercatat pada kualifikasi kepegawaian</p>
             </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Tingkat Pendidikan</span>
-            <p class="font-bold text-slate-800 text-sm mt-1">{profile.tingkatPendidikanNama || "-"}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-xs">
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+            <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Tingkat Pendidikan</span>
+            <p class="font-bold text-slate-800 text-sm mt-1 break-words">{profile.tingkatPendidikanNama || "-"}</p>
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Program Studi / Jurusan</span>
-            <p class="font-bold text-slate-800 text-sm mt-1">{profile.pendidikanNama || "-"}</p>
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+            <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Program Studi / Jurusan</span>
+            <p class="font-bold text-slate-800 text-sm mt-1 break-words">{profile.pendidikanNama || "-"}</p>
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Nama Sekolah / Perguruan Tinggi</span>
-            <p class="font-bold text-slate-800 text-sm mt-1">{profile.namaSekolah || "-"}</p>
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+            <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Nama Sekolah / Perguruan Tinggi</span>
+            <p class="font-bold text-slate-800 text-sm mt-1 break-words">{profile.namaSekolah || "-"}</p>
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Tahun Kelulusan</span>
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+            <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px] block truncate">Tahun Kelulusan</span>
             <p class="font-bold text-slate-800 text-sm mt-1">{profile.tahunLulus || "-"}</p>
           </div>
         </div>
@@ -922,39 +922,39 @@
 
     <!-- TAB 3: KELUARGA -->
     {:else if activeTab === "keluarga"}
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+      <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4 sm:space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4">
           <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center">
+            <div class="w-7 h-7 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
             <div>
-              <h3 class="text-base font-bold text-slate-800">Status Pernikahan & Keluarga</h3>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800">Status Pernikahan & Keluarga</h3>
               <p class="text-xs text-slate-500">Informasi status perkawinan dan tanggungan keluarga pegawai</p>
             </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Status Pernikahan</span>
-            <p class="text-base font-bold text-slate-800">{profile.jenisKawinNama || "-"}</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 text-xs">
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1 min-w-0">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Status Pernikahan</span>
+            <p class="text-base font-bold text-slate-800 break-words">{profile.jenisKawinNama || "-"}</p>
             <p class="text-[11px] text-slate-500">Tercatat dalam data kepegawaian ASN</p>
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Jumlah Tanggungan / Pasangan</span>
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1 min-w-0">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Jumlah Tanggungan / Pasangan</span>
             <p class="text-base font-bold text-blue-700">
               {profile.jenisKawinNama?.toLowerCase().includes("kawin") ? "1 Pasangan" : "0 Pasangan"}
             </p>
             <p class="text-[11px] text-slate-500">Keluarga tertanggung BPJS / Penggajian</p>
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Kartu ASN Virtual Terdaftar</span>
-            <p class="text-base font-bold text-emerald-700">{profile.kartuAsnVirtual || "Terdaftar"}</p>
+          <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1 min-w-0">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Kartu ASN Virtual Terdaftar</span>
+            <p class="text-base font-bold text-emerald-700 break-words">{profile.kartuAsnVirtual || "Terdaftar"}</p>
             <p class="text-[11px] text-slate-500">Layanan Satu Pintu BKN</p>
           </div>
         </div>
@@ -962,23 +962,23 @@
 
     <!-- TAB 4: KONTRAK -->
     {:else if activeTab === "kontrak"}
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+      <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4 sm:space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4">
           <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
             <div>
-              <h3 class="text-base font-bold text-slate-800">Riwayat Perjanjian Kerja / Kontrak</h3>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800">Riwayat Perjanjian Kerja / Kontrak</h3>
               <p class="text-xs text-slate-500">Daftar riwayat kontrak kerja yang pernah diterbitkan untuk pegawai ini</p>
             </div>
           </div>
         </div>
 
         {#if !profile.riwayatKontrak || profile.riwayatKontrak.length === 0}
-          <div class="py-12 text-center bg-slate-50/70 rounded-xl border border-slate-200 p-8 space-y-2">
+          <div class="py-8 sm:py-12 text-center bg-slate-50/70 rounded-xl border border-slate-200 p-4 sm:p-8 space-y-2">
             <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -988,8 +988,8 @@
             <p class="text-xs text-slate-400">Riwayat kontrak akan otomatis muncul setelah usulan PK diselesaikan</p>
           </div>
         {:else}
-          <div class="overflow-x-auto rounded-xl border border-slate-200">
-            <table class="w-full text-left border-collapse text-xs">
+          <div class="overflow-x-auto max-w-full rounded-xl border border-slate-200 scrollbar-thin">
+            <table class="w-full min-w-[640px] text-left border-collapse text-xs">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                   <th class="py-3 px-4 text-center w-14">Ke-</th>
@@ -1006,32 +1006,32 @@
                     <td class="py-3.5 px-4 text-center font-bold text-blue-700 bg-blue-50/40">
                       {k.kontrakKe}
                     </td>
-                    <td class="py-3.5 px-4 font-mono font-bold text-slate-800">
+                    <td class="py-3.5 px-4 font-mono font-bold text-slate-800 break-all">
                       {k.nomorKontrak || "-"}
                       {#if k.keterangan}
-                        <p class="text-[10px] font-sans font-normal text-slate-400 mt-0.5">{k.keterangan}</p>
+                        <p class="text-[10px] font-sans font-normal text-slate-400 mt-0.5 break-words">{k.keterangan}</p>
                       {/if}
                     </td>
                     <td class="py-3.5 px-4">
                       <div class="space-y-0.5">
-                        <p class="font-semibold text-slate-800">
+                        <p class="font-semibold text-slate-800 whitespace-nowrap">
                           {formatDate(k.tanggalMulai)} s/d {formatDate(k.tanggalSelesai)}
                         </p>
-                        <p class="text-[10px] text-slate-400 font-mono">
+                        <p class="text-[10px] text-slate-400 font-mono whitespace-nowrap">
                           ({k.tanggalMulai} s/d {k.tanggalSelesai})
                         </p>
                       </div>
                     </td>
-                    <td class="py-3.5 px-4 font-bold text-emerald-700">
+                    <td class="py-3.5 px-4 font-bold text-emerald-700 whitespace-nowrap">
                       {formatCurrency(k.gajiPokok)}
                     </td>
-                    <td class="py-3.5 px-4">
+                    <td class="py-3.5 px-4 whitespace-nowrap">
                       <p class="font-semibold text-slate-800">Golongan {k.golongan || "-"}</p>
                       <p class="text-[10px] text-slate-400">
                         Masa Kerja: {k.mkTahun ?? "-"} Thn {k.mkBulan ?? "-"} Bln
                       </p>
                     </td>
-                    <td class="py-3.5 px-4 text-right">
+                    <td class="py-3.5 px-4 text-right whitespace-nowrap">
                       {#if k.arsipKontrak?.fileUrl}
                         <a
                           href={`${API_BASE_URL}${k.arsipKontrak.fileUrl}`}
@@ -1057,29 +1057,29 @@
 
     <!-- TAB 5: SK PENGANGKATAN -->
     {:else if activeTab === "sk_pengangkatan"}
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+      <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-4 sm:space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4">
           <div class="flex items-center gap-2.5">
-            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
             <div>
-              <h3 class="text-base font-bold text-slate-800">SK Pengangkatan & Surat Keputusan</h3>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800">SK Pengangkatan & Surat Keputusan</h3>
               <p class="text-xs text-slate-500">Data penetapan pengangkatan awal dan status surat keputusan kepegawaian</p>
             </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
           <!-- SK CPNS / Pengangkatan PPPK Card -->
-          <div class="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 font-semibold rounded-md text-xs border border-blue-200">
+          <div class="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 min-w-0">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 font-semibold rounded-md text-xs border border-blue-200 self-start sm:self-auto">
                 SK Pengangkatan Pertama
               </span>
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 {#if profile.arsipSkCpns?.fileUrl}
                   <a
                     href={`${API_BASE_URL}${profile.arsipSkCpns.fileUrl}`}
@@ -1092,41 +1092,36 @@
                     Lihat Berkas PDF
                   </a>
                 {/if}
-                {#if profile.tmtCpns}
-                  <span class="text-xs font-semibold text-slate-700 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
-                    TMT: {profile.tmtCpns}
-                  </span>
-                {/if}
               </div>
             </div>
 
             <div class="space-y-2 pt-1">
               <div>
-                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Nomor SK Pengangkatan</span>
-                <p class="font-mono text-sm font-bold text-slate-800">{profile.nomorSkCpns || "-"}</p>
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Nomor SK Pengangkatan</span>
+                <p class="font-mono text-sm font-bold text-slate-800 break-all">{profile.nomorSkCpns || "-"}</p>
               </div>
 
               <div class="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-200">
-                <div>
-                  <span class="text-slate-400 text-[10px] font-semibold uppercase">Tanggal Penetapan SK</span>
-                  <p class="font-semibold text-slate-800 mt-0.5">{profile.tanggalSkCpns || "-"}</p>
+                <div class="min-w-0">
+                  <span class="text-slate-400 text-[10px] font-semibold uppercase block truncate">Tanggal Penetapan SK</span>
+                  <p class="font-semibold text-slate-800 mt-0.5 break-words">{profile.tanggalSkCpns || "-"}</p>
                 </div>
-                <div>
-                  <span class="text-slate-400 text-[10px] font-semibold uppercase">TMT CPNS / PPPK</span>
-                  <p class="font-semibold text-slate-800 mt-0.5">{profile.tmtCpns || "-"}</p>
+                <div class="min-w-0">
+                  <span class="text-slate-400 text-[10px] font-semibold uppercase block truncate">TMT CPNS / PPPK</span>
+                  <p class="font-semibold text-slate-800 mt-0.5 break-words">{profile.tmtCpns || "-"}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Pertek BKN Card -->
-          <div class="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 font-semibold rounded-md text-xs border border-indigo-200">
+          <div class="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3 min-w-0">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span class="px-2.5 py-0.5 bg-indigo-50 text-indigo-700 font-semibold rounded-md text-xs border border-indigo-200 self-start sm:self-auto">
                 Pertek BKN
               </span>
               {#if profile.tmtPns || profile.tmtJabatan}
-                <span class="text-xs font-semibold text-slate-700 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
+                <span class="text-xs font-semibold text-slate-700 bg-white px-2.5 py-0.5 rounded-md border border-slate-200 self-start sm:self-auto">
                   TMT: {profile.tmtPns || profile.tmtJabatan}
                 </span>
               {/if}
@@ -1134,18 +1129,18 @@
 
             <div class="space-y-2 pt-1">
               <div>
-                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Nomor Pertek BKN</span>
-                <p class="font-mono text-sm font-bold text-slate-800">{profile.nomorSkPns || "-"}</p>
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block truncate">Nomor Pertek BKN</span>
+                <p class="font-mono text-sm font-bold text-slate-800 break-all">{profile.nomorSkPns || "-"}</p>
               </div>
 
               <div class="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-200">
-                <div>
-                  <span class="text-slate-400 text-[10px] font-semibold uppercase">Tanggal Pertek BKN</span>
-                  <p class="font-semibold text-slate-800 mt-0.5">{profile.tanggalSkPns || "-"}</p>
+                <div class="min-w-0">
+                  <span class="text-slate-400 text-[10px] font-semibold uppercase block truncate">Tanggal Pertek BKN</span>
+                  <p class="font-semibold text-slate-800 mt-0.5 break-words">{profile.tanggalSkPns || "-"}</p>
                 </div>
-                <div>
-                  <span class="text-slate-400 text-[10px] font-semibold uppercase">TMT Pertek BKN</span>
-                  <p class="font-semibold text-slate-800 mt-0.5">{profile.tmtPns || profile.tmtJabatan || "-"}</p>
+                <div class="min-w-0">
+                  <span class="text-slate-400 text-[10px] font-semibold uppercase block truncate">TMT Pertek BKN</span>
+                  <p class="font-semibold text-slate-800 mt-0.5 break-words">{profile.tmtPns || profile.tmtJabatan || "-"}</p>
                 </div>
               </div>
             </div>
@@ -1154,16 +1149,16 @@
 
         {#if profile.arsipSkPensiun}
           <!-- SK Pensiun Card (If applicable) -->
-          <div class="p-5 rounded-xl bg-rose-50 border border-rose-200 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <span class="px-2.5 py-0.5 bg-rose-600 text-white font-semibold rounded-md text-xs">
+          <div class="p-4 sm:p-5 rounded-xl bg-rose-50 border border-rose-200 space-y-2.5 min-w-0">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span class="px-2.5 py-0.5 bg-rose-600 text-white font-semibold rounded-md text-xs self-start sm:self-auto">
                 SK Pensiun Diterbitkan
               </span>
               {#if profile.arsipSkPensiun.fileUrl}
                 <a
                   href={`${API_BASE_URL}${profile.arsipSkPensiun.fileUrl}`}
                   target="_blank"
-                  class="px-3 py-1 bg-white hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-semibold border border-rose-200 flex items-center gap-1 transition-colors"
+                  class="px-3 py-1 bg-white hover:bg-rose-100 text-rose-700 rounded-lg text-xs font-semibold border border-rose-200 flex items-center gap-1 transition-colors self-start sm:self-auto"
                 >
                   <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1172,8 +1167,8 @@
                 </a>
               {/if}
             </div>
-            <p class="text-xs text-rose-800">
-              Nomor SK: <b class="font-mono">{profile.arsipSkPensiun.nomorSk}</b>
+            <p class="text-xs text-rose-800 break-words">
+              Nomor SK: <b class="font-mono break-all">{profile.arsipSkPensiun.nomorSk}</b>
               {#if profile.arsipSkPensiun.tanggalSk}
                 • Tanggal SK: <b>{profile.arsipSkPensiun.tanggalSk}</b>
               {/if}

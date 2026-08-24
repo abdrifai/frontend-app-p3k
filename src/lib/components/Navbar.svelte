@@ -80,6 +80,23 @@
     mobileLaporanOpen = false;
   };
 
+  // Scroll lock effect when mobile sidebar drawer is open
+  $effect(() => {
+    if (typeof document !== 'undefined') {
+      if (mobileMenuOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    }
+  });
+
+  function handleKeydown(e) {
+    if (e.key === 'Escape' && mobileMenuOpen) {
+      closeMobile();
+    }
+  }
+
   const isActive = (path) => $page.url.pathname === path;
 
   const isUtamaActive = () =>
@@ -241,6 +258,8 @@
     }, 200);
   };
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <header
   class="bg-white border-b border-slate-200/60 sticky top-0 z-50 shadow-sm"
@@ -1446,12 +1465,43 @@
     </div>
   </div>
 
-  <!-- Mobile Menu Drawer -->
+  <!-- Mobile Menu Drawer (Off-Canvas Sidebar) -->
   {#if mobileMenuOpen}
+    <!-- Backdrop Overlay -->
     <div
-      class="lg:hidden border-t border-slate-100 bg-white/95 backdrop-blur-sm"
+      class="lg:hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 transition-opacity duration-300"
+      onclick={closeMobile}
+      aria-hidden="true"
+    ></div>
+
+    <!-- Slide-Over Sidebar Panel -->
+    <aside
+      class="lg:hidden fixed top-0 bottom-0 left-0 z-50 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out"
     >
-      <div class="px-4 pt-3 pb-4 space-y-1">
+      <!-- Sidebar Drawer Header -->
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+            <span class="text-white font-extrabold text-xs">P3K</span>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-800 tracking-tight">SIPPPK</h2>
+            <p class="text-[11px] text-slate-500 font-medium">Sistem Informasi P3K</p>
+          </div>
+        </div>
+        <button
+          onclick={closeMobile}
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+          aria-label="Tutup menu"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Sidebar Drawer Content (Scrollable) -->
+      <div class="flex-1 overflow-y-auto px-4 py-4 space-y-1.5 scrollbar-thin">
         {#if canAccess('dashboard')}
           <a
             href="/"
@@ -1481,7 +1531,7 @@
         {#if $authStore.isAuthenticated}
           <!-- Mobile: Data P3K Utama Group -->
           {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pensiun', 'perbedaan-data'])}
-            <div class="pt-2">
+            <div class="pt-1">
               <button
                 type="button"
                 onclick={() => (mobileUtamaOpen = !mobileUtamaOpen)}
@@ -1522,23 +1572,23 @@
 
               {#if mobileUtamaOpen}
                 <div
-                  class="mt-1 mb-1 ml-5 pl-4 border-l-2 border-blue-200 space-y-0.5"
+                  class="mt-1 mb-1 ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5"
                 >
                   {#if canAccess('profil-pegawai')}
                     <a
                       href="/profil-pegawai"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/profil-pegawai',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-indigo-600"
+                          class="w-3.5 h-3.5 text-indigo-600"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1558,17 +1608,17 @@
                     <a
                       href="/statistik-p3k"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/statistik-p3k',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-emerald-500"
+                          class="w-3.5 h-3.5 text-emerald-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1587,14 +1637,14 @@
                     <a
                       href="/manajemen-pensiun"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/manajemen-pensiun',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-red-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-red-50 flex items-center justify-center shrink-0"
                       >
                         <svg
                           class="w-3.5 h-3.5 text-red-500"
@@ -1616,17 +1666,17 @@
                     <a
                       href="/perbedaan-data"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/perbedaan-data',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-rose-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-rose-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-rose-500"
+                          class="w-3.5 h-3.5 text-rose-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1648,7 +1698,7 @@
 
           <!-- Mobile: Perpanjangan Kontrak Group -->
           {#if canAccess('perpanjangan-pk') && canAccessAny(['perpanjangan-dashboard', 'perpanjangan-usulan', 'perpanjangan-inbox'])}
-            <div class="pt-2">
+            <div class="pt-1">
               <button
                 type="button"
                 onclick={() => (mobilePerpanjanganOpen = !mobilePerpanjanganOpen)}
@@ -1689,20 +1739,20 @@
 
               {#if mobilePerpanjanganOpen}
                 <div
-                  class="mt-1 mb-1 ml-5 pl-4 border-l-2 border-indigo-200 space-y-0.5"
+                  class="mt-1 mb-1 ml-4 pl-3 border-l-2 border-indigo-200 space-y-0.5"
                 >
                   {#if canAccess('perpanjangan-dashboard')}
                     <a
                       href="/perpanjangan-kontrak/dashboard"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/perpanjangan-kontrak/dashboard',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center shrink-0"
                       >
                         <svg
                           class="w-3.5 h-3.5 text-blue-500"
@@ -1724,17 +1774,17 @@
                     <a
                       href="/perpanjangan-kontrak/usulan"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/perpanjangan-kontrak/usulan',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-indigo-500"
+                          class="w-3.5 h-3.5 text-indigo-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1753,17 +1803,17 @@
                     <a
                       href="/perpanjangan-kontrak/inbox"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/perpanjangan-kontrak/inbox',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-amber-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-amber-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-amber-500"
+                          class="w-3.5 h-3.5 text-amber-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1785,7 +1835,7 @@
 
           <!-- Mobile: Task User Group -->
           {#if canAccess('task-user') && canAccessAny(['task-peremajaan-dashboard', 'task-peremajaan', 'task-usulan-pk'])}
-            <div class="pt-2">
+            <div class="pt-1">
               <button
                 type="button"
                 onclick={() => (mobileTaskUserOpen = !mobileTaskUserOpen)}
@@ -1826,20 +1876,20 @@
 
               {#if mobileTaskUserOpen}
                 <div
-                  class="mt-1 mb-1 ml-5 pl-4 border-l-2 border-indigo-200 space-y-0.5"
+                  class="mt-1 mb-1 ml-4 pl-3 border-l-2 border-indigo-200 space-y-0.5"
                 >
                   {#if canAccess('task-peremajaan-dashboard')}
                     <a
                       href="/task-peremajaan/dashboard"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/task-peremajaan/dashboard',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center shrink-0"
                       >
                         <i class="ri-dashboard-3-line text-blue-600 text-xs"></i>
                       </div>
@@ -1850,17 +1900,17 @@
                     <a
                       href="/task-user-peremajaan"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/task-user-peremajaan',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-orange-500"
+                          class="w-3.5 h-3.5 text-orange-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1879,17 +1929,17 @@
                     <a
                       href="/task-user-usulan-pk"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/task-user-usulan-pk',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-indigo-500"
+                          class="w-3.5 h-3.5 text-indigo-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1911,7 +1961,7 @@
 
           <!-- Mobile: Laporan Group -->
           {#if canAccess('laporan') && canAccessAny(['laporan-perpanjangan', 'laporan-unit-kerja', 'laporan-estimasi-pensiun', 'laporan-statistik-task'])}
-            <div class="pt-2">
+            <div class="pt-1">
               <button
                 type="button"
                 onclick={() => (mobileLaporanOpen = !mobileLaporanOpen)}
@@ -1952,20 +2002,20 @@
 
               {#if mobileLaporanOpen}
                 <div
-                  class="mt-1 mb-1 ml-5 pl-4 border-l-2 border-blue-200 space-y-0.5"
+                  class="mt-1 mb-1 ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5"
                 >
                   {#if canAccess('laporan-perpanjangan')}
                     <a
                       href="/laporan/perpanjangan-pk"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/laporan/perpanjangan-pk',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center shrink-0"
                       >
                         <svg
                           class="w-3.5 h-3.5 text-blue-500"
@@ -1987,17 +2037,17 @@
                     <a
                       href="/estimasi-pensiun"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/estimasi-pensiun',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-amber-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-amber-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-amber-500"
+                          class="w-3.5 h-3.5 text-amber-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -2016,17 +2066,17 @@
                     <a
                       href="/statistik-task"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/statistik-task',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-indigo-500"
+                          class="w-3.5 h-3.5 text-indigo-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -2045,17 +2095,17 @@
                     <a
                       href="/laporan/per-unit-kerja"
                       onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/laporan/per-unit-kerja',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
                       <div
-                        class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center"
+                        class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center shrink-0"
                       >
                         <svg
-                          class="w-3 h-3 text-teal-500"
+                          class="w-3.5 h-3.5 text-teal-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -2077,7 +2127,7 @@
 
           <!-- Mobile: Setting Group -->
           {#if canAccess('pengaturan') && canAccessAny(['setting-p3k-import', 'setting-statistik-import', 'setting-import-csv', 'setting-task-peremajaan', 'setting-task-usulan-pk', 'setting-ref-unor', 'setting-ref-gaji', 'setting-kegiatan', 'setting-manajemen-user', 'setting-hak-akses', 'setting-activity-log', 'setting-backup'])}
-            <div class="pt-2">
+            <div class="pt-1">
               <button
                 type="button"
                 onclick={() => (mobileSettingOpen = !mobileSettingOpen)}
@@ -2122,11 +2172,11 @@
               </button>
               {#if mobileSettingOpen}
                 <div
-                  class="mt-1 mb-1 ml-5 pl-4 border-l-2 border-slate-200 space-y-0.5"
+                  class="mt-1 mb-1 ml-4 pl-3 border-l-2 border-slate-200 space-y-0.5"
                 >
                   {#if canAccessAny(['setting-p3k-import', 'setting-import-csv', 'setting-statistik-import'])}
                     <p
-                      class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1 pb-1 px-3"
+                      class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1 pb-1 px-2.5"
                     >
                       Import SIASN
                     </p>
@@ -2134,17 +2184,17 @@
                       <a
                         href="/data-p3k-import"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/data-p3k-import',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-violet-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-violet-50 flex items-center justify-center shrink-0"
                         >
                           <svg
-                            class="w-3 h-3 text-violet-500"
+                            class="w-3.5 h-3.5 text-violet-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2163,17 +2213,17 @@
                       <a
                         href="/import-p3k-csv"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/import-p3k-csv',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-cyan-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-cyan-50 flex items-center justify-center shrink-0"
                         >
                           <svg
-                            class="w-3 h-3 text-cyan-500"
+                            class="w-3.5 h-3.5 text-cyan-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2192,17 +2242,17 @@
                       <a
                         href="/statistik-p3k-import"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/statistik-p3k-import',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-rose-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-rose-50 flex items-center justify-center shrink-0"
                         >
                           <svg
-                            class="w-3 h-3 text-rose-500"
+                            class="w-3.5 h-3.5 text-rose-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2222,7 +2272,7 @@
 
                   {#if canAccessAny(['setting-task-peremajaan', 'setting-task-usulan-pk', 'setting-kegiatan'])}
                     <p
-                      class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1 pb-1 px-3"
+                      class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1 pb-1 px-2.5"
                     >
                       Manajemen Task
                     </p>
@@ -2230,17 +2280,17 @@
                       <a
                         href="/setting/pembagian-task-peremajaan"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/setting/pembagian-task-peremajaan',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-orange-50 flex items-center justify-center shrink-0"
                         >
                           <svg
-                            class="w-3 h-3 text-orange-500"
+                            class="w-3.5 h-3.5 text-orange-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2259,17 +2309,17 @@
                       <a
                         href="/setting/pembagian-task-usulan-pk"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/setting/pembagian-task-usulan-pk',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
                         >
                           <svg
-                            class="w-3 h-3 text-indigo-500"
+                            class="w-3.5 h-3.5 text-indigo-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2288,16 +2338,16 @@
                       <a
                         href="/setting/kegiatan"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/setting/kegiatan',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-violet-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-violet-50 flex items-center justify-center shrink-0"
                         >
-                          <svg class="w-3 h-3 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg class="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                           </svg>
                         </div>
@@ -2309,7 +2359,7 @@
 
                   {#if canAccessAny(['setting-ref-gaji', 'setting-ref-unor'])}
                     <p
-                      class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1 pb-1 px-3"
+                      class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1 pb-1 px-2.5"
                     >
                       Referensi
                     </p>
@@ -2317,17 +2367,17 @@
                       <a
                         href="/setting/referensi-gaji"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/setting/referensi-gaji',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center shrink-0"
                         >
                           <svg
-                            class="w-3 h-3 text-emerald-500"
+                            class="w-3.5 h-3.5 text-emerald-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2347,17 +2397,17 @@
                       <a
                         href="/ref-unor"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/ref-unor',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center shrink-0"
                         >
                           <svg
-                            class="w-3 h-3 text-teal-500"
+                            class="w-3.5 h-3.5 text-teal-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2378,7 +2428,7 @@
 
                   {#if canAccessAny(['setting-manajemen-user', 'setting-hak-akses', 'setting-activity-log', 'setting-backup'])}
                     <p
-                      class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1 pb-1 px-3"
+                      class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-1 pb-1 px-2.5"
                     >
                       Sistem
                     </p>
@@ -2386,14 +2436,14 @@
                       <a
                         href="/manajemen-user"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/manajemen-user',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center shrink-0"
                         >
                           <svg
                             class="w-3.5 h-3.5 text-slate-500"
@@ -2415,14 +2465,14 @@
                       <a
                         href="/setting/hak-akses"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/setting/hak-akses',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-purple-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-purple-50 flex items-center justify-center shrink-0"
                         >
                           <svg class="w-3.5 h-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -2435,16 +2485,16 @@
                       <a
                         href="/setting/activity-log"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/setting/activity-log',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
                         >
-                          <svg class="w-3 h-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
@@ -2455,14 +2505,14 @@
                       <a
                         href="/setting/backup"
                         onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2.5 px-3 rounded-lg text-sm transition-colors {isActive(
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                           '/setting/backup',
                         )
                           ? 'text-blue-700 bg-blue-50 font-semibold'
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center"
+                          class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center shrink-0"
                         >
                           <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
@@ -2476,92 +2526,70 @@
               {/if}
             </div>
           {/if}
+        {/if}
+      </div>
 
-          <!-- Mobile user section -->
-          <div class="border-t border-slate-100 pt-3 mt-3">
-            <div
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-50/70"
-            >
-              <div
-                class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-sm ring-2 ring-white overflow-hidden"
-              >
-                {#if $authStore.user?.foto}
-                  <img
-                    src="{API_BASE_URL}{$authStore.user.foto}"
-                    alt="Avatar"
-                    class="w-full h-full object-cover"
-                  />
-                {:else}
-                  <span class="text-white text-xs font-bold uppercase"
-                    >{($authStore.user?.username || "U").charAt(0)}</span
-                  >
-                {/if}
-              </div>
-              <div class="flex-1">
-                <p class="text-sm font-medium text-slate-700">
-                  {$authStore.user?.username}
-                </p>
-                <p class="text-[10px] text-slate-400">Pengguna aktif</p>
-              </div>
+      <!-- Sidebar Drawer Footer -->
+      {#if $authStore.isAuthenticated}
+        <div class="p-3.5 border-t border-slate-100 bg-slate-50/80">
+          <div class="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200/70 shadow-sm">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm shrink-0 overflow-hidden">
+              {#if $authStore.user?.foto}
+                <img
+                  src="{API_BASE_URL}{$authStore.user.foto}"
+                  alt="Avatar"
+                  class="w-full h-full object-cover"
+                />
+              {:else}
+                {($authStore.user?.namaLengkap || $authStore.user?.username || "U").charAt(0)}
+              {/if}
             </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-slate-800 truncate">
+                {$authStore.user?.namaLengkap || $authStore.user?.username}
+              </p>
+              <p class="text-[10px] text-slate-400 font-medium truncate">
+                {$authStore.user?.role || "Pengguna Aktif"}
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mt-2">
             <a
               href="/profile"
               onclick={closeMobile}
-              class="nav-link w-full text-left mt-1 {isActive('/profile')
-                ? 'nav-link-active'
-                : 'nav-link-inactive'}"
+              class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 transition-colors shadow-sm"
             >
-              <span class="flex items-center gap-2.5">
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  ><path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  /></svg
-                >
-                Ubah Profil
-              </span>
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Profil
             </a>
             <button
               onclick={() => {
                 handleLogout();
                 closeMobile();
               }}
-              class="nav-link w-full text-left text-red-500 hover:bg-red-50 hover:text-red-600 mt-1"
+              class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors shadow-sm"
             >
-              <span class="flex items-center gap-2.5">
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  ><path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  /></svg
-                >
-                Keluar
-              </span>
+              <svg class="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Keluar
             </button>
           </div>
-        {:else}
-          <div class="border-t border-slate-100 pt-3 mt-3 space-y-2">
-            <a
-              href="/login"
-              onclick={closeMobile}
-              class="nav-link block nav-link-inactive">Masuk</a
-            >
-            <!-- <a href="/register" onclick={closeMobile} class="btn-primary block text-center">Daftar</a> -->
-          </div>
-        {/if}
-      </div>
-    </div>
+        </div>
+      {:else}
+        <div class="p-4 border-t border-slate-100 bg-slate-50/80">
+          <a
+            href="/login"
+            onclick={closeMobile}
+            class="btn-primary w-full text-center text-sm py-2.5"
+          >
+            Masuk
+          </a>
+        </div>
+      {/if}
+    </aside>
   {/if}
 </header>

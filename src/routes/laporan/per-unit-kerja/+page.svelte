@@ -134,26 +134,26 @@
   .print-only { display: none; }
 </style>
 
-<div class="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-6">
+<div class="max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 w-full overflow-x-hidden">
 
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 no-print">
-    <div>
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 no-print">
+    <div class="min-w-0">
       <div class="flex items-center gap-2 mb-1">
-        <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
+        <div class="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
           <svg class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
           </svg>
         </div>
-        <h1 class="text-2xl font-bold text-slate-800">Laporan Per Unit Kerja</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight break-words">Laporan Per Unit Kerja</h1>
       </div>
-      <p class="text-sm text-slate-500 ml-10">Pilih unit kerja induk untuk menampilkan seluruh pegawai P3K.</p>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1">Pilih unit kerja induk untuk menampilkan seluruh pegawai P3K.</p>
     </div>
     {#if records.length > 0}
       <button onclick={handlePrint}
-        class="no-print flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        class="no-print flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors shadow-sm w-full sm:w-auto shrink-0">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
         </svg>
@@ -163,16 +163,16 @@
   </div>
 
   <!-- Filter Panel -->
-  <div class="card p-5 no-print">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="card p-3.5 sm:p-5 no-print min-w-0">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
       <!-- Pilih Unit Kerja (Searchable Combobox) -->
-      <div class="md:col-span-1 relative" bind:this={unorDropdownRef}>
+      <div class="md:col-span-1 relative min-w-0" bind:this={unorDropdownRef}>
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
           Unit Kerja Induk <span class="text-red-400">*</span>
         </label>
         {#if isLoadingUnor}
-          <div class="input-field flex items-center gap-2 text-slate-400 text-sm">
-            <svg class="w-4 h-4 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
+          <div class="input-field flex items-center gap-2 text-slate-400 text-xs sm:text-sm">
+            <svg class="w-4 h-4 animate-spin text-teal-500 shrink-0" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
             </svg>
@@ -197,7 +197,7 @@
                 oninput={onUnorInput}
                 onfocus={() => (showUnorDropdown = true)}
                 placeholder="Ketik untuk mencari unit kerja..."
-                class="input-field w-full pl-9 pr-8"
+                class="input-field w-full pl-9 pr-8 text-xs sm:text-sm"
                 autocomplete="off"
               />
 
@@ -222,11 +222,11 @@
             </div>
 
             {#if showUnorDropdown}
-              <div class="absolute z-50 left-0 w-full min-w-[320px] sm:min-w-[480px] md:min-w-[580px] max-w-[90vw] mt-1.5 bg-white rounded-2xl shadow-2xl shadow-slate-300/80 border border-slate-200 overflow-hidden">
+              <div class="absolute z-50 left-0 w-full min-w-0 sm:min-w-[480px] md:min-w-[580px] max-w-full mt-1.5 bg-white rounded-2xl shadow-2xl shadow-slate-300/80 border border-slate-200 overflow-hidden">
                 <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
                   <span>Hasil Pencarian ({filteredUnorList.length} unit kerja)</span>
                   {#if unorSearchText}
-                    <span class="text-[11px] text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md font-normal truncate max-w-[200px]">"{unorSearchText}"</span>
+                    <span class="text-[11px] text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md font-normal truncate max-w-[160px] sm:max-w-[200px]">"{unorSearchText}"</span>
                   {/if}
                 </div>
 
@@ -271,17 +271,17 @@
       </div>
 
       <!-- Search -->
-      <div>
+      <div class="min-w-0">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Cari Nama / NIP</label>
         <input type="text" bind:value={searchTerm} placeholder="Nama atau NIP..."
-          class="input-field w-full" disabled={!selectedUnorId}
+          class="input-field w-full text-xs sm:text-sm" disabled={!selectedUnorId}
           onkeydown={(e) => e.key === 'Enter' && handleFilter()} />
       </div>
 
       <!-- Filter Status -->
-      <div>
+      <div class="min-w-0">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Status Pegawai</label>
-        <select bind:value={filterStatus} class="input-field w-full"
+        <select bind:value={filterStatus} class="input-field w-full text-xs sm:text-sm"
           disabled={!selectedUnorId} onchange={handleFilter}>
           <option value="">Semua Status</option>
           <option value="AKTIF">Aktif</option>
@@ -291,9 +291,9 @@
     </div>
 
     {#if selectedUnorId}
-      <div class="flex justify-end mt-4">
-        <button onclick={handleFilter} class="btn-primary flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="flex justify-end mt-3 sm:mt-4">
+        <button onclick={handleFilter} class="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
           </svg>
@@ -305,51 +305,51 @@
 
   <!-- Empty State -->
   {#if !selectedUnorId && !isLoading}
-    <div class="card p-12 text-center">
-      <div class="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-4">
-        <svg class="w-8 h-8 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div class="card p-8 sm:p-12 text-center min-w-0">
+      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
             d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
         </svg>
       </div>
-      <p class="text-slate-600 font-medium">Silakan pilih unit kerja induk terlebih dahulu</p>
-      <p class="text-sm text-slate-400 mt-1">Daftar pegawai akan tampil setelah unit kerja dipilih</p>
+      <p class="text-slate-600 font-medium text-sm sm:text-base">Silakan pilih unit kerja induk terlebih dahulu</p>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">Daftar pegawai akan tampil setelah unit kerja dipilih</p>
     </div>
   {/if}
 
   <!-- Loading -->
   {#if isLoading}
-    <div class="card p-12 text-center">
+    <div class="card p-8 sm:p-12 text-center min-w-0">
       <svg class="w-8 h-8 animate-spin text-teal-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
       </svg>
-      <p class="text-slate-500 text-sm">Memuat data pegawai...</p>
+      <p class="text-slate-500 text-xs sm:text-sm">Memuat data pegawai...</p>
     </div>
   {/if}
 
   <!-- Not Found -->
   {#if !isLoading && selectedUnorId && records.length === 0}
-    <div class="card p-10 text-center">
-      <p class="text-slate-500 font-medium">Tidak ada pegawai ditemukan</p>
-      <p class="text-sm text-slate-400 mt-1">Coba ubah filter atau pilih unit kerja yang lain</p>
+    <div class="card p-8 sm:p-10 text-center min-w-0">
+      <p class="text-slate-500 font-medium text-sm sm:text-base">Tidak ada pegawai ditemukan</p>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">Coba ubah filter atau pilih unit kerja yang lain</p>
     </div>
   {/if}
 
   {#if !isLoading && records.length > 0}
     <!-- Summary bar -->
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-lg">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 min-w-0">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 min-w-0">
+        <div class="px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-lg min-w-0">
           <span class="text-xs font-semibold text-teal-700 uppercase tracking-wide">Unit Kerja:</span>
-          <span class="text-sm font-bold text-teal-800 ml-1">{selectedUnorNama}</span>
+          <span class="text-xs sm:text-sm font-bold text-teal-800 ml-1 break-words">{selectedUnorNama}</span>
         </div>
-        <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
+        <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg shrink-0">
           <span class="text-xs text-slate-500">Total:</span>
-          <span class="text-sm font-bold text-slate-700 ml-1">{meta.total} pegawai</span>
+          <span class="text-xs sm:text-sm font-bold text-slate-700 ml-1">{meta.total} pegawai</span>
         </div>
       </div>
-      <p class="text-xs text-slate-400 no-print">Hal. {meta.page} dari {meta.totalPages}</p>
+      <p class="text-xs text-slate-400 no-print text-right sm:text-left">Hal. {meta.page} dari {meta.totalPages}</p>
     </div>
 
     <!-- Print Header -->
@@ -364,41 +364,41 @@
     </div>
 
     <!-- Table -->
-    <div class="card overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+    <div class="card overflow-hidden min-w-0">
+      <div class="overflow-x-auto max-w-full scrollbar-thin">
+        <table class="w-full min-w-[720px] text-xs sm:text-sm border-collapse text-left">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-8">No</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">NIP</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Nama</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Nama Jabatan</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Gol/Ruang</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Pendidikan</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">TMT CPNS</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-10">No</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[150px]">NIP</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[160px]">Nama</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[180px]">Nama Jabatan</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[90px]">Gol/Ruang</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[130px]">Pendidikan</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[100px]">TMT CPNS</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[90px]">Status</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             {#each records as rec, i}
               <tr class="hover:bg-slate-50/60 transition-colors">
-                <td class="px-4 py-3 text-slate-400 text-xs">{(meta.page - 1) * meta.limit + i + 1}</td>
-                <td class="px-4 py-3">
-                  <span class="font-mono text-xs text-slate-600">{rec.nipBaru || '-'}</span>
+                <td class="px-3 sm:px-4 py-3 text-slate-400 text-xs">{(meta.page - 1) * meta.limit + i + 1}</td>
+                <td class="px-3 sm:px-4 py-3">
+                  <span class="font-mono text-xs text-slate-600 break-all">{rec.nipBaru || '-'}</span>
                 </td>
-                <td class="px-4 py-3">
-                  <p class="font-medium text-slate-800 leading-tight">{rec.nama || '-'}</p>
+                <td class="px-3 sm:px-4 py-3">
+                  <p class="font-medium text-slate-800 leading-tight break-words">{rec.nama || '-'}</p>
                   {#if rec.gelarDepan || rec.gelarBelakang}
-                    <p class="text-[10px] text-slate-400 mt-0.5">
+                    <p class="text-[10px] text-slate-400 mt-0.5 break-words">
                       {[rec.gelarDepan, rec.nama, rec.gelarBelakang].filter(Boolean).join(' ')}
                     </p>
                   {/if}
                 </td>
-                <td class="px-4 py-3 text-slate-600 text-xs">{rec.jabatanNama || '-'}</td>
-                <td class="px-4 py-3 text-slate-600 text-xs">{formatGol(rec)}</td>
-                <td class="px-4 py-3 text-slate-600 text-xs">{rec.tingkatPendidikanNama || '-'}</td>
-                <td class="px-4 py-3 text-slate-600 text-xs font-mono">{rec.tmtCpns || '-'}</td>
-                <td class="px-4 py-3">
+                <td class="px-3 sm:px-4 py-3 text-slate-600 text-xs break-words">{rec.jabatanNama || '-'}</td>
+                <td class="px-3 sm:px-4 py-3 text-slate-600 text-xs whitespace-nowrap">{formatGol(rec)}</td>
+                <td class="px-3 sm:px-4 py-3 text-slate-600 text-xs break-words">{rec.tingkatPendidikanNama || '-'}</td>
+                <td class="px-3 sm:px-4 py-3 text-slate-600 text-xs font-mono whitespace-nowrap">{rec.tmtCpns || '-'}</td>
+                <td class="px-3 sm:px-4 py-3 whitespace-nowrap">
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold {statusBadge(rec.statusPensiun)}">
                     {rec.statusPensiun || 'AKTIF'}
                   </span>
@@ -412,18 +412,18 @@
 
     <!-- Pagination -->
     {#if meta.totalPages > 1}
-      <div class="flex items-center justify-between no-print">
-        <p class="text-sm text-slate-500">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 no-print text-xs sm:text-sm">
+        <p class="text-slate-500 text-center sm:text-left">
           Menampilkan {(meta.page - 1) * meta.limit + 1}–{Math.min(meta.page * meta.limit, meta.total)} dari {meta.total} pegawai
         </p>
         <div class="flex items-center gap-2">
           <button onclick={() => fetchData(meta.page - 1)} disabled={meta.page <= 1}
-            class="px-3 py-1.5 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            class="px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
             ← Sebelumnya
           </button>
-          <span class="text-sm text-slate-500">Hal. {meta.page} / {meta.totalPages}</span>
+          <span class="text-xs sm:text-sm font-semibold text-slate-600">Hal. {meta.page} / {meta.totalPages}</span>
           <button onclick={() => fetchData(meta.page + 1)} disabled={meta.page >= meta.totalPages}
-            class="px-3 py-1.5 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            class="px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
             Berikutnya →
           </button>
         </div>

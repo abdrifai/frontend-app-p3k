@@ -386,19 +386,19 @@
   <title>Manajemen User — App P3K</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-6">
+<div class="max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 w-full overflow-x-hidden">
   <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-800">Manajemen User</h1>
-      <p class="mt-1 text-sm text-slate-500">
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
+    <div class="min-w-0">
+      <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight break-words">Manajemen User</h1>
+      <p class="mt-1 text-xs sm:text-sm text-slate-500">
         Kelola akun pengguna yang terdaftar di sistem. Total <span
           class="font-semibold text-slate-700">{meta.total}</span
         > user.
       </p>
     </div>
-    <button on:click={openAddModal} class="btn-primary whitespace-nowrap">
-      <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <button on:click={openAddModal} class="btn-primary whitespace-nowrap w-full sm:w-auto justify-center">
+      <svg class="w-4 h-4 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
       </svg>
       Tambah User
@@ -406,12 +406,12 @@
   </div>
 
   <!-- Search & Filter -->
-  <div class="card p-4 space-y-3">
+  <div class="card p-3.5 sm:p-4 space-y-3 min-w-0">
     <form
       on:submit={handleSearch}
-      class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+      class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3"
     >
-      <div class="flex-1 relative">
+      <div class="flex-1 relative min-w-0">
         <svg
           class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
           fill="none"
@@ -429,18 +429,18 @@
           type="text"
           bind:value={searchTerm}
           placeholder="Cari username, email, atau nama..."
-          class="input-field !pl-10 w-full"
+          class="input-field !pl-10 w-full text-xs sm:text-sm"
         />
       </div>
-      <div class="flex gap-2">
-        <button type="submit" class="btn-primary flex-1 sm:flex-none">
+      <div class="flex gap-2 shrink-0">
+        <button type="submit" class="btn-primary flex-1 sm:flex-none justify-center">
           Cari
         </button>
         {#if searchTerm}
           <button
             type="button"
             on:click={resetSearch}
-            class="btn-secondary !text-red-500 !border-red-200 hover:!bg-red-50"
+            class="btn-secondary !text-red-500 !border-red-200 hover:!bg-red-50 flex-1 sm:flex-none justify-center"
           >
             Reset
           </button>
@@ -448,27 +448,27 @@
       </div>
     </form>
 
-    <div class="flex items-center justify-between gap-4 pt-3 border-t border-slate-100">
-      <div class="flex items-center gap-1.5 text-xs font-semibold">
-        <span class="text-slate-400 mr-1">Filter Status:</span>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2.5 sm:pt-3 border-t border-slate-100 min-w-0">
+      <div class="flex items-center gap-1.5 text-xs font-semibold overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-thin">
+        <span class="text-slate-400 mr-1 whitespace-nowrap shrink-0">Filter Status:</span>
         <button
           type="button"
           on:click={() => { statusFilter = 'active'; fetchUsers(1); }}
-          class="px-3 py-1.5 rounded-lg transition-all {statusFilter === 'active' ? 'bg-emerald-600 text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          class="px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 {statusFilter === 'active' ? 'bg-emerald-600 text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
         >
           Aktif
         </button>
         <button
           type="button"
           on:click={() => { statusFilter = 'inactive'; fetchUsers(1); }}
-          class="px-3 py-1.5 rounded-lg transition-all {statusFilter === 'inactive' ? 'bg-rose-600 text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          class="px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 {statusFilter === 'inactive' ? 'bg-rose-600 text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
         >
           Non-Aktif (Soft Delete)
         </button>
         <button
           type="button"
           on:click={() => { statusFilter = 'all'; fetchUsers(1); }}
-          class="px-3 py-1.5 rounded-lg transition-all {statusFilter === 'all' ? 'bg-blue-600 text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          class="px-2.5 sm:px-3 py-1.5 rounded-lg transition-all whitespace-nowrap shrink-0 {statusFilter === 'all' ? 'bg-blue-600 text-white font-bold shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
         >
           Semua User
         </button>
@@ -477,44 +477,44 @@
   </div>
 
   <!-- Table -->
-  <div class="card overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-slate-200">
+  <div class="card overflow-hidden min-w-0">
+    <div class="overflow-x-auto max-w-full scrollbar-thin">
+      <table class="w-full min-w-[640px] divide-y divide-slate-200 text-xs sm:text-sm">
         <thead>
           <tr class="bg-slate-50/80">
             <th
               scope="col"
-              class="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+              class="px-3 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-12"
               >No</th
             >
             <th
               scope="col"
-              class="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+              class="px-3 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[140px]"
               >Username</th
             >
             <th
               scope="col"
-              class="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+              class="px-3 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[160px]"
               >Nama Lengkap</th
             >
             <th
               scope="col"
-              class="hidden md:table-cell px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+              class="hidden md:table-cell px-3 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
               >Email</th
             >
             <th
               scope="col"
-              class="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+              class="px-3 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[180px]"
               >Role & Status</th
             >
             <th
               scope="col"
-              class="hidden lg:table-cell px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+              class="hidden lg:table-cell px-3 sm:px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
               >Terdaftar</th
             >
             <th
               scope="col"
-              class="px-4 sm:px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider"
+              class="px-3 sm:px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider"
               >Aksi</th
             >
           </tr>
@@ -562,13 +562,13 @@
             {#each users as user, i}
               <tr class="hover:bg-blue-50/30 transition-colors {user.isDeleted ? 'bg-rose-50/20' : ''}">
                 <td
-                  class="px-4 sm:px-6 py-3.5 whitespace-nowrap text-sm text-slate-400 font-mono"
+                  class="px-3 sm:px-6 py-3.5 whitespace-nowrap text-slate-400 font-mono text-xs"
                   >{(meta.page - 1) * meta.limit + i + 1}</td
                 >
-                <td class="px-4 sm:px-6 py-3.5 whitespace-nowrap">
-                  <div class="flex items-center gap-2.5">
+                <td class="px-3 sm:px-6 py-3.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
                     <div
-                      class="w-8 h-8 rounded-full {user.isDeleted ? 'bg-gradient-to-br from-rose-400 to-red-500' : 'bg-gradient-to-br from-emerald-400 to-teal-500'} flex items-center justify-center shadow-sm flex-shrink-0"
+                      class="w-8 h-8 rounded-full {user.isDeleted ? 'bg-gradient-to-br from-rose-400 to-red-500' : 'bg-gradient-to-br from-emerald-400 to-teal-500'} flex items-center justify-center shadow-sm shrink-0"
                     >
                       <span class="text-white text-xs font-bold uppercase"
                         >{(user.namaLengkap || user.username || "U").charAt(
@@ -576,64 +576,64 @@
                         )}</span
                       >
                     </div>
-                    <div>
-                      <span class="text-sm font-semibold text-slate-800"
+                    <div class="min-w-0">
+                      <span class="font-semibold text-slate-800 break-all block"
                         >{user.username.includes('_del_') ? user.username.split('_del_')[0] : user.username}</span
                       >
                     </div>
                   </div>
                 </td>
                 <td
-                  class="px-4 sm:px-6 py-3.5 whitespace-nowrap text-sm text-slate-600"
+                  class="px-3 sm:px-6 py-3.5 text-slate-600 font-medium break-words"
                   >{user.namaLengkap || "-"}</td
                 >
                 <td
-                  class="hidden md:table-cell px-4 sm:px-6 py-3.5 whitespace-nowrap text-sm text-slate-500"
+                  class="hidden md:table-cell px-3 sm:px-6 py-3.5 text-slate-500 break-all"
                   >{user.email ? (user.email.includes('_del_') ? user.email.split('_del_')[0] : user.email) : "-"}</td
                 >
-                <td class="px-4 sm:px-6 py-3.5 whitespace-nowrap">
+                <td class="px-3 sm:px-6 py-3.5">
                   <div class="flex flex-wrap items-center gap-1.5">
                     {#each getUserRoles(user) as r}
                       {#if r === 'admin'}
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-800 border border-purple-200">
                           <i class="ri-shield-keyhole-line text-[11px]"></i> Admin
                         </span>
                       {:else if r === 'pensiun' || r === 'operator_pensiun'}
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
+                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-200">
                           <i class="ri-user-unfollow-line text-[11px]"></i> Pensiun
                         </span>
                       {:else}
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800 border border-blue-200">
                           <i class="ri-user-settings-line text-[11px]"></i> Operator P3K
                         </span>
                       {/if}
                     {/each}
                     {#if user.isDeleted}
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
                         Non-Aktif
                       </span>
                     {:else}
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">
                         Aktif
                       </span>
                     {/if}
                   </div>
                 </td>
                 <td
-                  class="hidden lg:table-cell px-4 sm:px-6 py-3.5 whitespace-nowrap text-sm text-slate-500"
+                  class="hidden lg:table-cell px-3 sm:px-6 py-3.5 whitespace-nowrap text-slate-500"
                   >{formatDate(user.createdAt)}</td
                 >
                 <td
-                  class="px-4 sm:px-6 py-3.5 whitespace-nowrap text-right text-sm"
+                  class="px-3 sm:px-6 py-3.5 whitespace-nowrap text-right"
                 >
-                  <div class="flex items-center justify-end gap-1.5">
+                  <div class="flex items-center justify-end gap-1 sm:gap-1.5">
                     {#if user.isDeleted}
                       <button
                         on:click|stopPropagation={() => openDirectReactivateModal(user)}
                         class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
                         title="Aktifkan kembali akun ini"
                       >
-                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                         Aktifkan
@@ -699,9 +699,9 @@
     <!-- Pagination -->
     {#if meta.totalPages > 1}
       <div
-        class="border-t border-slate-100 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3"
+        class="border-t border-slate-100 px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm"
       >
-        <p class="text-sm text-slate-500">
+        <p class="text-slate-500 text-center sm:text-left">
           Menampilkan <span class="font-medium text-slate-700"
             >{(meta.page - 1) * meta.limit + 1}</span
           >
@@ -732,7 +732,7 @@
               />
             </svg>
           </button>
-          <span class="px-3 py-1.5 text-sm font-medium text-slate-600">
+          <span class="px-3 py-1.5 text-xs sm:text-sm font-semibold text-slate-600">
             {meta.page} / {meta.totalPages}
           </span>
           <button

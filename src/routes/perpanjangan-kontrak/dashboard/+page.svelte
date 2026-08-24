@@ -258,37 +258,37 @@
   <title>Dashboard Progres Usulan PK — SIPPPK</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
+<div class="max-w-7xl mx-auto py-4 sm:py-8 px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 w-full overflow-x-hidden">
   <!-- Header Title -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm">
     <div class="space-y-1">
       <div class="flex items-center gap-2.5">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         </div>
-        <div>
-          <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Dashboard Progres Usulan PK</h1>
+        <div class="min-w-0">
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight break-words">Dashboard Progres Usulan PK</h1>
           <p class="text-xs text-slate-500 font-medium">Monitoring status usulan perpanjangan Perjanjian Kerja secara real-time</p>
         </div>
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <button on:click={fetchDashboardStats} class="btn-secondary" disabled={isLoading}>
+    <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+      <button on:click={fetchDashboardStats} class="btn-secondary flex-1 sm:flex-initial justify-center" disabled={isLoading}>
         {#if isLoading}
           <div class="w-4 h-4 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin mr-2"></div>
         {:else}
-          <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-4 h-4 mr-1.5 sm:mr-2 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         {/if}
         Refresh Data
       </button>
 
-      <a href="/perpanjangan-kontrak/usulan" class="btn-primary">
-        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <a href="/perpanjangan-kontrak/usulan" class="btn-primary flex-1 sm:flex-initial justify-center">
+        <svg class="w-4 h-4 mr-1.5 sm:mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
         Kelola Usulan
@@ -309,23 +309,23 @@
     </div>
   {:else}
     <!-- Summary KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
       <!-- Card 1: Total Pegawai Aktif -->
-      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all relative overflow-hidden group min-w-0">
         <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
-        <div class="relative z-10 flex flex-col justify-between h-full">
+        <div class="relative z-10 flex flex-col justify-between h-full space-y-3">
           <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Pegawai PPPK</span>
-              <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Total Pegawai PPPK</span>
+              <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
             </div>
-            <div class="text-3xl font-extrabold text-slate-800">{stats.summary.totalPegawaiAktif}</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-slate-800">{stats.summary.totalPegawaiAktif}</div>
           </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             <span class="text-slate-500 font-medium">Sudah Usulan:</span>
             <button
               type="button"
@@ -345,28 +345,28 @@
         role="button"
         tabindex="0"
         on:click={() => openDetailModal('SELESAI')}
-        class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-300 transition-all relative overflow-hidden group cursor-pointer"
+        class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-300 transition-all relative overflow-hidden group cursor-pointer min-w-0"
         title="Klik untuk melihat rincian usulan Selesai (PK Terbit)"
       >
         <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
-        <div class="relative z-10 flex flex-col justify-between h-full">
+        <div class="relative z-10 flex flex-col justify-between h-full space-y-3">
           <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Usulan Selesai (PK)</span>
-              <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Usulan Selesai (PK)</span>
+              <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
             <div class="flex items-baseline justify-between">
-              <div class="text-3xl font-extrabold text-emerald-600">{stats.summary.selesaiCount}</div>
+              <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600">{stats.summary.selesaiCount}</div>
               <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 flex items-center gap-1">
                 Rincian &rarr;
               </span>
             </div>
           </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             <span class="text-slate-500 font-medium">Tingkat Penyelesaian:</span>
             <span class="font-bold text-emerald-600">{stats.summary.completionPercentage}%</span>
           </div>
@@ -379,22 +379,22 @@
         role="button"
         tabindex="0"
         on:click={() => openDetailModal('APPROVED')}
-        class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-indigo-300 transition-all relative overflow-hidden group cursor-pointer"
-        title="Klik untuk melihat rincian berkas yang sedang diproses"
+        class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-indigo-300 transition-all relative overflow-hidden group cursor-pointer min-w-0"
+        title="Klik untuk melihat rincian berkas yang sedang dipproses"
       >
         <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
-        <div class="relative z-10 flex flex-col justify-between h-full">
+        <div class="relative z-10 flex flex-col justify-between h-full space-y-3">
           <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sedang Diproses</span>
-              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Sedang Diproses</span>
+              <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
             <div class="flex items-baseline justify-between">
-              <div class="text-3xl font-extrabold text-indigo-600">
+              <div class="text-2xl sm:text-3xl font-extrabold text-indigo-600">
                 {stats.summary.approvedCount + stats.summary.srikandiCount}
               </div>
               <span class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100 flex items-center gap-1">
@@ -402,7 +402,7 @@
               </span>
             </div>
           </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             <button
               type="button"
               on:click|stopPropagation={() => openDetailModal('APPROVED')}
@@ -422,21 +422,21 @@
       </div>
 
       <!-- Card 4: Belum Buat Usulan -->
-      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all relative overflow-hidden group min-w-0">
         <div class="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-6 -mt-6 transition-transform group-hover:scale-110"></div>
-        <div class="relative z-10 flex flex-col justify-between h-full">
+        <div class="relative z-10 flex flex-col justify-between h-full space-y-3">
           <div>
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Belum Ada Usulan</span>
-              <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <span class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider block truncate">Belum Ada Usulan</span>
+              <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
             </div>
-            <div class="text-3xl font-extrabold text-amber-600">{stats.summary.totalPegawaiBelumUsulan}</div>
+            <div class="text-2xl sm:text-3xl font-extrabold text-amber-600">{stats.summary.totalPegawaiBelumUsulan}</div>
           </div>
-          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
             <span class="text-slate-500 font-medium">Pending Review:</span>
             <button
               type="button"
@@ -452,20 +452,20 @@
     </div>
 
     <!-- Workflow Progress Bar Breakdown -->
-    <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-      <div class="flex items-center justify-between">
+    <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <div>
-          <h2 class="text-base font-bold text-slate-800">Alur Pipeline Usulan Kontrak</h2>
+          <h2 class="text-sm sm:text-base font-bold text-slate-800">Alur Pipeline Usulan Kontrak</h2>
           <p class="text-xs text-slate-500">Distribusi status berkas dari pengajuan awal hingga penandatanganan PK final</p>
         </div>
-        <div class="text-right">
-          <span class="text-xs font-semibold text-slate-400 uppercase">Total Usulan</span>
-          <p class="text-lg font-black text-slate-800">{stats.summary.totalUsulan}</p>
+        <div class="text-left sm:text-right self-start sm:self-auto">
+          <span class="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase">Total Usulan</span>
+          <p class="text-base sm:text-lg font-black text-slate-800">{stats.summary.totalUsulan}</p>
         </div>
       </div>
 
       <!-- Segmented Bar (Clickable) -->
-      <div class="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+      <div class="h-3.5 sm:h-4 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
         {#if stats.summary.totalUsulan > 0}
           <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
           <div
@@ -516,20 +516,20 @@
       </div>
 
       <!-- Legend Cards (Clickable) -->
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 pt-1 sm:pt-2">
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
         <div
           role="button"
           tabindex="0"
           on:click={() => openDetailModal('PENDING')}
-          class="bg-amber-50/70 hover:bg-amber-100/90 border border-amber-200/80 rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm"
+          class="bg-amber-50/70 hover:bg-amber-100/90 border border-amber-200/80 rounded-xl p-2.5 sm:p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm min-w-0"
           title="Klik untuk melihat rincian usulan Pending Review"
         >
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-amber-400"></span>
-            <span class="text-xs font-semibold text-slate-700">1. Pending</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0"></span>
+            <span class="text-xs font-semibold text-slate-700 truncate">1. Pending</span>
           </div>
-          <span class="text-xs font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full">{stats.summary.pendingCount}</span>
+          <span class="text-xs font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full shrink-0 ml-1">{stats.summary.pendingCount}</span>
         </div>
 
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
@@ -537,14 +537,14 @@
           role="button"
           tabindex="0"
           on:click={() => openDetailModal('APPROVED')}
-          class="bg-blue-50/70 hover:bg-blue-100/90 border border-blue-200/80 rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm"
+          class="bg-blue-50/70 hover:bg-blue-100/90 border border-blue-200/80 rounded-xl p-2.5 sm:p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm min-w-0"
           title="Klik untuk melihat rincian usulan Approved"
         >
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-            <span class="text-xs font-semibold text-slate-700">2. Approved</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+            <span class="text-xs font-semibold text-slate-700 truncate">2. Approved</span>
           </div>
-          <span class="text-xs font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full">{stats.summary.approvedCount}</span>
+          <span class="text-xs font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full shrink-0 ml-1">{stats.summary.approvedCount}</span>
         </div>
 
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
@@ -552,14 +552,14 @@
           role="button"
           tabindex="0"
           on:click={() => openDetailModal('UPLOAD_SRIKANDI')}
-          class="bg-purple-50/70 hover:bg-purple-100/90 border border-purple-200/80 rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm"
+          class="bg-purple-50/70 hover:bg-purple-100/90 border border-purple-200/80 rounded-xl p-2.5 sm:p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm min-w-0"
           title="Klik untuk melihat rincian usulan Proses Srikandi"
         >
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-purple-500"></span>
-            <span class="text-xs font-semibold text-slate-700">3. Srikandi</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
+            <span class="text-xs font-semibold text-slate-700 truncate">3. Srikandi</span>
           </div>
-          <span class="text-xs font-bold text-purple-700 bg-purple-100/80 px-2 py-0.5 rounded-full">{stats.summary.srikandiCount}</span>
+          <span class="text-xs font-bold text-purple-700 bg-purple-100/80 px-2 py-0.5 rounded-full shrink-0 ml-1">{stats.summary.srikandiCount}</span>
         </div>
 
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
@@ -567,14 +567,14 @@
           role="button"
           tabindex="0"
           on:click={() => openDetailModal('SELESAI')}
-          class="bg-emerald-50/70 hover:bg-emerald-100/90 border border-emerald-200/80 rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm"
+          class="bg-emerald-50/70 hover:bg-emerald-100/90 border border-emerald-200/80 rounded-xl p-2.5 sm:p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm min-w-0"
           title="Klik untuk melihat rincian usulan Selesai (PK Terbit)"
         >
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-            <span class="text-xs font-semibold text-slate-700">4. Selesai</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+            <span class="text-xs font-semibold text-slate-700 truncate">4. Selesai</span>
           </div>
-          <span class="text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full">{stats.summary.selesaiCount}</span>
+          <span class="text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full shrink-0 ml-1">{stats.summary.selesaiCount}</span>
         </div>
 
         <!-- svelte-ignore a11y_click_events_have_key_events a11y_interactive_supports_focus -->
@@ -582,14 +582,14 @@
           role="button"
           tabindex="0"
           on:click={() => openDetailModal('REJECTED')}
-          class="bg-rose-50/70 hover:bg-rose-100/90 border border-rose-200/80 rounded-xl p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm"
+          class="bg-rose-50/70 hover:bg-rose-100/90 border border-rose-200/80 rounded-xl p-2.5 sm:p-3 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-sm min-w-0 col-span-2 sm:col-span-1"
           title="Klik untuk melihat rincian usulan Ditolak"
         >
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-rose-400"></span>
-            <span class="text-xs font-semibold text-slate-700">Ditolak</span>
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0"></span>
+            <span class="text-xs font-semibold text-slate-700 truncate">Ditolak</span>
           </div>
-          <span class="text-xs font-bold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-full">{stats.summary.rejectedCount}</span>
+          <span class="text-xs font-bold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-full shrink-0 ml-1">{stats.summary.rejectedCount}</span>
         </div>
       </div>
     </div>
@@ -597,22 +597,22 @@
     <!-- Section Tabs -->
     <div class="space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-3">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-thin">
           <button
             on:click={() => (selectedTab = "unor")}
-            class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 {selectedTab === 'unor' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-100'}"
+            class="px-3 sm:px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {selectedTab === 'unor' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-100'}"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m3 0h1m-1-4h.01M9 16h.01M9 12h.01M13 16h.01M13 12h.01" />
             </svg>
-            Progres Per Unit Kerja ({stats.byUnor?.length || 0})
+            Per Unit Kerja ({stats.byUnor?.length || 0})
           </button>
 
           <button
             on:click={() => (selectedTab = "operator")}
-            class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 {selectedTab === 'operator' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-100'}"
+            class="px-3 sm:px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {selectedTab === 'operator' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-100'}"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             Performa Operator ({stats.byOperator?.length || 0})
@@ -620,16 +620,16 @@
 
           <button
             on:click={() => (selectedTab = "recent")}
-            class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 {selectedTab === 'recent' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-100'}"
+            class="px-3 sm:px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {selectedTab === 'recent' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-600 hover:bg-slate-100'}"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Aktivitas Terbaru
           </button>
         </div>
 
-        <div class="flex items-center gap-3 w-full sm:w-auto">
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
           {#if selectedTab === "unor"}
             <div class="relative flex-grow sm:w-64">
               <input
@@ -643,11 +643,11 @@
               </svg>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5 shrink-0">
               <span class="text-xs text-slate-500 font-semibold hidden sm:inline">Tampilkan:</span>
               <select
                 bind:value={limitUnor}
-                class="text-xs border border-slate-200 rounded-xl px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 shadow-sm"
+                class="text-xs border border-slate-200 rounded-xl px-2.5 sm:px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 shadow-sm"
               >
                 {#each limitOptions as opt}
                   <option value={opt}>{opt} Data</option>
@@ -657,11 +657,11 @@
           {/if}
 
           {#if selectedTab === "operator"}
-            <div class="flex items-center gap-2 ml-auto">
+            <div class="flex items-center gap-1.5 ml-auto shrink-0">
               <span class="text-xs text-slate-500 font-semibold hidden sm:inline">Tampilkan:</span>
               <select
                 bind:value={limitOperator}
-                class="text-xs border border-slate-200 rounded-xl px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 shadow-sm"
+                class="text-xs border border-slate-200 rounded-xl px-2.5 sm:px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 shadow-sm"
               >
                 {#each limitOptions as opt}
                   <option value={opt}>{opt} Data</option>
@@ -671,11 +671,11 @@
           {/if}
 
           {#if selectedTab === "recent"}
-            <div class="flex items-center gap-2 ml-auto">
+            <div class="flex items-center gap-1.5 ml-auto shrink-0">
               <span class="text-xs text-slate-500 font-semibold hidden sm:inline">Tampilkan:</span>
               <select
                 bind:value={limitRecent}
-                class="text-xs border border-slate-200 rounded-xl px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 shadow-sm"
+                class="text-xs border border-slate-200 rounded-xl px-2.5 sm:px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 shadow-sm"
               >
                 {#each limitOptions as opt}
                   <option value={opt}>{opt} Data</option>
@@ -689,20 +689,20 @@
       <!-- Tab Content: Unit Kerja Breakdown -->
       {#if selectedTab === "unor"}
         {#if filteredUnor.length === 0}
-          <div class="bg-white rounded-2xl p-12 text-center border border-slate-200/80">
+          <div class="bg-white rounded-2xl p-8 sm:p-12 text-center border border-slate-200/80">
             <p class="text-slate-500 text-sm">Tidak ada unit kerja yang sesuai dengan pencarian.</p>
           </div>
         {:else}
-          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden space-y-0">
-            <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden space-y-0 min-w-0">
+            <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-xs text-slate-500">
               <span>Menampilkan <b>{displayedUnor.length}</b> dari total <b>{filteredUnor.length}</b> Unit Kerja</span>
               <span class="text-[11px] text-slate-400">Default: 10 | Max: 500</span>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
+            <div class="overflow-x-auto max-w-full scrollbar-thin">
+              <table class="w-full min-w-[700px] text-left border-collapse">
                 <thead>
                   <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th class="py-3.5 px-4">Unit Kerja Induk (Unor Induk)</th>
+                    <th class="py-3.5 px-4 min-w-[200px]">Unit Kerja Induk (Unor Induk)</th>
                     <th class="py-3.5 px-4 text-center">Pegawai</th>
                     <th class="py-3.5 px-4 text-center">Usulan</th>
                     <th class="py-3.5 px-4 text-center">Selesai</th>
@@ -716,7 +716,7 @@
                 <tbody class="divide-y divide-slate-100 text-xs">
                   {#each displayedUnor as item}
                     <tr class="hover:bg-slate-50/70 transition-colors">
-                      <td class="py-3.5 px-4 font-bold text-slate-800">
+                      <td class="py-3.5 px-4 font-bold text-slate-800 break-words">
                         {item.unorNama}
                       </td>
                       <td class="py-3.5 px-4 text-center font-bold text-slate-700">
@@ -813,7 +813,7 @@
 
             <!-- Pagination Bar -->
             <div class="px-4 py-3 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <p class="text-slate-500 font-medium">
+              <p class="text-slate-500 font-medium text-center sm:text-left">
                 Menampilkan <b>{filteredUnor.length > 0 ? (pageUnor - 1) * limitUnor + 1 : 0}</b> - <b>{Math.min(pageUnor * limitUnor, filteredUnor.length)}</b> dari <b>{filteredUnor.length}</b> Unit Kerja
               </p>
               <div class="flex items-center gap-2">
@@ -851,20 +851,20 @@
       <!-- Tab Content: Operator Performance -->
       {#if selectedTab === "operator"}
         {#if (stats.byOperator || []).length === 0}
-          <div class="bg-white rounded-2xl p-12 text-center border border-slate-200/80">
+          <div class="bg-white rounded-2xl p-8 sm:p-12 text-center border border-slate-200/80">
             <p class="text-slate-500 text-sm">Belum ada data performa operator.</p>
           </div>
         {:else}
-          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-0">
+            <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-xs text-slate-500">
               <span>Menampilkan <b>{displayedOperator.length}</b> dari total <b>{(stats.byOperator || []).length}</b> Operator</span>
               <span class="text-[11px] text-slate-400">Default: 10 | Max: 500</span>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
+            <div class="overflow-x-auto max-w-full scrollbar-thin">
+              <table class="w-full min-w-[700px] text-left border-collapse">
                 <thead>
                   <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th class="py-3.5 px-4">Operator / User</th>
+                    <th class="py-3.5 px-4 min-w-[200px]">Operator / User</th>
                     <th class="py-3.5 px-4 text-center">Role</th>
                     <th class="py-3.5 px-4 text-center">Tugas Diberikan</th>
                     <th class="py-3.5 px-4 text-center">Tugas Selesai</th>
@@ -877,13 +877,13 @@
                   {#each displayedOperator as op}
                     <tr class="hover:bg-slate-50/70 transition-colors">
                       <td class="py-3.5 px-4">
-                        <div class="flex items-center gap-3">
-                          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                        <div class="flex items-center gap-3 min-w-0">
+                          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0">
                             {(op.namaLengkap || op.username).charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <p class="font-bold text-slate-800">{op.namaLengkap || op.username}</p>
-                            <p class="text-[10px] text-slate-400 font-mono">@{op.username}</p>
+                          <div class="min-w-0">
+                            <p class="font-bold text-slate-800 break-words">{op.namaLengkap || op.username}</p>
+                            <p class="text-[10px] text-slate-400 font-mono break-all">@{op.username}</p>
                           </div>
                         </div>
                       </td>
@@ -948,7 +948,7 @@
 
             <!-- Pagination Bar -->
             <div class="px-4 py-3 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <p class="text-slate-500 font-medium">
+              <p class="text-slate-500 font-medium text-center sm:text-left">
                 Menampilkan <b>{(stats.byOperator || []).length > 0 ? (pageOperator - 1) * limitOperator + 1 : 0}</b> - <b>{Math.min(pageOperator * limitOperator, (stats.byOperator || []).length)}</b> dari <b>{(stats.byOperator || []).length}</b> Operator
               </p>
               <div class="flex items-center gap-2">
@@ -985,20 +985,20 @@
 
       <!-- Tab Content: Recent Submissions -->
       {#if selectedTab === "recent"}
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-          <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-0">
+          <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-xs text-slate-500">
             <span>Menampilkan <b>{displayedRecent.length}</b> dari total <b>{(stats.recentUsulan || []).length}</b> Aktivitas Terbaru</span>
             <span class="text-[11px] text-slate-400">Default: 10 | Max: 500</span>
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+          <div class="overflow-x-auto max-w-full scrollbar-thin">
+            <table class="w-full min-w-[700px] text-left border-collapse">
               <thead>
                 <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th class="py-3.5 px-4">Pegawai (NIP & Nama)</th>
-                  <th class="py-3.5 px-4">Unit Kerja</th>
+                  <th class="py-3.5 px-4 min-w-[180px]">Pegawai (NIP & Nama)</th>
+                  <th class="py-3.5 px-4 min-w-[180px]">Unit Kerja</th>
                   <th class="py-3.5 px-4">Nomor Kontrak</th>
                   <th class="py-3.5 px-4">Status</th>
-                  <th class="py-3.5 px-4">Operator / Pengaju</th>
+                  <th class="py-3.5 px-4 min-w-[140px]">Operator / Pengaju</th>
                   <th class="py-3.5 px-4 text-right">Terakhir Diupdate</th>
                 </tr>
               </thead>
@@ -1006,13 +1006,13 @@
                 {#each displayedRecent as u}
                   <tr class="hover:bg-slate-50/70 transition-colors">
                     <td class="py-3.5 px-4">
-                      <p class="font-bold text-slate-800">{u.dataP3k?.nama || '-'}</p>
-                      <p class="text-[10px] text-slate-400 font-mono">NIP: {u.dataP3k?.nipBaru || '-'}</p>
+                      <p class="font-bold text-slate-800 break-words">{u.dataP3k?.nama || '-'}</p>
+                      <p class="text-[10px] text-slate-400 font-mono break-all">NIP: {u.dataP3k?.nipBaru || '-'}</p>
                     </td>
-                    <td class="py-3.5 px-4 text-slate-600 font-medium">
+                    <td class="py-3.5 px-4 text-slate-600 font-medium break-words">
                       {u.dataP3k?.unorInduk?.nama || '-'}
                     </td>
-                    <td class="py-3.5 px-4 font-mono text-[11px] text-slate-700">
+                    <td class="py-3.5 px-4 font-mono text-[11px] text-slate-700 break-all">
                       {u.nomorKontrak || '-'}
                     </td>
                     <td class="py-3.5 px-4">
@@ -1020,10 +1020,10 @@
                         {getStatusLabel(u.status)}
                       </span>
                     </td>
-                    <td class="py-3.5 px-4 text-slate-700 font-medium">
+                    <td class="py-3.5 px-4 text-slate-700 font-medium break-words">
                       {u.editedBy?.namaLengkap || u.editedBy?.username || '-'}
                     </td>
-                    <td class="py-3.5 px-4 text-right text-slate-400 text-[11px]">
+                    <td class="py-3.5 px-4 text-right text-slate-400 text-[11px] whitespace-nowrap">
                       {formatDate(u.updatedAt)}
                     </td>
                   </tr>
@@ -1034,7 +1034,7 @@
 
           <!-- Pagination Bar -->
           <div class="px-4 py-3 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <p class="text-slate-500 font-medium">
+            <p class="text-slate-500 font-medium text-center sm:text-left">
               Menampilkan <b>{(stats.recentUsulan || []).length > 0 ? (pageRecent - 1) * limitRecent + 1 : 0}</b> - <b>{Math.min(pageRecent * limitRecent, (stats.recentUsulan || []).length)}</b> dari <b>{(stats.recentUsulan || []).length}</b> Aktivitas
             </p>
             <div class="flex items-center gap-2">
@@ -1076,28 +1076,28 @@
     <div
       role="dialog"
       aria-modal="true"
-      class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
+      class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-6"
       on:click|self={closeDetailModal}
     >
-      <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-6xl max-h-[95vh] sm:max-h-[92vh] flex flex-col overflow-hidden">
         <!-- Modal Header -->
-        <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between gap-4 flex-shrink-0">
-          <div class="flex items-center gap-3.5">
-            <div class="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg {getStatusColorClass(detailStatus).iconBg}">
-              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="px-4 sm:px-6 py-3.5 sm:py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between gap-3 flex-shrink-0">
+          <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shrink-0 {getStatusColorClass(detailStatus).iconBg}">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h3 class="text-lg font-bold tracking-tight">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <h3 class="text-sm sm:text-lg font-bold tracking-tight break-words">
                   Rincian Usulan PK {detailStatus ? `: ${getStatusLabel(detailStatus)}` : '(Semua Status)'}
                 </h3>
-                <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-white/20 text-white backdrop-blur-sm border border-white/10">
+                <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-white/20 text-white backdrop-blur-sm border border-white/10 shrink-0">
                   {detailMeta.total} Data
                 </span>
               </div>
-              <p class="text-xs text-slate-300 mt-0.5">
+              <p class="text-[10px] sm:text-xs text-slate-300 mt-0.5 truncate">
                 Daftar rincian pegawai dan user/operator yang mengusulkan perpanjangan kontrak
               </p>
             </div>
@@ -1106,7 +1106,7 @@
           <button
             type="button"
             on:click={closeDetailModal}
-            class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+            class="p-1.5 sm:p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors shrink-0"
             title="Tutup Modal"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1116,26 +1116,26 @@
         </div>
 
         <!-- 1. Baris Atas: Pilihan Semua Status -->
-        <div class="px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex-shrink-0">
-          <div class="flex items-center gap-2 mb-2">
-            <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="px-4 sm:px-6 py-2.5 sm:py-3.5 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+          <div class="flex items-center gap-1.5 mb-2">
+            <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Pilih Status Usulan:</span>
+            <span class="text-[10px] sm:text-xs font-bold text-slate-700 uppercase tracking-wider">Pilih Status Usulan:</span>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
             <!-- Semua Status -->
             <button
               type="button"
               on:click={() => handleDetailStatusChange('')}
-              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === '' ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/20' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300'}"
+              class="px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center justify-between border min-w-0 {detailStatus === '' ? 'bg-slate-900 text-white border-slate-900 shadow-md shadow-slate-900/20' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300'}"
             >
               <div class="flex items-center gap-1.5 truncate">
-                <span class="w-2 h-2 rounded-full {detailStatus === '' ? 'bg-white' : 'bg-slate-400'}"></span>
+                <span class="w-2 h-2 rounded-full shrink-0 {detailStatus === '' ? 'bg-white' : 'bg-slate-400'}"></span>
                 <span class="truncate">Semua</span>
               </div>
-              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === '' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}">
+              <span class="text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0 {detailStatus === '' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}">
                 {stats.summary.totalUsulan}
               </span>
             </button>
@@ -1144,13 +1144,13 @@
             <button
               type="button"
               on:click={() => handleDetailStatusChange('PENDING')}
-              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'PENDING' ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20' : 'bg-white text-amber-800 border-amber-200/80 hover:bg-amber-50 hover:border-amber-300'}"
+              class="px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center justify-between border min-w-0 {detailStatus === 'PENDING' ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20' : 'bg-white text-amber-800 border-amber-200/80 hover:bg-amber-50 hover:border-amber-300'}"
             >
               <div class="flex items-center gap-1.5 truncate">
-                <span class="w-2 h-2 rounded-full {detailStatus === 'PENDING' ? 'bg-white' : 'bg-amber-500'}"></span>
+                <span class="w-2 h-2 rounded-full shrink-0 {detailStatus === 'PENDING' ? 'bg-white' : 'bg-amber-500'}"></span>
                 <span class="truncate">1. Pending</span>
               </div>
-              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'PENDING' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'}">
+              <span class="text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0 {detailStatus === 'PENDING' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'}">
                 {stats.summary.pendingCount}
               </span>
             </button>
@@ -1159,13 +1159,13 @@
             <button
               type="button"
               on:click={() => handleDetailStatusChange('APPROVED')}
-              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'APPROVED' ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20' : 'bg-white text-blue-800 border-blue-200/80 hover:bg-blue-50 hover:border-blue-300'}"
+              class="px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center justify-between border min-w-0 {detailStatus === 'APPROVED' ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20' : 'bg-white text-blue-800 border-blue-200/80 hover:bg-blue-50 hover:border-blue-300'}"
             >
               <div class="flex items-center gap-1.5 truncate">
-                <span class="w-2 h-2 rounded-full {detailStatus === 'APPROVED' ? 'bg-white' : 'bg-blue-500'}"></span>
+                <span class="w-2 h-2 rounded-full shrink-0 {detailStatus === 'APPROVED' ? 'bg-white' : 'bg-blue-500'}"></span>
                 <span class="truncate">2. Approved</span>
               </div>
-              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'APPROVED' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}">
+              <span class="text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0 {detailStatus === 'APPROVED' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}">
                 {stats.summary.approvedCount}
               </span>
             </button>
@@ -1174,13 +1174,13 @@
             <button
               type="button"
               on:click={() => handleDetailStatusChange('UPLOAD_SRIKANDI')}
-              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/20' : 'bg-white text-purple-800 border-purple-200/80 hover:bg-purple-50 hover:border-purple-300'}"
+              class="px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center justify-between border min-w-0 {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/20' : 'bg-white text-purple-800 border-purple-200/80 hover:bg-purple-50 hover:border-purple-300'}"
             >
               <div class="flex items-center gap-1.5 truncate">
-                <span class="w-2 h-2 rounded-full {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-white' : 'bg-purple-500'}"></span>
+                <span class="w-2 h-2 rounded-full shrink-0 {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-white' : 'bg-purple-500'}"></span>
                 <span class="truncate">3. Srikandi</span>
               </div>
-              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-700'}">
+              <span class="text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0 {detailStatus === 'UPLOAD_SRIKANDI' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-700'}">
                 {stats.summary.srikandiCount}
               </span>
             </button>
@@ -1189,13 +1189,13 @@
             <button
               type="button"
               on:click={() => handleDetailStatusChange('SELESAI')}
-              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'SELESAI' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20' : 'bg-white text-emerald-800 border-emerald-200/80 hover:bg-emerald-50 hover:border-emerald-300'}"
+              class="px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center justify-between border min-w-0 {detailStatus === 'SELESAI' ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20' : 'bg-white text-emerald-800 border-emerald-200/80 hover:bg-emerald-50 hover:border-emerald-300'}"
             >
               <div class="flex items-center gap-1.5 truncate">
-                <span class="w-2 h-2 rounded-full {detailStatus === 'SELESAI' ? 'bg-white' : 'bg-emerald-500'}"></span>
+                <span class="w-2 h-2 rounded-full shrink-0 {detailStatus === 'SELESAI' ? 'bg-white' : 'bg-emerald-500'}"></span>
                 <span class="truncate">4. Selesai</span>
               </div>
-              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'SELESAI' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}">
+              <span class="text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0 {detailStatus === 'SELESAI' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}">
                 {stats.summary.selesaiCount}
               </span>
             </button>
@@ -1204,13 +1204,13 @@
             <button
               type="button"
               on:click={() => handleDetailStatusChange('REJECTED')}
-              class="px-3 py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-between border {detailStatus === 'REJECTED' ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20' : 'bg-white text-rose-800 border-rose-200/80 hover:bg-rose-50 hover:border-rose-300'}"
+              class="px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold rounded-xl transition-all flex items-center justify-between border min-w-0 {detailStatus === 'REJECTED' ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20' : 'bg-white text-rose-800 border-rose-200/80 hover:bg-rose-50 hover:border-rose-300'}"
             >
               <div class="flex items-center gap-1.5 truncate">
-                <span class="w-2 h-2 rounded-full {detailStatus === 'REJECTED' ? 'bg-white' : 'bg-rose-500'}"></span>
+                <span class="w-2 h-2 rounded-full shrink-0 {detailStatus === 'REJECTED' ? 'bg-white' : 'bg-rose-500'}"></span>
                 <span class="truncate">Ditolak</span>
               </div>
-              <span class="text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1.5 {detailStatus === 'REJECTED' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'}">
+              <span class="text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-full font-bold ml-1 shrink-0 {detailStatus === 'REJECTED' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'}">
                 {stats.summary.rejectedCount}
               </span>
             </button>
@@ -1218,24 +1218,24 @@
         </div>
 
         <!-- 2. Baris Bawah: Form Pencarian Pegawai & Opsi Tampilan -->
-        <div class="px-6 py-3.5 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-shrink-0">
-          <div class="flex items-center gap-2 flex-grow max-w-2xl">
+        <div class="px-4 sm:px-6 py-3 sm:py-3.5 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 flex-shrink-0">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-grow max-w-2xl">
             <div class="relative flex-grow">
               <input
                 type="text"
                 bind:value={detailSearch}
                 on:keydown={(e) => e.key === 'Enter' && handleDetailSearch()}
-                placeholder="Cari Nama Pegawai, NIP, Unit Kerja, No Kontrak, atau User Pengusul..."
-                class="w-full text-xs pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium text-slate-800"
+                placeholder="Cari Nama Pegawai, NIP, Unit Kerja, No Kontrak..."
+                class="w-full text-xs pl-9 sm:pl-10 pr-9 py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium text-slate-800"
               />
-              <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 sm:top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               {#if detailSearch}
                 <button
                   type="button"
                   on:click={() => { detailSearch = ''; handleDetailSearch(); }}
-                  class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors"
+                  class="absolute right-3 top-2 sm:top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition-colors"
                   title="Hapus pencarian"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1248,7 +1248,7 @@
             <button
               type="button"
               on:click={handleDetailSearch}
-              class="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0"
+              class="px-4 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 shrink-0"
               title="Mulai pencarian"
             >
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1264,10 +1264,10 @@
               <select
                 bind:value={detailLimit}
                 on:change={() => fetchDetailUsulan(1)}
-                class="text-xs border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
+                class="text-xs border border-slate-200 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
               >
                 {#each detailLimitOptions as opt}
-                  <option value={opt}>{opt} Data / Halaman</option>
+                  <option value={opt}>{opt} Data / Hal</option>
                 {/each}
               </select>
             </div>
@@ -1275,14 +1275,14 @@
         </div>
 
         <!-- Modal Table Body -->
-        <div class="flex-grow overflow-y-auto p-4 sm:p-6 bg-slate-50/40">
+        <div class="flex-grow overflow-y-auto p-3 sm:p-6 bg-slate-50/40">
           {#if detailLoading}
-            <div class="py-16 text-center">
-              <div class="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
+            <div class="py-12 sm:py-16 text-center">
+              <div class="w-8 h-8 sm:w-10 sm:h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
               <p class="text-xs text-slate-500 font-medium">Memuat data rincian usulan pegawai...</p>
             </div>
           {:else if detailRecords.length === 0}
-            <div class="py-16 text-center bg-white rounded-2xl border border-slate-200 p-8">
+            <div class="py-12 sm:py-16 text-center bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
               <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1292,15 +1292,15 @@
               <p class="text-xs text-slate-400 mt-1">Coba ubah status filter atau kata kunci pencarian Anda</p>
             </div>
           {:else}
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-w-0">
+              <div class="overflow-x-auto max-w-full scrollbar-thin">
+                <table class="w-full min-w-[750px] text-left border-collapse text-xs">
                   <thead>
                     <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                       <th class="py-3 px-3.5 w-12 text-center">No</th>
-                      <th class="py-3 px-4 min-w-[220px]">Pegawai PPPK</th>
+                      <th class="py-3 px-4 min-w-[200px]">Pegawai PPPK</th>
                       <th class="py-3 px-4 min-w-[180px]">Unit Kerja Induk</th>
-                      <th class="py-3 px-4 min-w-[190px]">User yang Mengusulkan</th>
+                      <th class="py-3 px-4 min-w-[180px]">User yang Mengusulkan</th>
                       <th class="py-3 px-4 min-w-[180px]">Detail Kontrak & Masa Berlaku</th>
                       <th class="py-3 px-4 text-center">Status</th>
                       <th class="py-3 px-4 text-right">Aksi</th>
@@ -1316,15 +1316,15 @@
 
                         <!-- Pegawai -->
                         <td class="py-3 px-4">
-                          <div class="space-y-0.5">
-                            <p class="font-bold text-slate-900 leading-snug">
+                          <div class="space-y-0.5 min-w-0">
+                            <p class="font-bold text-slate-900 leading-snug break-words">
                               {[rec.dataP3k?.gelarDepan, rec.dataP3k?.nama, rec.dataP3k?.gelarBelakang].filter(Boolean).join(' ') || rec.dataP3k?.nama || '-'}
                             </p>
-                            <p class="text-[11px] font-mono text-slate-500">
+                            <p class="text-[11px] font-mono text-slate-500 break-all">
                               NIP: {rec.dataP3k?.nipBaru || '-'}
                             </p>
                             {#if rec.dataP3k?.jabatanNama}
-                              <p class="text-[10px] text-slate-500 font-medium truncate max-w-[240px]">
+                              <p class="text-[10px] text-slate-500 font-medium break-words">
                                 {rec.dataP3k.jabatanNama}
                               </p>
                             {/if}
@@ -1333,11 +1333,11 @@
 
                         <!-- Unit Kerja -->
                         <td class="py-3 px-4">
-                          <p class="font-semibold text-slate-800 leading-tight">
+                          <p class="font-semibold text-slate-800 leading-tight break-words">
                             {rec.dataP3k?.unorInduk?.nama || rec.dataP3k?.unorNama || '-'}
                           </p>
                           {#if rec.dataP3k?.unorInduk && rec.dataP3k?.unorNama && rec.dataP3k.unorNama !== rec.dataP3k.unorInduk.nama}
-                            <p class="text-[10px] text-slate-400 mt-0.5">
+                            <p class="text-[10px] text-slate-400 mt-0.5 break-words">
                               {rec.dataP3k.unorNama}
                             </p>
                           {/if}
@@ -1345,17 +1345,17 @@
 
                         <!-- User yang Mengusulkan -->
                         <td class="py-3 px-4">
-                          <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm">
+                          <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-sm">
                               {(rec.editedBy?.namaLengkap || rec.editedBy?.username || 'U').charAt(0).toUpperCase()}
                             </div>
                             <div class="min-w-0">
-                              <p class="font-bold text-slate-800 text-xs truncate">
+                              <p class="font-bold text-slate-800 text-xs break-words">
                                 {rec.editedBy?.namaLengkap || rec.editedBy?.username || 'System / Auto'}
                               </p>
-                              <div class="flex items-center gap-1.5 mt-0.5">
+                              <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
                                 {#if rec.editedBy?.username}
-                                  <span class="text-[10px] font-mono text-slate-400">@{rec.editedBy.username}</span>
+                                  <span class="text-[10px] font-mono text-slate-400 break-all">@{rec.editedBy.username}</span>
                                 {/if}
                                 {#if rec.editedBy?.role}
                                   <span class="text-[9px] font-bold px-1.5 py-0.2 rounded uppercase {rec.editedBy.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}">
@@ -1370,28 +1370,28 @@
                         <!-- Detail Kontrak -->
                         <td class="py-3 px-4">
                           <div class="space-y-0.5">
-                            <p class="font-mono text-xs font-bold text-slate-800">
+                            <p class="font-mono text-xs font-bold text-slate-800 break-all">
                               {rec.nomorKontrak || 'Nomor Belum Digenerate'}
                             </p>
-                            <p class="text-[10px] text-slate-500 flex items-center gap-1">
+                            <p class="text-[10px] text-slate-500 flex items-center gap-1 whitespace-nowrap">
                               <span>📅 Periode:</span>
                               <span class="font-medium text-slate-700">{rec.tanggalMulai || '-'} s/d {rec.tanggalSelesai || '-'}</span>
                             </p>
-                            <p class="text-[10px] text-slate-400">
+                            <p class="text-[10px] text-slate-400 whitespace-nowrap">
                               Update: {formatDate(rec.updatedAt || rec.createdAt)}
                             </p>
                           </div>
                         </td>
 
                         <!-- Status -->
-                        <td class="py-3 px-4 text-center">
+                        <td class="py-3 px-4 text-center whitespace-nowrap">
                           <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border shadow-xs {getStatusBadgeClass(rec.status)}">
                             {getStatusLabel(rec.status)}
                           </span>
                         </td>
 
                         <!-- Aksi -->
-                        <td class="py-3 px-4 text-right">
+                        <td class="py-3 px-4 text-right whitespace-nowrap">
                           <a
                             href={`/perpanjangan-kontrak/usulan?search=${encodeURIComponent(rec.dataP3k?.nipBaru || '')}`}
                             class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition-colors border border-blue-200"
@@ -1413,8 +1413,8 @@
         </div>
 
         <!-- Modal Footer & Pagination -->
-        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0 text-xs">
-          <p class="text-slate-500 font-medium">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0 text-xs">
+          <p class="text-slate-500 font-medium text-center sm:text-left">
             Menampilkan <b>{detailMeta.total > 0 ? (detailMeta.page - 1) * detailMeta.limit + 1 : 0}</b> - <b>{Math.min(detailMeta.page * detailMeta.limit, detailMeta.total)}</b> dari <b>{detailMeta.total}</b> Usulan
           </p>
 
@@ -1450,7 +1450,7 @@
             <button
               type="button"
               on:click={closeDetailModal}
-              class="ml-3 px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors"
+              class="ml-2 sm:ml-3 px-3.5 sm:px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors"
             >
               Tutup
             </button>
