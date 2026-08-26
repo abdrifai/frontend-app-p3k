@@ -39,7 +39,10 @@
     kegiatanId = null;          // reset pilihan jika user mengetik manual
     showKegiatanDropdown = true;
     clearTimeout(kegiatanDebounce);
-    kegiatanDebounce = setTimeout(() => fetchKegiatanList(kegiatan), 300);
+    kegiatanDebounce = setTimeout(() => {
+      fetchKegiatanList(kegiatan);
+      fetchUnassignedStats(kegiatan);
+    }, 300);
   };
 
   const selectKegiatan = (k) => {
@@ -92,11 +95,11 @@
     fetchReports();
     fetchUsers();
     fetchFieldConfigs();
-    fetchUnassignedStats();
+    fetchUnassignedStats(kegiatan);
     fetchKegiatanList();
   });
 
-  const fetchUnassignedStats = async (kegiatanLabel = '') => {
+  const fetchUnassignedStats = async (kegiatanLabel = kegiatan) => {
     try {
       const params = new URLSearchParams();
       if (kegiatanLabel) params.set('kegiatan', kegiatanLabel);
