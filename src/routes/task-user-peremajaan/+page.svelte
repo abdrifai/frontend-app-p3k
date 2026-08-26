@@ -2,7 +2,7 @@
   import { addToast } from "$lib/toastStore";
   import { authStore } from "$lib/store";
   import { apiRequest, API_BASE_URL } from "$lib/api";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { goto } from "$app/navigation";
 
   let records = [];
@@ -19,6 +19,10 @@
   let isSubmitting = false;
   let editForm = {};
   let selectedFileSkCpns = null;
+
+  // Element references for fast keyboard focus management
+  let submitBtnEl = null;
+  let kerjakanBtnEls = [];
 
   // Active field configs from backend
   let activeFields = [];
@@ -109,7 +113,7 @@
     showDropdown[fieldName] = false;
   };
 
-  const openEditModal = (task) => {
+  const openEditModal = async (task) => {
     selectedTask = task;
     // Initialize form from existing data
     editForm = {};
@@ -128,15 +132,30 @@
       }
     }
     showEditModal = true;
+
+    // Immediately focus on 'Selesaikan Tugas' submit button for fast Enter workflow
+    await tick();
+    setTimeout(() => {
+      if (submitBtnEl) submitBtnEl.focus();
+    }, 50);
   };
 
-  const closeEditModal = () => {
+  const closeEditModal = async (restoreFocus = true) => {
     showEditModal = false;
     selectedTask = null;
     searchTerms = {};
     searchResults = {};
     showDropdown = {};
     selectedFileSkCpns = null;
+
+    if (restoreFocus) {
+      await tick();
+      setTimeout(() => {
+        if (kerjakanBtnEls && kerjakanBtnEls[0]) {
+          kerjakanBtnEls[0].focus();
+        }
+      }, 50);
+    }
   };
 
   const handleFileSkCpnsChange = (e) => {
@@ -214,8 +233,16 @@
       );
       if (result.success) {
         addToast("Tugas berhasil diselesaikan!", "success");
-        closeEditModal();
+        await closeEditModal(false);
         await fetchMyTasks(meta.page);
+        
+        // Immediately move focus back to the top 'Kerjakan' button for fast Enter workflow
+        await tick();
+        setTimeout(() => {
+          if (kerjakanBtnEls && kerjakanBtnEls[0]) {
+            kerjakanBtnEls[0].focus();
+          }
+        }, 50);
       }
     } catch (error) {
       console.error("Complete task error:", error);
@@ -435,8 +462,9 @@
                   class="px-4 py-4 whitespace-nowrap text-center text-sm font-medium"
                 >
                   <button
+                    bind:this={kerjakanBtnEls[i]}
                     on:click={() => openEditModal(task)}
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-md transition-all duration-200"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-md transition-all duration-200 focus:ring-4 focus:ring-indigo-300 focus:outline-none"
                   >
                     <svg
                       class="w-4 h-4"
@@ -731,7 +759,8 @@
             </button>
             <button
               type="submit"
-              class="btn-primary shadow-indigo-200"
+              bind:this={submitBtnEl}
+              class="btn-primary shadow-indigo-200 focus:ring-4 focus:ring-indigo-300 focus:outline-none"
               disabled={isSubmitting || activeFields.length === 0}
             >
               {#if isSubmitting}
