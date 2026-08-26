@@ -545,7 +545,7 @@
               <p class="text-sm text-slate-700 font-semibold">
                 {selectedTask.dataP3k?.nama}
               </p>
-              <p class="text-xs text-slate-500 mt-1">
+              <p class="text-xs text-slate-500 mt-1 break-words whitespace-normal leading-relaxed">
                 Unit Kerja: {selectedTask.dataP3k?.unorNama ||
                   selectedTask.dataP3k?.lokasiKerjaNama ||
                   "-"}
@@ -565,7 +565,7 @@
                     {#each fields as field}
                       <div>
                         <label
-                          class="block text-sm font-bold text-slate-700 mb-1.5"
+                          class="block text-sm font-bold text-slate-700 mb-1.5 break-words whitespace-normal"
                           for="field-{field.fieldName}"
                         >
                           {field.label}
@@ -616,10 +616,10 @@
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                                     <li
-                                      class="px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors"
+                                      class="px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors border-b border-slate-50 last:border-0"
                                       on:click={() => selectSearchResult(field.fieldName, result.id, result.nama)}
                                     >
-                                      <div class="font-medium text-slate-800">{result.nama}</div>
+                                      <div class="font-medium text-slate-800 break-words whitespace-normal leading-snug">{result.nama}</div>
                                     </li>
                                   {/each}
                                 {:else}
@@ -628,6 +628,18 @@
                               </ul>
                             {/if}
                           </div>
+
+                          {#if editForm[field.fieldName] && searchTerms[field.fieldName]}
+                            <div class="mt-2 p-2.5 bg-indigo-50/80 border border-indigo-100 rounded-xl text-xs font-semibold text-indigo-900 break-words whitespace-normal leading-relaxed flex items-start gap-2">
+                              <svg class="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <div>
+                                <span class="text-indigo-600 text-[10px] uppercase font-bold tracking-wider block">Pilihan Terpilih:</span>
+                                <span>{searchTerms[field.fieldName]}</span>
+                              </div>
+                            </div>
+                          {/if}
 
                         {:else if field.inputType === "date"}
                           <input
