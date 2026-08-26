@@ -1422,10 +1422,12 @@
           </div>
         {:else}
           <!-- Not logged in -->
-          <div class="hidden lg:flex items-center gap-2">
-            <a href="/login" class="btn-primary text-sm !py-2">Masuk</a>
-            <!-- <a href="/register" class="nav-link nav-link-inactive">Daftar</a> -->
-          </div>
+          {#if !isActive('/login')}
+            <div class="hidden lg:flex items-center gap-2">
+              <a href="/login" class="btn-primary text-sm !py-2">Masuk</a>
+              <!-- <a href="/register" class="nav-link nav-link-inactive">Daftar</a> -->
+            </div>
+          {/if}
           <!-- Mobile hamburger when not logged in -->
           <button
             onclick={toggleMobile}
@@ -2579,7 +2581,7 @@
             </button>
           </div>
         </div>
-      {:else}
+      {:else if !isActive('/login')}
         <div class="p-4 border-t border-slate-100 bg-slate-50/80">
           <a
             href="/login"

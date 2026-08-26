@@ -139,7 +139,7 @@
     }
   }
 
-  // --- Modal Rincian Usulan Berdasarkan Status ---
+  // --- Modal Rincian Usulan Berdasarkan Status & User ---
   let showDetailModal = false;
   let detailStatus = ""; // "PENDING", "APPROVED", "UPLOAD_SRIKANDI", "SELESAI", "REJECTED", or "" (Semua)
   let detailSearch = "";
@@ -147,13 +147,16 @@
   let detailLimit = 10;
   let detailLoading = false;
   let detailRecords = [];
-  let detailMeta = { total: 0, page: 1, limit: 10, totalPages: 1 };
   const detailLimitOptions = [10, 25, 50, 100];
+
+  // Grouping/Rekap State inside Modal
+  let selectedUserId = null; // null = Rekap Mode (Grid user), 'ALL' = Semua daftar pegawai, or userId = Daftar pegawai user tersebut
 
   function openDetailModal(status = "", initialSearch = "") {
     detailStatus = status;
     detailSearch = initialSearch;
     detailPage = 1;
+    selectedUserId = null;
     showDetailModal = true;
     fetchDetailUsulan(1);
   }
@@ -161,15 +164,16 @@
   function closeDetailModal() {
     showDetailModal = false;
     detailRecords = [];
+    selectedUserId = null;
   }
 
-  async function fetchDetailUsulan(page = detailPage) {
+  async function fetchDetailUsulan(page = 1) {
     detailLoading = true;
     detailPage = page;
     try {
       let queryParams = new URLSearchParams({
-        page: String(detailPage),
-        limit: String(detailLimit)
+        isLaporan: "true",
+        limit: "all"
       });
       if (detailStatus) queryParams.set("status", detailStatus);
       if (detailSearch.trim()) queryParams.set("search", detailSearch.trim());
@@ -177,7 +181,6 @@
       const res = await apiRequest(`/api/v1/perpanjangan/usulan?${queryParams.toString()}`);
       if (res && res.success) {
         detailRecords = res.data || [];
-        detailMeta = res.meta || { total: 0, page: 1, limit: detailLimit, totalPages: 1 };
       } else {
         addToast(res?.message || "Gagal memuat rincian usulan", "error");
       }
@@ -197,8 +200,56 @@
   function handleDetailStatusChange(st) {
     detailStatus = st;
     detailPage = 1;
+    selectedUserId = null;
     fetchDetailUsulan(1);
   }
+
+  function selectUserForDetail(userId) {
+    selectedUserId = userId;
+    detailPage = 1;
+  }
+
+  function clearSelectedUser() {
+    selectedUserId = null;
+    detailPage = 1;
+  }
+
+  // Derived grouping by User / Operator
+  $: userRecap = (() => {
+    const map = new Map();
+    for (const rec of detailRecords) {
+      const userKey = rec.editedBy?.id || rec.editedBy?.username || 'unassigned';
+      if (!map.has(userKey)) {
+        map.set(userKey, {
+          userId: userKey,
+          namaLengkap: rec.editedBy?.namaLengkap || rec.editedBy?.username || 'System / Auto',
+          username: rec.editedBy?.username || '',
+          role: rec.editedBy?.role || '',
+          count: 0,
+          records: []
+        });
+      }
+      const item = map.get(userKey);
+      item.count++;
+      item.records.push(rec);
+    }
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  })();
+
+  $: activeUserObj = (selectedUserId && selectedUserId !== 'ALL')
+    ? userRecap.find(u => u.userId === selectedUserId)
+    : null;
+
+  $: activeUserRecords = (() => {
+    if (!selectedUserId || selectedUserId === 'ALL') {
+      return detailRecords;
+    }
+    const found = userRecap.find(u => u.userId === selectedUserId);
+    return found ? found.records : [];
+  })();
+
+  $: totalPagesDetail = Math.max(1, Math.ceil(activeUserRecords.length / detailLimit));
+  $: displayedDetailRecords = activeUserRecords.slice((detailPage - 1) * detailLimit, detailPage * detailLimit);
 
   function getStatusColorClass(status) {
     switch (status) {
@@ -1094,11 +1145,11 @@
                   Rincian Usulan PK {detailStatus ? `: ${getStatusLabel(detailStatus)}` : '(Semua Status)'}
                 </h3>
                 <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-white/20 text-white backdrop-blur-sm border border-white/10 shrink-0">
-                  {detailMeta.total} Data
+                  {detailRecords.length} Data
                 </span>
               </div>
               <p class="text-[10px] sm:text-xs text-slate-300 mt-0.5 truncate">
-                Daftar rincian pegawai dan user/operator yang mengusulkan perpanjangan kontrak
+                Daftar rekapitulasi user pengusul dan rincian pegawai perpanjangan kontrak
               </p>
             </div>
           </div>
@@ -1217,15 +1268,15 @@
           </div>
         </div>
 
-        <!-- 2. Baris Bawah: Form Pencarian Pegawai & Opsi Tampilan -->
-        <div class="px-4 sm:px-6 py-3 sm:py-3.5 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 flex-shrink-0">
+        <!-- 2. Baris Bawah: Form Pencarian & Switcher Tampilan -->
+        <div class="px-4 sm:px-6 py-3 sm:py-3.5 bg-white border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 flex-shrink-0">
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-grow max-w-2xl">
             <div class="relative flex-grow">
               <input
                 type="text"
                 bind:value={detailSearch}
                 on:keydown={(e) => e.key === 'Enter' && handleDetailSearch()}
-                placeholder="Cari Nama Pegawai, NIP, Unit Kerja, No Kontrak..."
+                placeholder="Cari Nama Pegawai, NIP, Unit Kerja, User..."
                 class="w-full text-xs pl-9 sm:pl-10 pr-9 py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-medium text-slate-800"
               />
               <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5 sm:top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1254,32 +1305,89 @@
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Cari Pegawai
+              Cari
             </button>
           </div>
 
-          <div class="flex items-center gap-3 justify-between sm:justify-end">
-            <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <span>Tampilkan:</span>
-              <select
-                bind:value={detailLimit}
-                on:change={() => fetchDetailUsulan(1)}
-                class="text-xs border border-slate-200 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 bg-slate-50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
+          <!-- Toggle View Mode & Page Limit -->
+          <div class="flex items-center gap-2 justify-between md:justify-end flex-wrap">
+            <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200/80">
+              <button
+                type="button"
+                on:click={() => { selectedUserId = null; detailPage = 1; }}
+                class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 {selectedUserId === null ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}"
               >
-                {#each detailLimitOptions as opt}
-                  <option value={opt}>{opt} Data / Hal</option>
-                {/each}
-              </select>
+                <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Rekap User ({userRecap.length})
+              </button>
+
+              <button
+                type="button"
+                on:click={() => { selectedUserId = 'ALL'; detailPage = 1; }}
+                class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 {selectedUserId === 'ALL' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}"
+              >
+                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Semua Pegawai ({detailRecords.length})
+              </button>
             </div>
+
+            {#if selectedUserId !== null}
+              <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                <span>Per Hal:</span>
+                <select
+                  bind:value={detailLimit}
+                  on:change={() => (detailPage = 1)}
+                  class="text-xs border border-slate-200 rounded-xl px-2.5 py-1.5 bg-slate-50 font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
+                >
+                  {#each detailLimitOptions as opt}
+                    <option value={opt}>{opt} Data</option>
+                  {/each}
+                </select>
+              </div>
+            {/if}
           </div>
         </div>
 
-        <!-- Modal Table Body -->
+        <!-- Selected User Drill-down Banner (if specific user is selected) -->
+        {#if activeUserObj}
+          <div class="px-4 sm:px-6 py-2.5 bg-indigo-50/90 border-b border-indigo-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 flex-shrink-0 text-xs">
+            <div class="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                on:click={clearSelectedUser}
+                class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 font-bold flex items-center gap-1 transition-colors shadow-xs shrink-0"
+              >
+                <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Kembali ke Rekap User
+              </button>
+
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-slate-400 font-bold">|</span>
+                <span class="text-slate-600 font-medium">Menampilkan Pegawai Diusulkan oleh:</span>
+                <span class="font-bold text-indigo-900 bg-white px-2 py-0.5 rounded-md border border-indigo-200 truncate">
+                  {activeUserObj.namaLengkap} {activeUserObj.username ? `(@${activeUserObj.username})` : ''}
+                </span>
+              </div>
+            </div>
+
+            <span class="font-bold text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full border border-indigo-200 shrink-0">
+              {activeUserRecords.length} Pegawai
+            </span>
+          </div>
+        {/if}
+
+        <!-- Modal Body Content -->
         <div class="flex-grow overflow-y-auto p-3 sm:p-6 bg-slate-50/40">
           {#if detailLoading}
             <div class="py-12 sm:py-16 text-center">
               <div class="w-8 h-8 sm:w-10 sm:h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3"></div>
-              <p class="text-xs text-slate-500 font-medium">Memuat data rincian usulan pegawai...</p>
+              <p class="text-xs text-slate-500 font-medium">Memuat data rincian usulan...</p>
             </div>
           {:else if detailRecords.length === 0}
             <div class="py-12 sm:py-16 text-center bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
@@ -1291,7 +1399,81 @@
               <h4 class="text-sm font-bold text-slate-700">Tidak ada usulan ditemukan</h4>
               <p class="text-xs text-slate-400 mt-1">Coba ubah status filter atau kata kunci pencarian Anda</p>
             </div>
+          {:else if selectedUserId === null}
+            <!-- ══ REKAP PER USER VIEW ══ -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Rekapitulasi Berdasarkan User Pengusul</h4>
+                  <p class="text-[11px] text-slate-500">Klik pada nama user untuk melihat daftar pegawai yang diusulkan</p>
+                </div>
+                <span class="text-xs font-semibold text-slate-400">Total: {userRecap.length} User</span>
+              </div>
+
+              <!-- User Recap Cards Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {#each userRecap as userItem}
+                  <div
+                    role="button"
+                    tabindex="0"
+                    on:click={() => selectUserForDetail(userItem.userId)}
+                    on:keydown={(e) => e.key === 'Enter' && selectUserForDetail(userItem.userId)}
+                    class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300 hover:-translate-y-0.5 transition-all cursor-pointer group flex flex-col justify-between space-y-3 min-w-0"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-sm flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0 group-hover:scale-105 transition-transform">
+                          {userItem.namaLengkap.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="min-w-0">
+                          <p class="font-bold text-slate-800 text-sm group-hover:text-indigo-600 transition-colors truncate">
+                            {userItem.namaLengkap}
+                          </p>
+                          <div class="flex items-center gap-1.5 mt-0.5">
+                            {#if userItem.username}
+                              <span class="text-[11px] font-mono text-slate-400 truncate">@{userItem.username}</span>
+                            {/if}
+                            {#if userItem.role}
+                              <span class="text-[9px] font-bold px-1.5 py-0.2 rounded uppercase shrink-0 {userItem.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">
+                                {userItem.role}
+                              </span>
+                            {/if}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="text-right shrink-0">
+                        <span class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-1 rounded-full block">
+                          {userItem.count} Usulan
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Progress Bar Relative to Total in Modal -->
+                    <div class="space-y-1">
+                      <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+                        <span>Porsi Usulan:</span>
+                        <span>{Math.round((userItem.count / detailRecords.length) * 100)}%</span>
+                      </div>
+                      <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          style="width: {(userItem.count / detailRecords.length) * 100}%"
+                          class="h-full bg-indigo-500 rounded-full"
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600 group-hover:text-indigo-700">
+                      <span>Lihat Daftar Pegawai</span>
+                      <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            </div>
+
           {:else}
+            <!-- ══ DAFTAR PEGAWAI TABLE VIEW ══ -->
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-w-0">
               <div class="overflow-x-auto max-w-full scrollbar-thin">
                 <table class="w-full min-w-[750px] text-left border-collapse text-xs">
@@ -1307,11 +1489,11 @@
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100">
-                    {#each detailRecords as rec, i}
+                    {#each displayedDetailRecords as rec, i}
                       <tr class="hover:bg-slate-50/80 transition-colors">
                         <!-- No -->
                         <td class="py-3 px-3.5 text-center text-slate-400 font-mono text-[11px]">
-                          {(detailMeta.page - 1) * detailMeta.limit + i + 1}
+                          {(detailPage - 1) * detailLimit + i + 1}
                         </td>
 
                         <!-- Pegawai -->
@@ -1414,47 +1596,60 @@
 
         <!-- Modal Footer & Pagination -->
         <div class="px-4 sm:px-6 py-3 sm:py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0 text-xs">
-          <p class="text-slate-500 font-medium text-center sm:text-left">
-            Menampilkan <b>{detailMeta.total > 0 ? (detailMeta.page - 1) * detailMeta.limit + 1 : 0}</b> - <b>{Math.min(detailMeta.page * detailMeta.limit, detailMeta.total)}</b> dari <b>{detailMeta.total}</b> Usulan
-          </p>
+          {#if selectedUserId !== null && activeUserRecords.length > 0}
+            <p class="text-slate-500 font-medium text-center sm:text-left">
+              Menampilkan <b>{(detailPage - 1) * detailLimit + 1}</b> - <b>{Math.min(detailPage * detailLimit, activeUserRecords.length)}</b> dari <b>{activeUserRecords.length}</b> Pegawai
+            </p>
 
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              on:click={() => fetchDetailUsulan(Math.max(1, detailMeta.page - 1))}
-              disabled={detailMeta.page <= 1 || detailLoading}
-              class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-sm transition-all"
-            >
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-              Sebelumnya
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                on:click={() => (detailPage = Math.max(1, detailPage - 1))}
+                disabled={detailPage <= 1 || detailLoading}
+                class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-sm transition-all"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Sebelumnya
+              </button>
 
-            <span class="text-slate-600 font-bold px-2">
-              Hal. {detailMeta.page} / {detailMeta.totalPages}
-            </span>
+              <span class="text-slate-600 font-bold px-2">
+                Hal. {detailPage} / {totalPagesDetail}
+              </span>
 
-            <button
-              type="button"
-              on:click={() => fetchDetailUsulan(Math.min(detailMeta.totalPages, detailMeta.page + 1))}
-              disabled={detailMeta.page >= detailMeta.totalPages || detailLoading}
-              class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-sm transition-all"
-            >
-              Selanjutnya
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+              <button
+                type="button"
+                on:click={() => (detailPage = Math.min(totalPagesDetail, detailPage + 1))}
+                disabled={detailPage >= totalPagesDetail || detailLoading}
+                class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-sm transition-all"
+              >
+                Selanjutnya
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
 
+              <button
+                type="button"
+                on:click={closeDetailModal}
+                class="ml-2 sm:ml-3 px-3.5 sm:px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
+          {:else}
+            <p class="text-slate-500 font-medium">
+              Total: <b>{detailRecords.length}</b> Usulan ({userRecap.length} User Pengusul)
+            </p>
             <button
               type="button"
               on:click={closeDetailModal}
-              class="ml-2 sm:ml-3 px-3.5 sm:px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors"
+              class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors"
             >
               Tutup
             </button>
-          </div>
+          {/if}
         </div>
       </div>
     </div>
