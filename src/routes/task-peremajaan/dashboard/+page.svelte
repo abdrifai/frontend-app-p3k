@@ -973,7 +973,14 @@
                     </td>
                     <td class="py-3.5 px-4">
                       <div>
-                        <p class="font-bold text-slate-800 leading-tight">{r.dataP3k?.nama || "-"}</p>
+                        <div class="flex items-center gap-1.5">
+                          <p class="font-bold text-slate-800 leading-tight">{r.dataP3k?.nama || "-"}</p>
+                          {#if r.dataP3k?.statusPensiun === 'PENSIUN'}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                              ⚠️ PENSIUN
+                            </span>
+                          {/if}
+                        </div>
                         <p class="text-[11px] text-slate-400 font-mono mt-0.5">NIP: {r.dataP3k?.nipBaru || "-"}</p>
                       </div>
                     </td>

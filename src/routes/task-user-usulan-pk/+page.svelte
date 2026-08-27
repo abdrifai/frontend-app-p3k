@@ -493,14 +493,25 @@
             </tr>
           {:else}
             {#each records as task, i}
-              <tr class="hover:bg-slate-50 transition-colors group">
+              {@const isPensiun = task.dataP3k?.statusPensiun === 'PENSIUN'}
+              <tr class="transition-colors group {isPensiun ? 'bg-red-50/50 hover:bg-red-50/80 border-l-4 border-l-red-500' : 'hover:bg-slate-50'}">
                 <td
                   class="px-4 py-4 whitespace-nowrap text-sm text-slate-400 font-mono"
                   >{(meta.page - 1) * meta.limit + i + 1}</td
                 >
                 <td class="px-4 py-4 whitespace-nowrap">
-                  <div class="text-sm font-semibold text-slate-800">
-                    {task.dataP3k?.nama}
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold {isPensiun ? 'text-red-900' : 'text-slate-800'}">
+                      {task.dataP3k?.nama}
+                    </span>
+                    {#if isPensiun}
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        PENSIUN - Hentikan
+                      </span>
+                    {/if}
                   </div>
                   <div class="text-xs text-slate-500 font-mono mt-0.5">
                     {task.dataP3k?.nipBaru}
@@ -516,9 +527,9 @@
                 </td>
                 <td class="px-4 py-4 whitespace-nowrap">
                   <span
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border text-amber-700 bg-amber-50 border-amber-200"
+                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border {isPensiun ? 'text-red-700 bg-red-50 border-red-200' : 'text-amber-700 bg-amber-50 border-amber-200'}"
                   >
-                    {task.isCompleted ? "Selesai" : "Belum Selesai"}
+                    {isPensiun ? "Pegawai Pensiun" : (task.isCompleted ? "Selesai" : "Belum Selesai")}
                   </span>
                 </td>
                 <td
@@ -526,21 +537,37 @@
                 >
                   <button
                     on:click={() => openEditModal(task)}
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-md transition-all duration-200"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 {isPensiun ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'} rounded-md transition-all duration-200"
                   >
-                    <svg
-                      class="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      ><path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 4v16m8-8H4"
-                      /></svg
-                    >
-                    Buat Usulan
+                    {#if isPensiun}
+                      <svg
+                        class="w-4 h-4 text-red-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        ><path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        /></svg
+                      >
+                      <span>Pegawai Pensiun</span>
+                    {:else}
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        ><path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 4v16m8-8H4"
+                        /></svg
+                      >
+                      <span>Buat Usulan</span>
+                    {/if}
                   </button>
                 </td>
               </tr>
@@ -594,13 +621,20 @@
         class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg z-10 overflow-hidden"
       >
         <!-- Progress Bar at top -->
-        <div class="h-1 bg-indigo-600 w-full animate-pulse"></div>
+        <div class="h-1 {selectedTask.dataP3k?.statusPensiun === 'PENSIUN' ? 'bg-red-600' : 'bg-indigo-600'} w-full animate-pulse"></div>
 
         <div
           class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50"
         >
           <div>
-            <h3 class="text-lg font-bold text-slate-800">Buat Usulan PK</h3>
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-bold text-slate-800">Buat Usulan PK</h3>
+              {#if selectedTask.dataP3k?.statusPensiun === 'PENSIUN'}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                  ⚠️ PENSIUN
+                </span>
+              {/if}
+            </div>
             <p class="text-xs text-slate-500 font-mono mt-1">
               Pegawai: {form.namaDisplay}
             </p>
@@ -627,6 +661,20 @@
 
         <form on:submit={handleCompleteTask} class="p-6">
           <div class="space-y-4">
+            {#if selectedTask.dataP3k?.statusPensiun === 'PENSIUN'}
+              <!-- Warning Banner for Retired Employee -->
+              <div class="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3 text-red-800">
+                <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                  <h4 class="text-sm font-bold text-red-900">PERINGATAN: PEGAWAI TELAH PENSIUN</h4>
+                  <p class="text-xs text-red-700 mt-1 leading-relaxed">
+                    Pegawai ini telah berstatus <strong>PENSIUN</strong>. Pembuatan usulan perpanjangan kontrak <strong>sebaiknya dihentikan</strong> karena pegawai tidak lagi aktif.
+                  </p>
+                </div>
+              </div>
+            {/if}
             <div
               class="bg-blue-50/50 px-4 py-3 rounded-xl border border-blue-100 flex gap-3"
             >

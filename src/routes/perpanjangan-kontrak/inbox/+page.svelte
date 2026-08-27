@@ -383,17 +383,25 @@
             >
           {:else}
             {#each records as rec, i}
+              {@const isPensiun = rec.dataP3k?.statusPensiun === 'PENSIUN'}
               <tr
-                class="hover:bg-slate-50/50 transition-colors cursor-pointer"
+                class="transition-colors cursor-pointer {isPensiun ? 'bg-red-50/40 hover:bg-red-50/70 border-l-4 border-l-red-500' : 'hover:bg-slate-50/50'}"
                 on:click={() => openDetail(rec)}
               >
                 <td class="px-4 sm:px-6 py-3 text-sm text-slate-400 font-mono"
                   >{(meta.page - 1) * meta.limit + i + 1}</td
                 >
                 <td class="px-4 sm:px-6 py-3">
-                  <p class="text-sm font-semibold text-slate-800">
-                    {rec.dataP3k?.nama || "-"}
-                  </p>
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-sm font-semibold {isPensiun ? 'text-red-900' : 'text-slate-800'}">
+                      {rec.dataP3k?.nama || "-"}
+                    </p>
+                    {#if isPensiun}
+                      <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">
+                        ⚠️ PENSIUN
+                      </span>
+                    {/if}
+                  </div>
                   <p class="text-xs text-slate-400 font-mono">
                     {rec.dataP3k?.nipBaru || "-"}
                   </p>
@@ -422,11 +430,16 @@
                     "-"}</td
                 >
                 <td class="px-4 sm:px-6 py-3">
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border {statusColor(
-                      rec.status,
-                    )}">{statusLabel(rec.status)}</span
-                  >
+                  <div class="flex flex-col gap-1 items-start">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border {statusColor(
+                        rec.status,
+                      )}">{statusLabel(rec.status)}</span
+                    >
+                    {#if isPensiun}
+                      <span class="text-[10px] text-red-600 font-bold">Hentikan Usulan</span>
+                    {/if}
+                  </div>
                 </td>
                 {#if isAdmin}
                   <td class="px-4 sm:px-6 py-3">
@@ -590,7 +603,19 @@
               /></svg
             >
           </button>
-        </div>
+        {#if selectedRecord.dataP3k?.statusPensiun === 'PENSIUN'}
+          <div class="mb-5 bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3 text-red-800">
+            <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>
+              <h4 class="text-sm font-bold text-red-900">PERINGATAN: PEGAWAI TELAH PENSIUN</h4>
+              <p class="text-xs text-red-700 mt-1 leading-relaxed">
+                Pegawai ini telah berstatus <strong>PENSIUN</strong>. Usulan perpanjangan kontrak ini <strong>harus dihentikan / ditolak</strong> karena pegawai yang bersangkutan sudah tidak aktif.
+              </p>
+            </div>
+          </div>
+        {/if}
 
         <dl class="grid grid-cols-2 gap-4">
           <div

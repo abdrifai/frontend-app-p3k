@@ -662,14 +662,22 @@
             >
           {:else}
             {#each records as rec, i}
-              <tr class="hover:bg-slate-50/50 transition-colors">
+              {@const isPensiun = rec.dataP3k?.statusPensiun === 'PENSIUN'}
+              <tr class="transition-colors {isPensiun ? 'bg-red-50/40 hover:bg-red-50/70 border-l-4 border-l-red-500' : 'hover:bg-slate-50/50'}">
                 <td class="px-4 sm:px-6 py-3 text-sm text-slate-400 font-mono"
                   >{(meta.page - 1) * meta.limit + i + 1}</td
                 >
                 <td class="px-4 sm:px-6 py-3">
-                  <p class="text-sm font-semibold text-slate-800">
-                    {rec.dataP3k?.nama || "-"}
-                  </p>
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-sm font-semibold {isPensiun ? 'text-red-900' : 'text-slate-800'}">
+                      {rec.dataP3k?.nama || "-"}
+                    </p>
+                    {#if isPensiun}
+                      <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">
+                        ⚠️ PENSIUN
+                      </span>
+                    {/if}
+                  </div>
                   <p class="text-xs text-slate-400 font-mono">
                     {rec.dataP3k?.nipBaru || "-"}
                   </p>
@@ -693,11 +701,16 @@
                   {rec.templateKontrak?.nama || "-"}
                 </td>
                 <td class="px-4 sm:px-6 py-3">
-                  <span
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border {statusColor(
-                      rec.status,
-                    )}">{statusLabel(rec.status)}</span
-                  >
+                  <div class="flex flex-col gap-1 items-start">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border {statusColor(
+                        rec.status,
+                      )}">{statusLabel(rec.status)}</span
+                    >
+                    {#if isPensiun}
+                      <span class="text-[10px] text-red-600 font-bold">Hentikan Usulan</span>
+                    {/if}
+                  </div>
                 </td>
                 {#if isAdmin}
                   <td class="px-4 sm:px-6 py-3">
