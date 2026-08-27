@@ -603,6 +603,8 @@
               /></svg
             >
           </button>
+        </div>
+
         {#if selectedRecord.dataP3k?.statusPensiun === 'PENSIUN'}
           <div class="mb-5 bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3 text-red-800">
             <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

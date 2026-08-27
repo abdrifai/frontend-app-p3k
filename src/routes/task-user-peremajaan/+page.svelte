@@ -406,7 +406,8 @@
                 </div>
               </td>
             </tr>
-          {:else            {#each records as task, i}
+          {:else}
+            {#each records as task, i}
               {@const isPensiun = task.dataP3k?.statusPensiun === 'PENSIUN'}
               <tr class="transition-colors group {isPensiun ? 'bg-red-50/50 hover:bg-red-50/80 border-l-4 border-l-red-500' : 'hover:bg-slate-50'}">
                 <td
