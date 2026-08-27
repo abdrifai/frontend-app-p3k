@@ -26,7 +26,7 @@
   };
 
   let searchUnor = "";
-  let selectedTab = "unor"; // "unor", "operator", "recent"
+  let selectedTab = "unor"; // "unor", "operator", "recent", "kinerja"
 
   let limitUnor = 10;
   let pageUnor = 1;
@@ -36,6 +36,32 @@
 
   let limitRecent = 10;
   let pageRecent = 1;
+
+  // --- KINERJA HARIAN STATE ---
+  function getTodayString() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  let kinerjaDate = getTodayString();
+  let kinerjaPreset = "today"; // "today", "yesterday", "custom"
+  let kinerjaLoading = false;
+
+  let kinerjaData = {
+    summary: {
+      totalDikerjakan: 0,
+      pendingCount: 0,
+      approvedCount: 0,
+      srikandiCount: 0,
+      selesaiCount: 0,
+      rejectedCount: 0,
+      activeUserCount: 0
+    },
+    byUser: []
+  };
 
   const limitOptions = [10, 25, 50, 100, 250, 500];
 
@@ -50,6 +76,51 @@
     pageRecent = 1;
   }
 
+  async function fetchKinerjaHarian() {
+    kinerjaLoading = true;
+    try {
+      const params = new URLSearchParams();
+      if (kinerjaDate) params.set("date", kinerjaDate);
+
+      const res = await apiRequest(`/api/v1/perpanjangan/kinerja-harian?${params.toString()}`);
+      if (res && res.success) {
+        kinerjaData = res.data;
+      } else {
+        addToast(res?.message || "Gagal memuat rekap kinerja", "error");
+      }
+    } catch (err) {
+      console.error("fetchKinerjaHarian error:", err);
+      addToast("Terjadi kesalahan saat memuat rekap kinerja harian", "error");
+    } finally {
+      kinerjaLoading = false;
+    }
+  }
+
+  function setKinerjaPreset(preset) {
+    kinerjaPreset = preset;
+    if (preset === "today") {
+      kinerjaDate = getTodayString();
+    } else if (preset === "yesterday") {
+      const yest = new Date();
+      yest.setDate(yest.getDate() - 1);
+      const yyyy = yest.getFullYear();
+      const mm = String(yest.getMonth() + 1).padStart(2, "0");
+      const dd = String(yest.getDate()).padStart(2, "0");
+      kinerjaDate = `${yyyy}-${mm}-${dd}`;
+    }
+    fetchKinerjaHarian();
+  }
+
+  function handleKinerjaDateChange(e) {
+    kinerjaDate = e.target.value;
+    kinerjaPreset = "custom";
+    fetchKinerjaHarian();
+  }
+
+  $: if (selectedTab === "kinerja" && (!kinerjaData.byUser || kinerjaData.byUser.length === 0)) {
+    fetchKinerjaHarian();
+  }
+
   onMount(async () => {
     if (!$authStore.isAuthenticated) {
       addToast("Silakan login terlebih dahulu", "error");
@@ -57,6 +128,7 @@
       return;
     }
     await fetchDashboardStats();
+    await fetchKinerjaHarian();
   });
 
   async function fetchDashboardStats() {
@@ -678,6 +750,24 @@
             </svg>
             Aktivitas Terbaru
           </button>
+
+          <button
+            on:click={() => {
+              selectedTab = "kinerja";
+              if (!kinerjaData.records || kinerjaData.records.length === 0) fetchKinerjaHarian();
+            }}
+            class="px-3 sm:px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {selectedTab === 'kinerja' ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-600 hover:bg-slate-100'}"
+          >
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Kinerja
+            {#if kinerjaData.summary?.totalDikerjakan > 0}
+              <span class="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold {selectedTab === 'kinerja' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}">
+                {kinerjaData.summary.totalDikerjakan}
+              </span>
+            {/if}
+          </button>
         </div>
 
         <div class="flex items-center gap-2.5 w-full sm:w-auto">
@@ -1114,6 +1204,172 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+            </div>
+          </div>
+        </div>
+      {/if}
+
+      <!-- TAB 4: KINERJA HARIAN (SIMPEL: FILTER TANGGAL -> TABEL REKAP) -->
+      {#if selectedTab === "kinerja"}
+        <div class="space-y-4">
+          <!-- Filter Tanggal Bar Sederhana -->
+          <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                Filter Tanggal:
+              </span>
+              <input
+                type="date"
+                value={kinerjaDate || getTodayString()}
+                on:change={handleKinerjaDateChange}
+                class="text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700 bg-white shadow-sm"
+              />
+            </div>
+
+            <!-- Quick Preset Buttons -->
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+              <button
+                type="button"
+                on:click={() => setKinerjaPreset("today")}
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {kinerjaPreset === 'today' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}"
+              >
+                Hari Ini
+              </button>
+              <button
+                type="button"
+                on:click={() => setKinerjaPreset("yesterday")}
+                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {kinerjaPreset === 'yesterday' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}"
+              >
+                Kemarin
+              </button>
+              <button
+                type="button"
+                on:click={fetchKinerjaHarian}
+                class="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                title="Muat Ulang Data"
+              >
+                <svg class="w-4 h-4 {kinerjaLoading ? 'animate-spin text-blue-600' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabel Rekapitulasi Kinerja User Per Hari -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-0">
+            <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span class="font-bold text-slate-700">
+                Rekap Pekerjaan User ({kinerjaData.byUser?.length || 0} Operator Aktif)
+              </span>
+              <span class="font-semibold text-slate-600">
+                Tanggal: <b>{kinerjaDate || getTodayString()}</b>
+              </span>
+            </div>
+
+            <div class="overflow-x-auto max-w-full scrollbar-thin">
+              <table class="w-full min-w-[700px] text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4 w-12 text-center">No</th>
+                    <th class="py-3.5 px-4 min-w-[200px]">User / Operator</th>
+                    <th class="py-3.5 px-4 text-center text-amber-700 bg-amber-50/50">Pending</th>
+                    <th class="py-3.5 px-4 text-center text-blue-700 bg-blue-50/50">Approved</th>
+                    <th class="py-3.5 px-4 text-center text-purple-700 bg-purple-50/50">Upload Srikandi</th>
+                    <th class="py-3.5 px-4 text-center text-emerald-700 bg-emerald-50/50">Selesai (PK)</th>
+                    <th class="py-3.5 px-4 text-center text-rose-700 bg-rose-50/50">Ditolak</th>
+                    <th class="py-3.5 px-4 text-center font-extrabold text-slate-800 bg-slate-100/70">Total Hari Ini</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                  {#if kinerjaLoading}
+                    <tr>
+                      <td colspan="8" class="py-12 text-center text-slate-400">
+                        <div class="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <span>Memuat rekap kinerja...</span>
+                      </td>
+                    </tr>
+                  {:else if !kinerjaData.byUser || kinerjaData.byUser.length === 0}
+                    <tr>
+                      <td colspan="8" class="py-12 text-center text-slate-400">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <p class="font-medium text-slate-600">Tidak ada aktivitas pengerjaan usulan pada tanggal ini</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Silakan pilih tanggal lain pada filter di atas</p>
+                      </td>
+                    </tr>
+                  {:else}
+                    {#each kinerjaData.byUser as u, idx}
+                      <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-3.5 px-4 text-center text-slate-400 font-mono text-xs">
+                          {idx + 1}
+                        </td>
+                        <td class="py-3.5 px-4">
+                          <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                              {(u.namaLengkap || u.username || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p class="font-bold text-slate-800 leading-tight">
+                                {u.namaLengkap}
+                              </p>
+                              <p class="text-[11px] text-slate-400 font-mono mt-0.5">
+                                @{u.username} • <span class="capitalize">{u.role}</span>
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold {u.pending > 0 ? 'text-amber-600 bg-amber-50/30' : 'text-slate-300'}">
+                          {u.pending}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold {u.approved > 0 ? 'text-blue-600 bg-blue-50/30' : 'text-slate-300'}">
+                          {u.approved}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold {u.srikandi > 0 ? 'text-purple-600 bg-purple-50/30' : 'text-slate-300'}">
+                          {u.srikandi}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold {u.selesai > 0 ? 'text-emerald-600 bg-emerald-50/30' : 'text-slate-300'}">
+                          {u.selesai}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-bold {u.rejected > 0 ? 'text-rose-600 bg-rose-50/30' : 'text-slate-300'}">
+                          {u.rejected}
+                        </td>
+                        <td class="py-3.5 px-4 text-center font-black text-sm text-slate-800 bg-slate-50">
+                          {u.total}
+                        </td>
+                      </tr>
+                    {/each}
+                  {/if}
+                </tbody>
+                {#if kinerjaData.byUser && kinerjaData.byUser.length > 0}
+                  <tfoot>
+                    <tr class="bg-slate-100/80 border-t-2 border-slate-300 text-xs font-black text-slate-800">
+                      <td colspan="2" class="py-3.5 px-4 text-right uppercase tracking-wider">
+                        Total Keseluruhan :
+                      </td>
+                      <td class="py-3.5 px-4 text-center text-amber-700 bg-amber-100/40">
+                        {kinerjaData.summary?.pendingCount || 0}
+                      </td>
+                      <td class="py-3.5 px-4 text-center text-blue-700 bg-blue-100/40">
+                        {kinerjaData.summary?.approvedCount || 0}
+                      </td>
+                      <td class="py-3.5 px-4 text-center text-purple-700 bg-purple-100/40">
+                        {kinerjaData.summary?.srikandiCount || 0}
+                      </td>
+                      <td class="py-3.5 px-4 text-center text-emerald-700 bg-emerald-100/40">
+                        {kinerjaData.summary?.selesaiCount || 0}
+                      </td>
+                      <td class="py-3.5 px-4 text-center text-rose-700 bg-rose-100/40">
+                        {kinerjaData.summary?.rejectedCount || 0}
+                      </td>
+                      <td class="py-3.5 px-4 text-center text-sm font-black text-slate-900 bg-slate-200/80">
+                        {kinerjaData.summary?.totalDikerjakan || 0}
+                      </td>
+                    </tr>
+                  </tfoot>
+                {/if}
+              </table>
             </div>
           </div>
         </div>
