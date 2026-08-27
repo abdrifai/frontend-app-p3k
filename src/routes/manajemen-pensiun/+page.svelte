@@ -39,8 +39,14 @@
   let detailRecord = null;
 
   // --- API calls ---
+  // Flag: apakah hasil pencarian menunjukkan pegawai sudah pensiun
+  let searchFoundPensiun = false;
+  let searchFoundPensiunNames = [];
+
   const fetchActiveEmployees = async (page = 1) => {
     isLoading = true;
+    searchFoundPensiun = false;
+    searchFoundPensiunNames = [];
     try {
       const params = new URLSearchParams({
         page,
@@ -53,6 +59,28 @@
       if (result.success) {
         records = result.data;
         meta = result.meta;
+
+        // Jika pencarian aktif dan hasilnya kosong, cek apakah pegawai ada tapi sudah pensiun
+        if (searchTerm.trim() && records.length === 0) {
+          try {
+            // Cari TANPA filter statusPensiun — untuk melihat apakah ada data dengan nama/NIP tersebut
+            const allParams = new URLSearchParams({ page: 1, limit: 5 });
+            allParams.set("search", searchTerm.trim());
+            const allResult = await apiRequest(`/api/v1/data-p3k?${allParams.toString()}`, "GET");
+            if (allResult.success && allResult.data && allResult.data.length > 0) {
+              // Filter hanya yang statusPensiun bukan AKTIF
+              const pensiunData = allResult.data.filter(r => r.statusPensiun && r.statusPensiun !== "AKTIF");
+              if (pensiunData.length > 0) {
+                searchFoundPensiun = true;
+                searchFoundPensiunNames = pensiunData.map(r => r.nama);
+                const firstNama = searchFoundPensiunNames[0] || searchTerm;
+                addToast(`Pegawai "${firstNama}" sudah berstatus PENSIUN. Data tidak ditampilkan di tab Set Pensiun.`, "warning");
+              }
+            }
+          } catch (_) {
+            // Abaikan error pengecekan — tidak mengganggu flow utama
+          }
+        }
       }
     } catch (err) {
       addToast("Gagal memuat data pegawai aktif", "error");
@@ -420,9 +448,37 @@
               {:else if records.length === 0}
                 <tr>
                   <td colspan="5" class="px-6 py-12 text-center">
-                    <p class="text-sm text-slate-400">
-                      Tidak ada pegawai aktif ditemukan
-                    </p>
+                    {#if searchFoundPensiun}
+                      <!-- Notifikasi: pegawai sudah pensiun -->
+                      <div class="max-w-md mx-auto">
+                        <div class="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
+                          <svg class="w-7 h-7 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                          </svg>
+                        </div>
+                        <p class="text-sm font-semibold text-amber-700 mb-1">Pegawai Sudah Pensiun</p>
+                        <p class="text-xs text-slate-500 mb-3">
+                          Pegawai yang Anda cari sudah berstatus <span class="font-bold text-red-600">PENSIUN</span> dan tidak dapat diproses di tab ini.
+                        </p>
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left space-y-1">
+                          {#each searchFoundPensiunNames as nama}
+                            <div class="flex items-center gap-2 text-xs text-amber-800">
+                              <span class="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></span>
+                              <span class="font-medium">{nama}</span>
+                              <span class="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">PENSIUN</span>
+                            </div>
+                          {/each}
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-3">
+                          Lihat data lengkap di tab <button on:click={() => switchTab('data-pensiun')} class="text-red-600 font-semibold hover:underline">Data Pensiun</button>.
+                        </p>
+                      </div>
+                    {:else}
+                      <p class="text-sm text-slate-400">
+                        Tidak ada pegawai aktif ditemukan
+                      </p>
+                    {/if}
                   </td>
                 </tr>
               {:else}
