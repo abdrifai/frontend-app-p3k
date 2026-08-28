@@ -49,6 +49,9 @@
   let kinerjaDate = getTodayString();
   let kinerjaPreset = "today"; // "today", "yesterday", "custom"
   let kinerjaLoading = false;
+  let kinerjaFromCache = false;
+  let kinerjaIsToday = true;
+  let snapshotLoading = false;
 
   let kinerjaData = {
     summary: {
@@ -60,7 +63,8 @@
       rejectedCount: 0,
       activeUserCount: 0
     },
-    byUser: []
+    byUser: [],
+    meta: { tanggal: null, isToday: true, fromCache: false }
   };
 
   const limitOptions = [10, 25, 50, 100, 250, 500];
@@ -85,6 +89,8 @@
       const res = await apiRequest(`/api/v1/perpanjangan/kinerja-harian?${params.toString()}`);
       if (res && res.success) {
         kinerjaData = res.data;
+        kinerjaFromCache = res.data?.meta?.fromCache ?? false;
+        kinerjaIsToday = res.data?.meta?.isToday ?? true;
       } else {
         addToast(res?.message || "Gagal memuat rekap kinerja", "error");
       }
@@ -93,6 +99,27 @@
       addToast("Terjadi kesalahan saat memuat rekap kinerja harian", "error");
     } finally {
       kinerjaLoading = false;
+    }
+  }
+
+  async function triggerKinerjaSnapshot() {
+    snapshotLoading = true;
+    try {
+      const res = await apiRequest(`/api/v1/perpanjangan/kinerja-snapshot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: kinerjaDate })
+      });
+      if (res && res.success) {
+        addToast(`Snapshot rekap kinerja untuk ${kinerjaDate} berhasil disimpan`, "success");
+        await fetchKinerjaHarian();
+      } else {
+        addToast(res?.message || "Gagal menyimpan snapshot kinerja", "error");
+      }
+    } catch (err) {
+      addToast("Terjadi kesalahan saat menyimpan snapshot", "error");
+    } finally {
+      snapshotLoading = false;
     }
   }
 
@@ -1225,34 +1252,78 @@
                 on:change={handleKinerjaDateChange}
                 class="text-xs px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700 bg-white shadow-sm"
               />
+
+              <!-- Indikator Live vs Cache -->
+              {#if !kinerjaLoading && kinerjaData.byUser?.length > 0}
+                {#if kinerjaIsToday}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Live
+                  </span>
+                {:else if kinerjaFromCache}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700 border border-blue-200" title="Data diambil dari cache snapshot">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 10a2 2 0 002 2h8a2 2 0 002-2l1-10" /></svg>
+                    Cached
+                  </span>
+                {:else}
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Live (belum dicache)
+                  </span>
+                {/if}
+              {/if}
             </div>
 
-            <!-- Quick Preset Buttons -->
-            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-              <button
-                type="button"
-                on:click={() => setKinerjaPreset("today")}
-                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {kinerjaPreset === 'today' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}"
-              >
-                Hari Ini
-              </button>
-              <button
-                type="button"
-                on:click={() => setKinerjaPreset("yesterday")}
-                class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {kinerjaPreset === 'yesterday' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}"
-              >
-                Kemarin
-              </button>
-              <button
-                type="button"
-                on:click={fetchKinerjaHarian}
-                class="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200 transition-colors"
-                title="Muat Ulang Data"
-              >
-                <svg class="w-4 h-4 {kinerjaLoading ? 'animate-spin text-blue-600' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
+            <!-- Quick Preset + Actions -->
+            <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  on:click={() => setKinerjaPreset("today")}
+                  class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {kinerjaPreset === 'today' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}"
+                >
+                  Hari Ini
+                </button>
+                <button
+                  type="button"
+                  on:click={() => setKinerjaPreset("yesterday")}
+                  class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all {kinerjaPreset === 'yesterday' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}"
+                >
+                  Kemarin
+                </button>
+                <button
+                  type="button"
+                  on:click={fetchKinerjaHarian}
+                  class="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                  title="Muat Ulang Data"
+                >
+                  <svg class="w-4 h-4 {kinerjaLoading ? 'animate-spin text-blue-600' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Tombol Simpan Snapshot Manual (hanya untuk tanggal bukan hari ini) -->
+              {#if !kinerjaIsToday && kinerjaData.byUser?.length > 0 && !kinerjaFromCache}
+                <button
+                  type="button"
+                  on:click={triggerKinerjaSnapshot}
+                  disabled={snapshotLoading}
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                  title="Simpan snapshot rekap hari ini ke cache agar lebih cepat dimuat berikutnya"
+                >
+                  {#if snapshotLoading}
+                    <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  {:else}
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                  {/if}
+                  Simpan Cache
+                </button>
+              {/if}
             </div>
           </div>
 
