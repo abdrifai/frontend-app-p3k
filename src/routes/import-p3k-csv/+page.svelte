@@ -24,8 +24,8 @@
 
     const file = files[0];
 
-    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
-      addToast("Format file harus berupa CSV", "error");
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      addToast("Format file harus berupa CSV (.csv)", "error");
       return;
     }
 

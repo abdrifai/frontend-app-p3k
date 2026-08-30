@@ -10,7 +10,6 @@
   let stats         = null;
   let loadingStats  = true;
 
-  let downloadingSql        = false;
   let downloadingArchive    = {};   // { 'final-pk': bool, 'pensiun-sk': bool }
   let downloadingAllArchive = false;
 
@@ -144,24 +143,6 @@
       addToast('Gagal menghapus file: ' + e.message, 'error');
     } finally {
       deletingFile = { ...deletingFile, [filename]: false };
-    }
-  }
-
-  // ── Download SQL ───────────────────────────────────────────────────────
-  async function downloadSql() {
-    downloadingSql = true;
-    try {
-      const res = await authFetch('/api/backup/sql', { method: 'POST' });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(JSON.stringify(json) || res.statusText);
-      }
-      triggerDownload(await res.blob(), `backup_db_p3k_${today()}.sql`);
-      addToast('Backup database SQL berhasil diunduh!', 'success');
-    } catch (e) {
-      addToast('Gagal mengunduh SQL: ' + e.message, 'error');
-    } finally {
-      downloadingSql = false;
     }
   }
 
@@ -480,94 +461,21 @@
     </div>
   </div>
 
-  <!-- ── Main Grid ───────────────────────────────────────────────────────── -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-    <!-- ── Backup Database SQL ─────────────────────────────────────────── -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0">
-          <h2 class="text-sm font-semibold text-slate-800">Backup Database</h2>
-          <p class="text-[11px] text-slate-400 mt-0.5">Dump penuh via mysqldump — siap restore</p>
-        </div>
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200">.SQL</span>
+  <!-- ── Backup Arsip File ───────────────────────────────────────────── -->
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+        </svg>
       </div>
-
-      <div class="p-5 space-y-4">
-        <!-- Info rows -->
-        <div class="space-y-2.5 bg-slate-50 rounded-xl p-4 border border-slate-100">
-          {#each [
-            { icon: '🗄️', label: 'Format',  value: 'MySQL / MariaDB SQL Dump' },
-            { icon: '🔄', label: 'Restore', value: 'mysql -u root -p db < file.sql' },
-            { icon: '🔒', label: 'Konten',  value: 'Seluruh tabel + struktur + data' },
-            { icon: '⚡', label: 'Opsi',    value: '--single-transaction, --add-drop-table' },
-          ] as row}
-            <div class="flex items-start gap-2.5">
-              <span class="text-sm mt-0.5">{row.icon}</span>
-              <div>
-                <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">{row.label}</span>
-                <p class="text-xs text-slate-600 font-mono leading-tight">{row.value}</p>
-              </div>
-            </div>
-          {/each}
-        </div>
-
-        <!-- Warning -->
-        <div class="flex gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-100">
-          <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
-          <p class="text-[11px] text-amber-700 leading-relaxed">
-            File ini mengandung seluruh data sensitif. Simpan di tempat aman dan jangan dibagikan.
-          </p>
-        </div>
-
-        <!-- Download button -->
-        <button
-          id="btn-download-sql"
-          on:click={downloadSql}
-          disabled={downloadingSql}
-          class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white
-            bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700
-            shadow-sm hover:shadow-md transition-all duration-150
-            disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
-        >
-          {#if downloadingSql}
-            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            Mengunduh SQL...
-          {:else}
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
-            Unduh Database (.sql)
-          {/if}
-        </button>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-sm font-semibold text-slate-800">Backup Arsip File</h2>
+        <p class="text-[11px] text-slate-400 mt-0.5">Arsip PDF dari folder uploads — dikemas dalam ZIP</p>
       </div>
+      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">.ZIP</span>
     </div>
-
-    <!-- ── Backup Arsip File ───────────────────────────────────────────── -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0">
-          <h2 class="text-sm font-semibold text-slate-800">Backup Arsip File</h2>
-          <p class="text-[11px] text-slate-400 mt-0.5">Arsip PDF dari folder uploads — dikemas dalam ZIP</p>
-        </div>
-        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">.ZIP</span>
-      </div>
 
       <div class="p-5 space-y-3">
         <!-- Folder cards -->
@@ -664,8 +572,6 @@
         </button>
       </div>
     </div>
-
-  </div>
 
   <!-- ── Footer ──────────────────────────────────────────────────────────── -->
   <p class="text-center text-[11px] text-slate-400 pb-4">

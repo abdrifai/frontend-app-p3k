@@ -144,10 +144,6 @@
     fetchKinerjaHarian();
   }
 
-  $: if (selectedTab === "kinerja" && (!kinerjaData.byUser || kinerjaData.byUser.length === 0)) {
-    fetchKinerjaHarian();
-  }
-
   onMount(async () => {
     if (!$authStore.isAuthenticated) {
       addToast("Silakan login terlebih dahulu", "error");
@@ -781,7 +777,6 @@
           <button
             on:click={() => {
               selectedTab = "kinerja";
-              if (!kinerjaData.records || kinerjaData.records.length === 0) fetchKinerjaHarian();
             }}
             class="px-3 sm:px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 {selectedTab === 'kinerja' ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-600 hover:bg-slate-100'}"
           >
@@ -1327,11 +1322,181 @@
             </div>
           </div>
 
+          <!-- Progres Rekapitulasi Hari Ini / Tanggal Terpilih -->
+          {#if kinerjaLoading}
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-blue-200 shadow-sm space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-7 h-7 border-3 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+                  <div>
+                    <h4 class="text-xs sm:text-sm font-bold text-slate-800">Sedang Merekap Data Kinerja...</h4>
+                    <p class="text-[11px] text-slate-400">Menghitung total berkas yang dikerjakan pada tanggal <b>{kinerjaDate || getTodayString()}</b></p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">
+                    Memproses...
+                  </span>
+                </div>
+              </div>
+              <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                <div class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 rounded-full animate-pulse w-full"></div>
+              </div>
+            </div>
+          {:else if (kinerjaData.summary?.totalDikerjakan || 0) > 0}
+            {@const total = kinerjaData.summary.totalDikerjakan}
+            {@const selesai = kinerjaData.summary.selesaiCount || 0}
+            {@const srikandi = kinerjaData.summary.srikandiCount || 0}
+            {@const approved = kinerjaData.summary.approvedCount || 0}
+            {@const pending = kinerjaData.summary.pendingCount || 0}
+            {@const rejected = kinerjaData.summary.rejectedCount || 0}
+            {@const percentSelesai = Math.round((selesai / total) * 100)}
+
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm space-y-3.5">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Progres Rekap Tanggal: <b>{kinerjaDate || getTodayString()}</b></span>
+                    {#if kinerjaIsToday}
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        Aktif Hari Ini
+                      </span>
+                    {/if}
+                  </div>
+                  <h4 class="text-sm sm:text-base font-bold text-slate-800 mt-1">
+                    {selesai} dari {total} Berkas Selesai Diterbitkan ({percentSelesai}%)
+                  </h4>
+                </div>
+                
+                <!-- Badge Total Berkas yang Direkap -->
+                <div class="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-blue-50 border border-blue-200/80 px-3.5 py-2 rounded-xl shrink-0">
+                  <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <i class="ri-file-list-3-line"></i>
+                  </div>
+                  <div>
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">Total Berkas Direkap</span>
+                    <span class="text-base font-black text-slate-800 font-mono leading-none">{total} <span class="text-xs font-semibold text-slate-500">Berkas</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Multi-color Segmented Progress Bar dengan Label Persentase -->
+              <div class="space-y-2">
+                <div class="w-full bg-slate-100 rounded-xl h-5 flex overflow-hidden p-0.5 border border-slate-200/80 shadow-inner">
+                  {#if selesai > 0}
+                    <div
+                      style="width: {(selesai / total) * 100}%"
+                      class="bg-emerald-500 hover:bg-emerald-600 h-full rounded-l-lg transition-all duration-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden px-1 whitespace-nowrap"
+                      title="Selesai: {selesai} berkas ({percentSelesai}%)"
+                    >
+                      {#if (selesai / total) >= 0.08}
+                        {selesai} Selesai ({percentSelesai}%)
+                      {:else}
+                        {selesai}
+                      {/if}
+                    </div>
+                  {/if}
+                  {#if srikandi > 0}
+                    <div
+                      style="width: {(srikandi / total) * 100}%"
+                      class="bg-purple-500 hover:bg-purple-600 h-full transition-all duration-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden px-1 whitespace-nowrap"
+                      title="Upload Srikandi: {srikandi} berkas ({Math.round((srikandi / total) * 100)}%)"
+                    >
+                      {#if (srikandi / total) >= 0.08}
+                        {srikandi} Srikandi
+                      {:else}
+                        {srikandi}
+                      {/if}
+                    </div>
+                  {/if}
+                  {#if approved > 0}
+                    <div
+                      style="width: {(approved / total) * 100}%"
+                      class="bg-blue-500 hover:bg-blue-600 h-full transition-all duration-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden px-1 whitespace-nowrap"
+                      title="Approved: {approved} berkas ({Math.round((approved / total) * 100)}%)"
+                    >
+                      {#if (approved / total) >= 0.08}
+                        {approved} Approved
+                      {:else}
+                        {approved}
+                      {/if}
+                    </div>
+                  {/if}
+                  {#if pending > 0}
+                    <div
+                      style="width: {(pending / total) * 100}%"
+                      class="bg-amber-500 hover:bg-amber-600 h-full transition-all duration-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden px-1 whitespace-nowrap"
+                      title="Pending: {pending} berkas ({Math.round((pending / total) * 100)}%)"
+                    >
+                      {#if (pending / total) >= 0.08}
+                        {pending} Pending
+                      {:else}
+                        {pending}
+                      {/if}
+                    </div>
+                  {/if}
+                  {#if rejected > 0}
+                    <div
+                      style="width: {(rejected / total) * 100}%"
+                      class="bg-rose-500 hover:bg-rose-600 h-full rounded-r-lg transition-all duration-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden px-1 whitespace-nowrap"
+                      title="Ditolak: {rejected} berkas ({Math.round((rejected / total) * 100)}%)"
+                    >
+                      {#if (rejected / total) >= 0.08}
+                        {rejected} Ditolak
+                      {:else}
+                        {rejected}
+                      {/if}
+                    </div>
+                  {/if}
+                </div>
+
+                <!-- Legend status rincian -->
+                <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-600 gap-y-1.5 pt-1">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <span class="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-200">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Selesai: <b>{selesai}</b> ({percentSelesai}%)
+                    </span>
+                    <span class="flex items-center gap-1.5 bg-purple-50 text-purple-800 px-2 py-0.5 rounded-md border border-purple-200">
+                      <span class="w-2 h-2 rounded-full bg-purple-500"></span> Srikandi: <b>{srikandi}</b> ({Math.round((srikandi / total) * 100)}%)
+                    </span>
+                    <span class="flex items-center gap-1.5 bg-blue-50 text-blue-800 px-2 py-0.5 rounded-md border border-blue-200">
+                      <span class="w-2 h-2 rounded-full bg-blue-500"></span> Approved: <b>{approved}</b> ({Math.round((approved / total) * 100)}%)
+                    </span>
+                    <span class="flex items-center gap-1.5 bg-amber-50 text-amber-800 px-2 py-0.5 rounded-md border border-amber-200">
+                      <span class="w-2 h-2 rounded-full bg-amber-500"></span> Pending: <b>{pending}</b> ({Math.round((pending / total) * 100)}%)
+                    </span>
+                    {#if rejected > 0}
+                      <span class="flex items-center gap-1.5 bg-rose-50 text-rose-800 px-2 py-0.5 rounded-md border border-rose-200">
+                        <span class="w-2 h-2 rounded-full bg-rose-500"></span> Ditolak: <b>{rejected}</b> ({Math.round((rejected / total) * 100)}%)
+                      </span>
+                    {/if}
+                  </div>
+                  <span class="text-slate-500 font-semibold text-xs">Total: <b class="text-slate-800 font-mono text-sm">{total}</b> Berkas ({kinerjaData.byUser?.length || 0} Operator)</span>
+                </div>
+              </div>
+            </div>
+          {:else}
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg shrink-0">
+                  <i class="ri-inbox-line"></i>
+                </div>
+                <div>
+                  <h4 class="text-xs sm:text-sm font-bold text-slate-700">Tidak ada berkas yang direkap pada tanggal ini</h4>
+                  <p class="text-[11px] text-slate-400 mt-0.5">Tidak ditemukan aktivitas pengerjaan usulan perpanjangan kontrak pada tanggal <b>{kinerjaDate || getTodayString()}</b></p>
+                </div>
+              </div>
+              <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                0 Berkas
+              </span>
+            </div>
+          {/if}
+
           <!-- Tabel Rekapitulasi Kinerja User Per Hari -->
           <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-0">
             <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <span class="font-bold text-slate-700">
-                Rekap Pekerjaan User ({kinerjaData.byUser?.length || 0} Operator Aktif)
+                Daftar Rekap per Operator ({kinerjaData.byUser?.length || 0} User) — Total <b class="text-blue-600 font-mono">{kinerjaData.summary?.totalDikerjakan || 0}</b> Berkas Direkap
               </span>
               <span class="font-semibold text-slate-600">
                 Tanggal: <b>{kinerjaDate || getTodayString()}</b>
@@ -1339,30 +1504,31 @@
             </div>
 
             <div class="overflow-x-auto max-w-full scrollbar-thin">
-              <table class="w-full min-w-[700px] text-left border-collapse">
+              <table class="w-full min-w-[760px] text-left border-collapse">
                 <thead>
                   <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     <th class="py-3.5 px-4 w-12 text-center">No</th>
-                    <th class="py-3.5 px-4 min-w-[200px]">User / Operator</th>
+                    <th class="py-3.5 px-4 min-w-[180px]">User / Operator</th>
                     <th class="py-3.5 px-4 text-center text-amber-700 bg-amber-50/50">Pending</th>
                     <th class="py-3.5 px-4 text-center text-blue-700 bg-blue-50/50">Approved</th>
                     <th class="py-3.5 px-4 text-center text-purple-700 bg-purple-50/50">Upload Srikandi</th>
                     <th class="py-3.5 px-4 text-center text-emerald-700 bg-emerald-50/50">Selesai (PK)</th>
                     <th class="py-3.5 px-4 text-center text-rose-700 bg-rose-50/50">Ditolak</th>
                     <th class="py-3.5 px-4 text-center font-extrabold text-slate-800 bg-slate-100/70">Total Hari Ini</th>
+                    <th class="py-3.5 px-4 min-w-[130px] text-center">Progres Selesai</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs">
                   {#if kinerjaLoading}
                     <tr>
-                      <td colspan="8" class="py-12 text-center text-slate-400">
+                      <td colspan="9" class="py-12 text-center text-slate-400">
                         <div class="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                         <span>Memuat rekap kinerja...</span>
                       </td>
                     </tr>
                   {:else if !kinerjaData.byUser || kinerjaData.byUser.length === 0}
                     <tr>
-                      <td colspan="8" class="py-12 text-center text-slate-400">
+                      <td colspan="9" class="py-12 text-center text-slate-400">
                         <svg class="w-8 h-8 mx-auto mb-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
@@ -1372,6 +1538,7 @@
                     </tr>
                   {:else}
                     {#each kinerjaData.byUser as u, idx}
+                      {@const userPercent = u.total > 0 ? Math.round((u.selesai / u.total) * 100) : 0}
                       <tr class="hover:bg-slate-50/70 transition-colors">
                         <td class="py-3.5 px-4 text-center text-slate-400 font-mono text-xs">
                           {idx + 1}
@@ -1409,11 +1576,28 @@
                         <td class="py-3.5 px-4 text-center font-black text-sm text-slate-800 bg-slate-50">
                           {u.total}
                         </td>
+                        <td class="py-3.5 px-4">
+                          <div class="space-y-1">
+                            <div class="flex justify-between text-[10px] font-bold">
+                              <span class="text-slate-500">{userPercent}%</span>
+                              <span class="text-emerald-600">{u.selesai}/{u.total}</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                              <div
+                                style="width: {userPercent}%"
+                                class="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-500"
+                              ></div>
+                            </div>
+                          </div>
+                        </td>
                       </tr>
                     {/each}
                   {/if}
                 </tbody>
                 {#if kinerjaData.byUser && kinerjaData.byUser.length > 0}
+                  {@const totalAll = kinerjaData.summary?.totalDikerjakan || 0}
+                  {@const selesaiAll = kinerjaData.summary?.selesaiCount || 0}
+                  {@const percentAll = totalAll > 0 ? Math.round((selesaiAll / totalAll) * 100) : 0}
                   <tfoot>
                     <tr class="bg-slate-100/80 border-t-2 border-slate-300 text-xs font-black text-slate-800">
                       <td colspan="2" class="py-3.5 px-4 text-right uppercase tracking-wider">
@@ -1435,7 +1619,21 @@
                         {kinerjaData.summary?.rejectedCount || 0}
                       </td>
                       <td class="py-3.5 px-4 text-center text-sm font-black text-slate-900 bg-slate-200/80">
-                        {kinerjaData.summary?.totalDikerjakan || 0}
+                        {totalAll}
+                      </td>
+                      <td class="py-3.5 px-4">
+                        <div class="space-y-1">
+                          <div class="flex justify-between text-[10px] font-bold">
+                            <span class="text-slate-600">{percentAll}%</span>
+                            <span class="text-emerald-700">{selesaiAll}/{totalAll}</span>
+                          </div>
+                          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                            <div
+                              style="width: {percentAll}%"
+                              class="h-full bg-gradient-to-r from-blue-600 to-emerald-600 rounded-full transition-all duration-500"
+                            ></div>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   </tfoot>

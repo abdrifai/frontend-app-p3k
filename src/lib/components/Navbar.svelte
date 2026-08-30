@@ -104,12 +104,15 @@
     isActive("/data-p3k") ||
     isActive("/statistik-p3k") ||
     isActive("/manajemen-pensiun") ||
-    isActive("/perbedaan-data");
+    isActive("/perbedaan-data") ||
+    isActive("/data-p3k/mapping-unor") ||
+    isActive("/mapping-unor");
 
   const isImportActive = () =>
     isActive("/data-p3k-import") ||
     isActive("/import-p3k-csv") ||
-    isActive("/statistik-p3k-import");
+    isActive("/statistik-p3k-import") ||
+    isActive("/setting/import-per-unit-kerja");
 
   const isPensiunActive = () => isActive("/manajemen-pensiun");
   let canAccessPensiun = $derived(isUserAdmin || isUserPensiun);
@@ -118,6 +121,7 @@
     isActive("/manajemen-user") ||
     isActive("/data-p3k-import") ||
     isActive("/statistik-p3k-import") ||
+    isActive("/setting/import-per-unit-kerja") ||
     isActive("/setting/pembagian-task-peremajaan") ||
     isActive("/setting/pembagian-task-usulan-pk") ||
     isActive("/setting/referensi-gaji") ||
@@ -513,6 +517,44 @@
                             class="text-[10px] text-slate-400 leading-tight mt-0.5"
                           >
                             Bandingkan data utama & import
+                          </p>
+                        </div>
+                      </a>
+                    {/if}
+
+                    {#if canAccess('mapping-unor')}
+                      <a
+                        href="/data-p3k/mapping-unor"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                          '/data-p3k/mapping-unor',
+                        ) || isActive('/mapping-unor')
+                          ? 'text-blue-700 bg-blue-50 font-medium'
+                          : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (utamaMenuOpen = false)}
+                      >
+                        <div
+                          class="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0"
+                        >
+                          <svg
+                            class="w-3.5 h-3.5 text-teal-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Mapping Unor</p>
+                          <p
+                            class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                          >
+                            Petakan unit kerja ke referensi
                           </p>
                         </div>
                       </a>
@@ -1027,7 +1069,7 @@
                   <div class="w-64 bg-white rounded-xl shadow-2xl shadow-slate-200/60 border border-slate-100 py-2 ring-1 ring-black/[0.03]">
 
                     <!-- ══ Kategori 1: Import SIASN ══ -->
-                    {#if canAccessAny(['setting-p3k-import', 'setting-import-csv', 'setting-statistik-import'])}
+                    {#if canAccessAny(['setting-p3k-import', 'setting-import-csv', 'setting-statistik-import', 'setting-import-per-unit-kerja'])}
                       <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
                       <div
                         class="mx-2 mb-0.5 px-3 py-2 flex items-center justify-between rounded-lg cursor-pointer hover:bg-slate-50 transition-colors select-none"
@@ -1084,6 +1126,22 @@
                             <div>
                               <p class="font-medium leading-tight">Statistik Import</p>
                               <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Ringkasan data import</p>
+                            </div>
+                          </a>
+                        {/if}
+                        {#if canAccess('setting-import-per-unit-kerja')}
+                          <a href="/setting/import-per-unit-kerja"
+                            class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/import-per-unit-kerja') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                            onclick={() => (settingMenuOpen = false)}>
+                            <div class="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                              <svg class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                              </svg>
+                            </div>
+                            <div>
+                              <p class="font-medium leading-tight">Per Unit Kerja</p>
+                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Komparasi data per unit kerja</p>
                             </div>
                           </a>
                         {/if}
@@ -1532,7 +1590,7 @@
 
         {#if $authStore.isAuthenticated}
           <!-- Mobile: Data P3K Utama Group -->
-          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pensiun', 'perbedaan-data'])}
+          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pensiun', 'perbedaan-data', 'mapping-unor'])}
             <div class="pt-1">
               <button
                 type="button"
@@ -1691,6 +1749,36 @@
                         >
                       </div>
                       Perbedaan Data
+                    </a>
+                  {/if}
+                  {#if canAccess('mapping-unor')}
+                    <a
+                      href="/data-p3k/mapping-unor"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                        '/data-p3k/mapping-unor',
+                      ) || isActive('/mapping-unor')
+                        ? 'text-blue-700 bg-blue-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-teal-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                      Mapping Unor
                     </a>
                   {/if}
                 </div>
@@ -2267,6 +2355,35 @@
                           >
                         </div>
                         Statistik Import
+                      </a>
+                    {/if}
+                    {#if canAccess('setting-import-per-unit-kerja')}
+                      <a
+                        href="/setting/import-per-unit-kerja"
+                        onclick={closeMobile}
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                          '/setting/import-per-unit-kerja',
+                        )
+                          ? 'text-blue-700 bg-blue-50 font-semibold'
+                          : 'text-slate-600 hover:bg-slate-50'}"
+                      >
+                        <div
+                          class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center shrink-0"
+                        >
+                          <svg
+                            class="w-3.5 h-3.5 text-teal-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            ><path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                            /></svg
+                          >
+                        </div>
+                        Per Unit Kerja
                       </a>
                     {/if}
                     <div class="my-1.5 border-t border-slate-100"></div>

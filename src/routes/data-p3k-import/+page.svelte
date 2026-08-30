@@ -192,12 +192,12 @@
 
   const syncData = async () => {
     const confirmSync = confirm(
-      "Apakah Anda yakin ingin menarik data import ke Data P3K Utama? Sistem akan memproses data yang belum ada di database utama.",
+      "Apakah Anda yakin ingin memasukkan data hasil import ke Data Utama P3K? Sistem hanya akan memproses pegawai baru yang belum terdaftar.",
     );
     if (!confirmSync) return;
 
     isSyncing = true;
-    addToast("Sedang memproses sinkronisasi data...", "info");
+    addToast("Sedang memasukkan data ke Data Utama P3K...", "info");
 
     try {
       const result = await apiRequest("/api/v1/data-p3k/sync", "POST");
@@ -205,12 +205,12 @@
       const count = result.data?.syncedCount || 0;
       if (count > 0) {
         addToast(
-          `🚀 Berhasil! ${count} data pegawai baru telah ditarik ke database utama.`,
+          `🚀 Berhasil! ${count} data pegawai baru telah dimasukkan ke Data Utama P3K.`,
           "success",
         );
       } else {
         addToast(
-          "Informasi: Tidak ada data baru untuk ditarik. Semua data sudah sinkron.",
+          "Informasi: Semua data sudah tersimpan di Data Utama P3K.",
           "success",
         );
       }
@@ -218,7 +218,7 @@
       fetchData(meta.page);
     } catch (error) {
       console.error("Sync error:", error);
-      addToast("Terjadi kesalahan sistem saat sinkronisasi", "error");
+      addToast("Terjadi kesalahan saat memproses data ke Data Utama", "error");
     } finally {
       isSyncing = false;
     }
@@ -226,21 +226,25 @@
 </script>
 
 <svelte:head>
-  <title>Data P3K — App P3K</title>
+  <title>Data P3K Import — App P3K</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-6">
+<div class="space-y-6">
   <!-- Page Header -->
-  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+  <div
+    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
+  >
     <div>
-      <h1 class="text-2xl font-bold text-slate-800">Data Pegawai P3K Import</h1>
-      <p class="mt-1 text-sm text-slate-500">
-        Data import PPPK dari SIASN. Total <span
-          class="font-semibold text-blue-600">{meta.total}</span
-        > pegawai terdaftar.
+      <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+        Data P3K Import
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1">
+        Daftar data hasil import CSV dari SIASN sebelum dimasukkan ke Data Utama P3K
       </p>
       {#if lastImportTime}
-        <p class="mt-1 text-xs text-slate-400 flex items-center gap-1.5">
+        <p
+          class="text-xs text-slate-400 mt-2 flex items-center gap-1.5 font-sans"
+        >
           <svg
             class="w-3.5 h-3.5"
             fill="none"
@@ -264,13 +268,14 @@
       <button
         on:click={syncData}
         disabled={isSyncing}
-        class="btn-primary gap-1.5 !bg-gradient-to-r !from-indigo-500 !to-purple-600 hover:!from-indigo-600 hover:!to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="btn-primary gap-1.5 !bg-gradient-to-r !from-indigo-600 !to-blue-600 hover:!from-indigo-700 hover:!to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-500/20 font-bold text-xs sm:text-sm py-2.5 px-4"
+        title="Masukkan data baru hasil import ke Data Utama P3K"
       >
         {#if isSyncing}
           <div
             class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
           ></div>
-          Menarik Data...
+          Menyimpan ke Data Utama...
         {:else}
           <svg
             class="w-4 h-4"
@@ -284,7 +289,7 @@
               d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
             /></svg
           >
-          Tarik ke Data P3K
+          Simpan ke Data Utama
         {/if}
       </button>
 
@@ -547,7 +552,7 @@
                     {#if record.isSynced}
                       <span
                         class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 uppercase tracking-tight"
-                        title="Data ini sudah ditarik ke Data P3K Utama"
+                        title="Data ini sudah tersimpan di Data Utama P3K"
                       >
                         <svg
                           class="w-2.5 h-2.5 mr-0.5"

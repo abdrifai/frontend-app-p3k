@@ -12,7 +12,6 @@
   let isExporting = false;
   let searchTerm = "";
   let filterUnitKerja = "";
-  let filterUnitKerjaStatus = "ADA"; // "ALL", "ADA", "KOSONG"
   let filterTmtCpns = "";
   let filterPendidikan = "";
   let filterGolongan = "";
@@ -65,7 +64,6 @@
     searchTerm ||
     filterUnitKerja ||
     filterTmtCpns ||
-    filterUnitKerjaStatus !== "ALL" ||
     filterPendidikan ||
     filterGolongan ||
     filterJenisJabatan;
@@ -73,7 +71,6 @@
   $: hasUrlParams =
     $page.url.searchParams.has("tmtCpns") ||
     $page.url.searchParams.has("unitKerja") ||
-    $page.url.searchParams.has("unitKerjaStatus") ||
     $page.url.searchParams.has("pendidikan") ||
     $page.url.searchParams.has("golongan") ||
     $page.url.searchParams.has("jenisJabatan");
@@ -435,12 +432,6 @@
       showFilters = true;
     }
 
-    const unitKerjaStatusQuery = $page.url.searchParams.get("unitKerjaStatus");
-    if (unitKerjaStatusQuery) {
-      filterUnitKerjaStatus = unitKerjaStatusQuery;
-      showFilters = true;
-    }
-
     const pendidikanQuery = $page.url.searchParams.get("pendidikan");
     if (pendidikanQuery) {
       filterPendidikan = pendidikanQuery;
@@ -471,14 +462,7 @@
         statusPensiun: "AKTIF",
       });
       if (searchTerm) queryParams.append("search", searchTerm);
-      if (filterUnitKerjaStatus === "KOSONG") {
-        queryParams.append("unitKerjaKosong", "true");
-      } else if (filterUnitKerjaStatus === "ADA") {
-        queryParams.append("unitKerjaAda", "true");
-        if (filterUnitKerja) queryParams.append("unitKerja", filterUnitKerja);
-      } else if (filterUnitKerja) {
-        queryParams.append("unitKerja", filterUnitKerja);
-      }
+      if (filterUnitKerja) queryParams.append("unitKerja", filterUnitKerja);
       if (filterTmtCpns) queryParams.append("tmtCpns", filterTmtCpns);
       if (filterPendidikan) queryParams.append("pendidikan", filterPendidikan);
       if (filterGolongan) queryParams.append("golongan", filterGolongan);
@@ -508,14 +492,7 @@
         statusPensiun: "AKTIF",
       });
       // deliberately omitting searchTerm (NIP / Nama)
-      if (filterUnitKerjaStatus === "KOSONG") {
-        queryParams.append("unitKerjaKosong", "true");
-      } else if (filterUnitKerjaStatus === "ADA") {
-        queryParams.append("unitKerjaAda", "true");
-        if (filterUnitKerja) queryParams.append("unitKerja", filterUnitKerja);
-      } else if (filterUnitKerja) {
-        queryParams.append("unitKerja", filterUnitKerja);
-      }
+      if (filterUnitKerja) queryParams.append("unitKerja", filterUnitKerja);
       if (filterTmtCpns) queryParams.append("tmtCpns", filterTmtCpns);
       if (filterPendidikan) queryParams.append("pendidikan", filterPendidikan);
       if (filterGolongan) queryParams.append("golongan", filterGolongan);
@@ -565,7 +542,6 @@
   const resetFilters = () => {
     searchTerm = "";
     filterUnitKerja = "";
-    filterUnitKerjaStatus = "ALL";
     filterTmtCpns = "";
     filterPendidikan = "";
     filterGolongan = "";
@@ -575,7 +551,6 @@
       const newUrl = new URL($page.url);
       newUrl.searchParams.delete("tmtCpns");
       newUrl.searchParams.delete("unitKerja");
-      newUrl.searchParams.delete("unitKerjaStatus");
       newUrl.searchParams.delete("pendidikan");
       newUrl.searchParams.delete("golongan");
       newUrl.searchParams.delete("jenisJabatan");
@@ -758,39 +733,6 @@
                 {/if}
               </ul>
             {/if}
-          </div>
-          <div class="mt-2 text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Status Unor Induk</div>
-          <div class="flex gap-4">
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="radio"
-                name="unorStatus"
-                value="ALL"
-                bind:group={filterUnitKerjaStatus}
-                class="w-3 h-3 text-blue-600 focus:ring-blue-500 border-slate-300"
-              />
-              <span class="text-xs text-slate-600">Semua</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="radio"
-                name="unorStatus"
-                value="ADA"
-                bind:group={filterUnitKerjaStatus}
-                class="w-3 h-3 text-blue-600 focus:ring-blue-500 border-slate-300"
-              />
-              <span class="text-xs text-slate-600">Sudah Ada</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="radio"
-                name="unorStatus"
-                value="KOSONG"
-                bind:group={filterUnitKerjaStatus}
-                class="w-3 h-3 text-blue-600 focus:ring-blue-500 border-slate-300"
-              />
-              <span class="text-xs text-slate-600">Kosong</span>
-            </label>
           </div>
         </div>
         <div>
