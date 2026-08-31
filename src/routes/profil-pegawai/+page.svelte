@@ -34,6 +34,12 @@
     return url.toLowerCase().includes(".pdf");
   }
 
+  function isWord(url) {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return lower.includes(".docx") || lower.includes(".doc");
+  }
+
   function openPdfModal(url, title = "Dokumen SK", subtitle = "") {
     if (!url) return;
     pdfModalUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
@@ -1074,6 +1080,26 @@
                             </svg>
                             Preview SK (.pdf)
                           </button>
+                        {:else if isWord(fileUrl)}
+                          <div class="inline-flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg text-xs font-semibold border border-amber-200 shadow-2xs">
+                              <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Dalam Proses Pengusulan
+                            </span>
+                            <a
+                              href={`${API_BASE_URL}${fileUrl}`}
+                              target="_blank"
+                              download
+                              class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                              title="Unduh Draft Word (.docx)"
+                            >
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                            </a>
+                          </div>
                         {:else}
                           <a
                             href={`${API_BASE_URL}${fileUrl}`}
