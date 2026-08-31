@@ -7,7 +7,7 @@
   import { addToast } from "$lib/toastStore";
 
   // --- Tab Navigation State ---
-  let activeTab = "data"; // "data", "upload", "stats"
+  let activeTab = "data"; // "data", "upload", "sync"
 
   // --- Upload State ---
   let files = null;
@@ -15,7 +15,7 @@
   let uploadProgress = 0;
   let showHeaderGuide = false;
 
-  // --- Data List State ---
+  // --- Data List State (Staging p3k_csv_imports) ---
   let records = [];
   let isLoadingData = true;
   let lastImportTime = null;
@@ -33,14 +33,22 @@
 
   let filterUnors = [];
 
-  // --- Stats State ---
-  let stats = null;
-  let statsLoading = false;
-  let activeStatCategory = "unitKerja"; // "unitKerja", "pendidikan", "jabatan", "golongan"
+  // --- Master Data State (data_p3k) ---
+  let masterRecords = [];
+  let isLoadingMaster = false;
+  let isSyncingMaster = false;
+  let masterSearchQuery = "";
+  let masterPagination = {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1
+  };
 
   // --- Detail Modal State ---
   let selectedRecord = null;
   let showDetailModal = false;
+  let showConfirmSyncModal = false;
 
   const RETIREMENT_AGE = 58;
 
@@ -99,100 +107,101 @@
 
     let bDay, bMonth, bYear;
     if (parts[0].length === 2 && parts[2].length === 4) {
-      bDay = parseInt(parts[0]);
-      bMonth = parseInt(parts[1]) - 1;
-      bYear = parseInt(parts[2]);
+      bDay = parseInt(parts[0], 10);
+      bMonth = parseInt(parts[1], 10);
+      bYear = parseInt(parts[2], 10);
+    } else if (parts[0].length === 4 && parts[2].length === 2) {
+      bYear = parseInt(parts[0], 10);
+      bMonth = parseInt(parts[1], 10);
+      bDay = parseInt(parts[2], 10);
     } else {
-      bYear = parseInt(parts[0]);
-      bMonth = parseInt(parts[1]) - 1;
-      bDay = parseInt(parts[2]);
+      return null;
     }
 
-    const retirementDate = new Date(bYear + RETIREMENT_AGE, bMonth, bDay);
-    if (isNaN(retirementDate.getTime())) return null;
+    let retYear = bYear + RETIREMENT_AGE;
+    let retMonth = bMonth + 1;
+    if (retMonth > 12) {
+      retMonth = 1;
+      retYear += 1;
+    }
+
+    const tmtDate = new Date(retYear, retMonth - 1, 1);
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
 
     const today = new Date();
-    const isPast = retirementDate <= today;
+    const isRetired = today >= tmtDate;
 
-    let targetDate, refDate;
-    if (isPast) {
-      targetDate = today;
-      refDate = retirementDate;
+    let diffMonths = (retYear - today.getFullYear()) * 12 + (retMonth - 1 - today.getMonth());
+    let remainingText = '';
+    if (isRetired) {
+      remainingText = 'Sudah Memasuki Pensiun';
+    } else if (diffMonths <= 0) {
+      remainingText = 'Bulan Ini';
+    } else if (diffMonths < 12) {
+      remainingText = `${diffMonths} Bulan Lagi`;
     } else {
-      targetDate = retirementDate;
-      refDate = today;
+      const y = Math.floor(diffMonths / 12);
+      const m = diffMonths % 12;
+      remainingText = `${y} Thn ${m > 0 ? m + ' Bln' : ''} Lagi`;
     }
-
-    let years = targetDate.getFullYear() - refDate.getFullYear();
-    let months = targetDate.getMonth() - refDate.getMonth();
-    let days = targetDate.getDate() - refDate.getDate();
-
-    if (days < 0) {
-      months--;
-      const prevMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
-      days += prevMonth.getDate();
-    }
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-
-    const retDateStr = `${String(retirementDate.getDate()).padStart(2, "0")}-${String(retirementDate.getMonth() + 1).padStart(2, "0")}-${retirementDate.getFullYear()}`;
 
     return {
-      date: retDateStr,
-      isPast,
-      remaining: `${years} thn, ${months} bln, ${days} hari`,
-      retirementYear: bYear + RETIREMENT_AGE,
+      tmtDateString: `1 ${months[retMonth - 1]} ${retYear}`,
+      retYear,
+      isRetired,
+      remainingText,
+      diffMonths
     };
   };
 
   onMount(async () => {
     if (!$authStore.isAuthenticated) {
-      addToast("Anda harus login untuk mengakses halaman ini", "error");
+      addToast("Silakan login terlebih dahulu", "error");
       goto("/login");
       return;
     }
 
-    // Check URL tab param
     const tabParam = $page.url.searchParams.get("tab");
-    if (tabParam === "upload" || tabParam === "stats" || tabParam === "data") {
-      activeTab = tabParam;
+    if (tabParam === "upload") {
+      activeTab = "upload";
+    } else if (tabParam === "sync") {
+      activeTab = "sync";
     }
 
     await Promise.all([
       fetchData(1),
       fetchLastImportTime(),
-      fetchStats()
+      fetchMasterData(1)
     ]);
   });
 
-  async function fetchData(page = 1) {
+  // --- Fetch Data Methods ---
+  async function fetchData(pageNumber = 1) {
     isLoadingData = true;
     try {
       const queryParams = new URLSearchParams({
-        page: page.toString(),
+        page: pageNumber.toString(),
         limit: pagination.limit.toString(),
+        search: searchTerm.trim(),
+        unitKerja: filterUnitKerja,
+        tanggalSkCpns: filterTanggalSkCpns,
       });
-
-      if (searchTerm.trim()) queryParams.append("search", searchTerm.trim());
-      if (filterUnitKerja) queryParams.append("unitKerja", filterUnitKerja);
-      if (filterTanggalSkCpns) queryParams.append("tanggalSkCpns", filterTanggalSkCpns);
 
       const res = await apiRequest(`/api/v1/p3k-csv-import?${queryParams.toString()}`, "GET");
       if (res && res.success) {
         records = res.data || [];
-        const meta = res.meta || res.pagination || {};
         pagination = {
-          page: meta.page || page,
-          limit: meta.limit || pagination.limit,
-          total: meta.total || 0,
-          totalPages: meta.totalPages || 1,
+          page: res.meta?.page || 1,
+          limit: res.meta?.limit || 15,
+          total: res.meta?.total || 0,
+          totalPages: res.meta?.totalPages || 1,
         };
 
-        // Extract distinct Unors for filters if empty
         if (filterUnors.length === 0 && records.length > 0) {
-          extractUnorFilters();
+          extractUniqueUnors();
         }
       } else {
         addToast(res.message || "Gagal memuat data", "error");
@@ -205,21 +214,36 @@
     }
   }
 
-  async function extractUnorFilters() {
+  async function fetchMasterData(pageNumber = 1) {
+    isLoadingMaster = true;
     try {
-      const statsRes = await apiRequest("/api/v1/p3k-csv-import/statistics", "GET");
-      if (statsRes && statsRes.success && statsRes.data?.byUnitKerja) {
-        filterUnors = statsRes.data.byUnitKerja.map(u => u.name).filter(Boolean);
+      const queryParams = new URLSearchParams({
+        page: pageNumber.toString(),
+        limit: masterPagination.limit.toString(),
+        search: masterSearchQuery.trim()
+      });
+
+      const res = await apiRequest(`/api/v1/data-p3k?${queryParams.toString()}`, "GET");
+      if (res && res.success) {
+        masterRecords = res.data || [];
+        masterPagination = {
+          page: res.meta?.page || res.pagination?.page || 1,
+          limit: res.meta?.limit || res.pagination?.limit || 10,
+          total: res.meta?.total || res.pagination?.total || 0,
+          totalPages: res.meta?.totalPages || res.pagination?.totalPages || 1
+        };
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      isLoadingMaster = false;
     }
   }
 
   async function fetchLastImportTime() {
     try {
       const res = await apiRequest("/api/v1/p3k-csv-import/last-import-time", "GET");
-      if (res && res.success && res.data?.lastImportTime) {
+      if (res && res.success && res.data) {
         lastImportTime = res.data.lastImportTime;
       }
     } catch (err) {
@@ -227,36 +251,28 @@
     }
   }
 
-  async function fetchStats() {
-    statsLoading = true;
+  async function extractUniqueUnors() {
     try {
       const res = await apiRequest("/api/v1/p3k-csv-import/statistics", "GET");
-      if (res && res.success) {
-        stats = res.data;
-        if (stats?.byUnitKerja && filterUnors.length === 0) {
-          filterUnors = stats.byUnitKerja.map(u => u.name).filter(Boolean);
-        }
+      if (res && res.success && res.data?.byUnitKerja) {
+        filterUnors = res.data.byUnitKerja.map((u) => u.unitKerja).filter(Boolean);
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      statsLoading = false;
     }
-  }
-
-  function getCurrentStatList() {
-    if (!stats) return [];
-    if (activeStatCategory === 'unitKerja') return stats.byUnitKerja || [];
-    if (activeStatCategory === 'pendidikan') return stats.byPendidikan || [];
-    if (activeStatCategory === 'jabatan') return stats.byJenisJabatan || [];
-    if (activeStatCategory === 'golongan') return stats.byGolongan || [];
-    return [];
   }
 
   function handleSearchInput() {
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
       fetchData(1);
+    }, 400);
+  }
+
+  function handleMasterSearchInput() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      fetchMasterData(1);
     }, 400);
   }
 
@@ -289,7 +305,7 @@
 
     const progressTimer = setInterval(() => {
       if (uploadProgress < 90) {
-        uploadProgress += Math.floor(Math.random() * 10) + 2;
+        uploadProgress += Math.floor(Math.random() * 12) + 2;
         if (uploadProgress > 90) uploadProgress = 90;
       }
     }, 300);
@@ -302,16 +318,16 @@
       uploadProgress = 100;
 
       if (res && res.success) {
-        addToast(`Berhasil mengimpor ${res.data?.importedCount || 0} data PPPK Penuh Waktu`, "success");
+        addToast(`Berhasil mengimpor ${res.data?.count || 0} data PPPK Full Waktu`, "success");
         files = null;
         await Promise.all([
           fetchData(1),
           fetchLastImportTime(),
-          fetchStats()
+          fetchMasterData(1)
         ]);
         activeTab = "data";
       } else {
-        addToast(res.message || "Gagal mengimpor data", "error");
+        addToast(res.message || "Gagal mengimpor file CSV", "error");
       }
     } catch (err) {
       console.error(err);
@@ -325,8 +341,29 @@
     }
   }
 
-  function openDetail(rec) {
-    selectedRecord = rec;
+  // --- Sync to Master Data Handler ---
+  async function handleSyncToMaster() {
+    isSyncingMaster = true;
+    try {
+      const res = await apiRequest("/api/v1/p3k-csv-import/sync-master", "POST");
+      if (res && res.success) {
+        addToast(res.message || "Data berhasil disinkronkan ke Data Utama (data_p3k)", "success");
+        showConfirmSyncModal = false;
+        await fetchMasterData(1);
+      } else {
+        addToast(res.message || "Gagal menyinkronkan data ke Data Utama", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("Terjadi kesalahan saat memindahkan data", "error");
+    } finally {
+      isSyncingMaster = false;
+    }
+  }
+
+  // --- Modal Helpers ---
+  function openDetail(item) {
+    selectedRecord = item;
     showDetailModal = true;
   }
 
@@ -344,13 +381,13 @@
   function formatDateTime(dateStr) {
     if (!dateStr) return "-";
     try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString("id-ID", {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "short",
         year: "numeric",
         hour: "2-digit",
-        minute: "2-digit",
+        minute: "2-digit"
       });
     } catch {
       return dateStr;
@@ -363,38 +400,46 @@
 </svelte:head>
 
 <div class="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-6">
-  <!-- Page Header -->
+  <!-- Page Header Card -->
   <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs">
     <div class="space-y-1">
       <div class="flex items-center gap-2.5">
         <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
         <div>
           <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">P3K Full Waktu (SIASN)</h1>
-          <p class="text-xs sm:text-sm text-slate-500">Kelola dan impor data profil SIASN P3K Full Waktu melalui file CSV</p>
+          <p class="text-xs sm:text-sm text-slate-500">Kelola, impor, dan pindahkan data profil SIASN P3K Full Waktu ke tabel data utama</p>
         </div>
       </div>
     </div>
 
-    <!-- Actions & Stats Pill -->
+    <!-- Status Pills -->
     <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+      <div class="px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2 text-xs font-semibold text-slate-700">
+        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+        Data Import: <span class="font-bold text-blue-700">{pagination.total.toLocaleString()}</span>
+      </div>
+
+      <div class="px-3.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center gap-2 text-xs font-semibold text-indigo-700">
+        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+        Data Utama: <span class="font-bold text-indigo-900">{masterPagination.total.toLocaleString()}</span>
+      </div>
+
       {#if lastImportTime}
-        <div class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-medium text-slate-600">
-          Terakhir Import: <span class="font-bold text-slate-800">{formatDateTime(lastImportTime)}</span>
+        <div class="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-medium flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Import Terakhir: <b class="font-bold">{formatDateTime(lastImportTime)}</b>
         </div>
       {/if}
-
-      <div class="px-3.5 py-1.5 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-2 text-xs font-semibold text-blue-800">
-        <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-        Total Data: <span class="font-bold text-blue-900">{pagination.total.toLocaleString()}</span>
-      </div>
     </div>
   </div>
 
-  <!-- Navigation Tabs -->
+  <!-- Navigation Tabs (Horizontal Non-Wrapping) -->
   <div class="inline-flex items-center gap-1.5 p-1.5 bg-slate-200/70 rounded-2xl max-w-full overflow-x-auto">
     <button
       type="button"
@@ -423,13 +468,13 @@
 
     <button
       type="button"
-      onclick={() => { activeTab = "stats"; fetchStats(); }}
-      class="whitespace-nowrap shrink-0 py-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-2 {activeTab === 'stats' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}"
+      onclick={() => { activeTab = "sync"; fetchMasterData(1); }}
+      class="whitespace-nowrap shrink-0 py-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-2 {activeTab === 'sync' ? 'bg-white text-amber-700 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}"
     >
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
       </svg>
-      Statistik
+      Pindahkan ke Data Utama
     </button>
   </div>
 
@@ -475,12 +520,12 @@
               type="text"
               bind:value={filterTanggalSkCpns}
               oninput={handleSearchInput}
-              placeholder="Filter Tgl SK CPNS (contoh: 2024)..."
+              placeholder="Filter Tgl SK CPNS (contoh: 2024)"
               class="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-slate-700 placeholder:text-slate-400"
             />
           </div>
 
-          <!-- Actions: Reset & Reload -->
+          <!-- Reset Filter -->
           <div class="flex items-center gap-2">
             <button
               type="button"
@@ -521,7 +566,7 @@
               </svg>
             </div>
             <h3 class="text-base font-bold text-slate-700">Belum Ada Data P3K Full Waktu</h3>
-            <p class="text-xs text-slate-400 max-w-sm mx-auto">Silakan unggah file CSV data SIASN pada tab <b>Import CSV</b> untuk mengisi tabel ini.</p>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">Silakan unggah file CSV data SIASN Full Waktu pada tab <b>Import CSV</b> untuk mengisi tabel ini.</p>
             <div class="pt-2">
               <button
                 type="button"
@@ -593,8 +638,8 @@
                     </td>
 
                     <td class="py-3 px-4 whitespace-nowrap">
-                      <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-[11px] font-bold">
-                        {item.golAkhirNama || item.golAwalNama || "-"}
+                      <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-[11px] font-bold">
+                        {item.golAkhirNama || "-"}
                       </span>
                     </td>
 
@@ -609,7 +654,7 @@
                       <button
                         type="button"
                         onclick={() => openDetail(item)}
-                        class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold transition-colors border border-blue-200 flex items-center gap-1 shadow-2xs mx-auto"
+                        class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold transition-colors border border-blue-200 inline-flex items-center gap-1 shadow-2xs"
                         title="Lihat Rincian Pegawai"
                       >
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -663,7 +708,6 @@
   {:else if activeTab === "upload"}
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
       <div class="p-6 sm:p-8 space-y-6">
-        <!-- Header Info -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
           <div>
             <h2 class="text-base font-bold text-slate-800">Unggah File CSV SIASN Full Waktu</h2>
@@ -678,11 +722,11 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {showHeaderGuide ? "Sembunyikan Panduan Header" : "Lihat Format Header (68 Kolom)"}
+            {showHeaderGuide ? 'Sembunyikan Panduan Header' : 'Lihat Format Header (63 Kolom)'}
           </button>
         </div>
 
-        <!-- Panduan Header Collapse -->
+        <!-- Header Guide Collapse -->
         {#if showHeaderGuide}
           <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
             <div class="flex items-center justify-between">
@@ -716,7 +760,7 @@
             class="hidden"
             onchange={() => {
               if (files && files.length > 0) {
-                addToast(`File terpilih: ${files[0].name}`, "info");
+                addToast(`File terpilih: ${files[0].name}`, 'info');
               }
             }}
           />
@@ -746,7 +790,7 @@
           </label>
         </div>
 
-        <!-- Upload Progress Bar -->
+        <!-- Upload Progress -->
         {#if isUploading}
           <div class="space-y-2 p-4 bg-slate-50 rounded-xl border border-slate-200 animate-fadeIn">
             <div class="flex justify-between text-xs font-semibold text-slate-700">
@@ -755,7 +799,7 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
-                Memproses dan memvalidasi baris CSV ke database...
+                Memproses baris CSV ke database...
               </span>
               <span>{uploadProgress}%</span>
             </div>
@@ -765,7 +809,7 @@
           </div>
         {/if}
 
-        <!-- Upload Action Button -->
+        <!-- Actions -->
         <div class="flex justify-end gap-3 pt-2">
           {#if files && files.length > 0}
             <button
@@ -801,86 +845,232 @@
       </div>
     </div>
 
-  <!-- ==================== TAB 3: STATISTIK ==================== -->
-  {:else if activeTab === "stats"}
+  <!-- ==================== TAB 3: PINDAHKAN KE DATA UTAMA ==================== -->
+  {:else if activeTab === "sync"}
     <div class="space-y-6">
-      {#if statsLoading}
-        <div class="py-16 text-center space-y-3 bg-white rounded-2xl border border-slate-200 p-8">
-          <div class="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p class="text-xs text-slate-500 font-medium">Menghitung statistik data...</p>
-        </div>
-      {:else if !stats || stats.total === 0}
-        <div class="py-16 text-center bg-white rounded-2xl border border-slate-200 p-8 space-y-3">
-          <p class="text-sm font-bold text-slate-700">Belum ada data untuk dianalisis</p>
-          <p class="text-xs text-slate-400">Silakan import data terlebih dahulu melalui tab Import CSV.</p>
-        </div>
-      {:else}
-        <!-- Top Stats KPI Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Pegawai Full Waktu</span>
-            <p class="text-2xl font-extrabold text-blue-700">{stats.total.toLocaleString()}</p>
-            <p class="text-[11px] text-slate-500">Tercatat di data import</p>
+      <!-- Sync Action Card -->
+      <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs font-semibold">
+              <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Sinkronisasi ke Tabel <code class="font-mono text-amber-900 font-bold">data_p3k</code>
+            </div>
+            <h2 class="text-lg font-bold text-slate-800">Pindahkan Data Hasil Import ke Data Utama</h2>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Fitur ini akan menyalin seluruh rekaman dari tabel hasil import CSV (<code class="bg-slate-100 px-1 py-0.5 rounded text-blue-700 font-mono">p3k_csv_imports</code>) ke tabel data utama (<code class="bg-slate-100 px-1 py-0.5 rounded text-blue-700 font-mono">data_p3k</code>). Data yang sudah ada tidak akan diduplikasi, dan data baru akan otomatis ditambahkan ke basis data master.
+            </p>
           </div>
 
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unit Kerja</span>
-            <p class="text-2xl font-extrabold text-emerald-700">{(stats.byUnitKerja || []).length}</p>
-            <p class="text-[11px] text-slate-500">Total Unit Kerja Terdata</p>
-          </div>
-
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tingkat Pendidikan</span>
-            <p class="text-2xl font-extrabold text-amber-700">{(stats.byPendidikan || []).length}</p>
-            <p class="text-[11px] text-slate-500">Jenjang Pendidikan Terdata</p>
-          </div>
-
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Golongan Terbanyak</span>
-            <p class="text-2xl font-extrabold text-indigo-700">{stats.byGolongan?.[0]?.name || '-'}</p>
-            <p class="text-[11px] text-slate-500">{stats.byGolongan?.[0]?.count || 0} Pegawai</p>
-          </div>
-        </div>
-
-        <!-- Category Selector -->
-        <div class="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
-          {#each [
-            { id: 'unitKerja', label: 'Unit Kerja' },
-            { id: 'pendidikan', label: 'Pendidikan' },
-            { id: 'jabatan', label: 'Jenis Jabatan' },
-            { id: 'golongan', label: 'Golongan' }
-          ] as cat}
+          <!-- Sync Trigger Button -->
+          <div class="shrink-0">
             <button
               type="button"
-              onclick={() => (activeStatCategory = cat.id)}
-              class="px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap {activeStatCategory === cat.id ? 'bg-blue-600 text-white shadow-xs' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}"
+              disabled={pagination.total === 0 || isSyncingMaster}
+              onclick={() => (showConfirmSyncModal = true)}
+              class="w-full sm:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-300 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
             >
-              {cat.label}
+              {#if isSyncingMaster}
+                <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                Sedang Menyinkronkan...
+              {:else}
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Pindahkan ke Data Utama ({pagination.total} Data)
+              {/if}
             </button>
-          {/each}
-        </div>
-
-        <!-- Breakdown List -->
-        <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-          <h3 class="text-sm font-bold text-slate-800">
-            Distribusi Berdasarkan {activeStatCategory === 'unitKerja' ? 'Unit Kerja' : activeStatCategory === 'pendidikan' ? 'Pendidikan' : activeStatCategory === 'jabatan' ? 'Jenis Jabatan' : 'Golongan'}
-          </h3>
-
-          <div class="space-y-3">
-            {#each getCurrentStatList() as item}
-              <div class="space-y-1">
-                <div class="flex justify-between text-xs">
-                  <span class="font-medium text-slate-700 truncate pr-3" title={item.name}>{item.name || 'Tanpa Keterangan'}</span>
-                  <span class="font-bold text-slate-800 shrink-0">{item.count.toLocaleString()} ({Math.round((item.count / stats.total) * 100)}%)</span>
-                </div>
-                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div class="h-full bg-blue-600 rounded-full" style="width: {(item.count / stats.total) * 100}%"></div>
-                </div>
-              </div>
-            {/each}
           </div>
         </div>
-      {/if}
+
+        <!-- Summary KPI Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Data Hasil Import (CSV)</span>
+            <p class="text-xl font-extrabold text-blue-700">{pagination.total.toLocaleString()}</p>
+            <p class="text-[10px] text-slate-500">Tabel p3k_csv_imports</p>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Data Utama Tersimpan</span>
+            <p class="text-xl font-extrabold text-indigo-700">{masterPagination.total.toLocaleString()}</p>
+            <p class="text-[10px] text-slate-500">Tabel data_p3k</p>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status Sinkronisasi</span>
+            {#if pagination.total > 0 && masterPagination.total >= pagination.total}
+              <div class="flex items-center gap-1.5 text-emerald-700 font-bold text-sm pt-1">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Tersinkronisasi
+              </div>
+              <p class="text-[10px] text-slate-500">Data utama telah mutakhir</p>
+            {:else if pagination.total > 0}
+              <div class="flex items-center gap-1.5 text-amber-700 font-bold text-sm pt-1">
+                <svg class="w-4 h-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Perlu Sinkronisasi
+              </div>
+              <p class="text-[10px] text-slate-500">Klik tombol pindahkan di atas</p>
+            {:else}
+              <p class="text-sm font-bold text-slate-400 pt-1">Belum Ada Data Import</p>
+              <p class="text-[10px] text-slate-500">Impor CSV terlebih dahulu</p>
+            {/if}
+          </div>
+        </div>
+      </div>
+
+      <!-- Master Data Table Section -->
+      <div class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Daftar Data Utama (data_p3k)</h3>
+            <p class="text-xs text-slate-500">Pratinjau data master utama P3K Full Waktu yang aktif</p>
+          </div>
+
+          <!-- Search in Master -->
+          <div class="relative w-full sm:w-64">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              bind:value={masterSearchQuery}
+              oninput={handleMasterSearchInput}
+              placeholder="Cari di data utama..."
+              class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Master Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          {#if isLoadingMaster}
+            <div class="py-16 text-center space-y-3">
+              <div class="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p class="text-xs text-slate-500 font-medium">Memuat data utama...</p>
+            </div>
+          {:else if masterRecords.length === 0}
+            <div class="py-16 text-center space-y-3 px-4">
+              <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-slate-700">Data Utama Masih Kosong</h3>
+              <p class="text-xs text-slate-400 max-w-sm mx-auto">Klik tombol <b>Pindahkan ke Data Utama</b> di atas untuk menyinkronkan data dari hasil import CSV.</p>
+            </div>
+          {:else}
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    <th class="py-3 px-4 w-12 text-center">No</th>
+                    <th class="py-3 px-4">NIP & Nama Pegawai</th>
+                    <th class="py-3 px-4">Unit Kerja (Unor)</th>
+                    <th class="py-3 px-4">Unit Kerja Induk (Mapping)</th>
+                    <th class="py-3 px-4">Jabatan</th>
+                    <th class="py-3 px-4">Golongan</th>
+                    <th class="py-3 px-4 text-center w-20">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  {#each masterRecords as item, idx}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                      <td class="py-3 px-4 text-center text-slate-400 font-mono">
+                        {(masterPagination.page - 1) * masterPagination.limit + idx + 1}
+                      </td>
+
+                      <td class="py-3 px-4 min-w-[200px]">
+                        <p class="font-bold text-slate-800">{item.nama} {item.gelarBelakang || ''}</p>
+                        <p class="text-[11px] text-blue-700 font-mono">{item.nipBaru}</p>
+                      </td>
+
+                      <td class="py-3 px-4 min-w-[180px]">
+                        <p class="font-medium text-slate-700">{item.unorNama || '-'}</p>
+                      </td>
+
+                      <td class="py-3 px-4 min-w-[200px]">
+                        {#if item.unorInduk?.nama}
+                          <span class="px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            {item.unorInduk.nama}
+                          </span>
+                        {:else}
+                          <span class="px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-[11px] font-medium">
+                            Belum Dipetakan
+                          </span>
+                        {/if}
+                      </td>
+
+                      <td class="py-3 px-4 min-w-[160px]">
+                        <p class="font-medium text-slate-800">{item.jabatanNama || '-'}</p>
+                      </td>
+
+                      <td class="py-3 px-4 whitespace-nowrap">
+                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-[11px] font-bold">
+                          {item.golAkhirNama || '-'}
+                        </span>
+                      </td>
+
+                      <td class="py-3 px-4 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onclick={() => openDetail(item)}
+                          class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          Detail
+                        </button>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Master Pagination Footer -->
+            <div class="px-4 py-3 border-t border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600">
+              <div>
+                Menampilkan <b>{(masterPagination.page - 1) * masterPagination.limit + 1}</b> - <b>{Math.min(masterPagination.page * masterPagination.limit, masterPagination.total)}</b> dari <b>{masterPagination.total.toLocaleString()}</b> data utama
+              </div>
+
+              <div class="flex items-center gap-1.5 self-end sm:self-auto">
+                <button
+                  type="button"
+                  disabled={masterPagination.page <= 1}
+                  onclick={() => fetchMasterData(masterPagination.page - 1)}
+                  class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Sebelumnya
+                </button>
+
+                <span class="px-3 py-1 bg-blue-600 text-white rounded-lg font-bold">
+                  {masterPagination.page} / {masterPagination.totalPages || 1}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={masterPagination.page >= masterPagination.totalPages}
+                  onclick={() => fetchMasterData(masterPagination.page + 1)}
+                  class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            </div>
+          {/if}
+        </div>
+      </div>
     </div>
   {/if}
 </div>
@@ -901,11 +1091,6 @@
             <span class="px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-400/30 rounded text-[10px] font-bold uppercase tracking-wider">
               P3K Full Waktu
             </span>
-            {#if ret?.isPast}
-              <span class="px-2 py-0.5 bg-rose-500/30 text-rose-300 border border-rose-400/40 rounded text-[10px] font-bold uppercase tracking-wider">
-                Mencapai Batas Usia Pensiun
-              </span>
-            {/if}
           </div>
           <h3 class="text-lg font-bold text-white">{selectedRecord.nama} {selectedRecord.gelarBelakang || ''}</h3>
           <p class="text-xs text-slate-300 font-mono">NIP: {selectedRecord.nipBaru} • NIK: {selectedRecord.nik || '-'}</p>
@@ -929,8 +1114,12 @@
           <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Informasi Kepegawaian & Posisi</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
             <div>
-              <span class="text-[10px] text-slate-400 block">Unit Kerja (Unor)</span>
+              <span class="text-[10px] text-slate-400 block">Unit Kerja (Unor Asal)</span>
               <p class="font-semibold text-slate-800 mt-0.5">{selectedRecord.unorNama || '-'}</p>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Unit Kerja Induk (Mapping)</span>
+              <p class="font-semibold text-blue-700 mt-0.5">{selectedRecord.unorInduk?.nama || 'Belum Dipetakan'}</p>
             </div>
             <div>
               <span class="text-[10px] text-slate-400 block">Jabatan</span>
@@ -938,7 +1127,7 @@
             </div>
             <div>
               <span class="text-[10px] text-slate-400 block">Golongan Akhir</span>
-              <p class="font-bold text-blue-700 mt-0.5">{selectedRecord.golAkhirNama || selectedRecord.golAwalNama || '-'}</p>
+              <p class="font-bold text-indigo-700 mt-0.5">{selectedRecord.golAkhirNama || '-'}</p>
             </div>
             <div>
               <span class="text-[10px] text-slate-400 block">Masa Kerja</span>
@@ -948,14 +1137,31 @@
               <span class="text-[10px] text-slate-400 block">Status CPNS / PNS</span>
               <p class="font-semibold text-slate-800 mt-0.5">{selectedRecord.statusCpnsPns || '-'}</p>
             </div>
-            <div>
-              <span class="text-[10px] text-slate-400 block">Kedudukan Hukum</span>
-              <p class="font-semibold text-slate-800 mt-0.5">{selectedRecord.kedudukanHukumNama || '-'}</p>
-            </div>
           </div>
         </div>
 
-        <!-- Section 2: Biodata Pribadi & Pensiun -->
+        <!-- Section 2: Pensiun & Usia -->
+        {#if ret}
+          <div>
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Estimasi Usia Pensiun (BUP 58 Tahun)</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div>
+                <span class="text-[10px] text-slate-400 block">Usia Saat Ini</span>
+                <p class="font-semibold text-slate-800 mt-0.5">{calculateAge(selectedRecord.tanggalLahir)}</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">TMT BUP Pensiun</span>
+                <p class="font-bold text-blue-700 mt-0.5">{ret.tmtDateString}</p>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">Sisa Waktu Kerja</span>
+                <p class="font-bold mt-0.5 {ret.isRetired ? 'text-rose-600' : 'text-emerald-700'}">{ret.remainingText}</p>
+              </div>
+            </div>
+          </div>
+        {/if}
+
+        <!-- Section 3: Biodata Pribadi -->
         <div>
           <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Biodata Pribadi</h4>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -964,12 +1170,12 @@
               <p class="font-semibold text-slate-800 mt-0.5">{selectedRecord.tempatLahirNama || '-'}, {selectedRecord.tanggalLahir || '-'}</p>
             </div>
             <div>
-              <span class="text-[10px] text-slate-400 block">Usia Saat Ini</span>
-              <p class="font-semibold text-slate-800 mt-0.5">{calculateAge(selectedRecord.tanggalLahir)}</p>
-            </div>
-            <div>
               <span class="text-[10px] text-slate-400 block">Jenis Kelamin</span>
               <p class="font-semibold text-slate-800 mt-0.5">{selectedRecord.jenisKelamin === 'L' ? 'Laki-laki' : selectedRecord.jenisKelamin === 'P' ? 'Perempuan' : '-'}</p>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 block">Agama</span>
+              <p class="font-semibold text-slate-800 mt-0.5">{selectedRecord.agamaNama || '-'}</p>
             </div>
             <div>
               <span class="text-[10px] text-slate-400 block">Nomor HP</span>
@@ -990,7 +1196,7 @@
           </div>
         </div>
 
-        <!-- Section 3: Pendidikan & Surat Keputusan -->
+        <!-- Section 4: Pendidikan & Surat Keputusan -->
         <div>
           <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pendidikan & Surat Keputusan (SK)</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -1022,6 +1228,45 @@
           class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-colors"
         >
           Tutup Rincian
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- ==================== CONFIRM SYNC MODAL ==================== -->
+{#if showConfirmSyncModal}
+  <div class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-xl space-y-4 border border-amber-200">
+      <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      </div>
+      <h3 class="text-base font-bold text-slate-800">Pindahkan Data ke Data Utama?</h3>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Apakah Anda yakin ingin memindahkan <b>{pagination.total.toLocaleString()} rekaman data</b> dari tabel hasil import ke tabel <b>data_p3k</b> (Data Utama Full Waktu)?
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          type="button"
+          disabled={isSyncingMaster}
+          onclick={() => (showConfirmSyncModal = false)}
+          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold"
+        >
+          Batal
+        </button>
+        <button
+          type="button"
+          disabled={isSyncingMaster}
+          onclick={handleSyncToMaster}
+          class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
+        >
+          {#if isSyncingMaster}
+            Memproses...
+          {:else}
+            Ya, Pindahkan Sekarang
+          {/if}
         </button>
       </div>
     </div>
