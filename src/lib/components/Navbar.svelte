@@ -111,6 +111,7 @@
   const isImportActive = () =>
     isActive("/data-p3k-import") ||
     isActive("/import-p3k-csv") ||
+    isActive("/import-p3k-paruh-waktu") ||
     isActive("/statistik-p3k-import") ||
     isActive("/setting/import-per-unit-kerja");
 
@@ -120,6 +121,7 @@
   const isSettingActive = () =>
     isActive("/manajemen-user") ||
     isActive("/data-p3k-import") ||
+    isActive("/import-p3k-paruh-waktu") ||
     isActive("/statistik-p3k-import") ||
     isActive("/setting/import-per-unit-kerja") ||
     isActive("/setting/pembagian-task-peremajaan") ||
@@ -1110,6 +1112,22 @@
                             <div>
                               <p class="font-medium leading-tight">Import CSV</p>
                               <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Upload file data SIASN</p>
+                            </div>
+                          </a>
+                        {/if}
+                        {#if canAccessAny(['setting-import-csv', 'setting-p3k-paruh-waktu'])}
+                          <a href="/import-p3k-paruh-waktu"
+                            class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/import-p3k-paruh-waktu') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                            onclick={() => (settingMenuOpen = false)}>
+                            <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                              <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                              </svg>
+                            </div>
+                            <div>
+                              <p class="font-medium leading-tight">P3K Paruh Waktu</p>
+                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Import & data paruh waktu</p>
                             </div>
                           </a>
                         {/if}
@@ -2326,6 +2344,36 @@
                           >
                         </div>
                         Import CSV
+                      </a>
+                    {/if}
+                    {#if canAccessAny(['setting-import-csv', 'setting-p3k-paruh-waktu'])}
+                      <a
+                        href="/import-p3k-paruh-waktu"
+                        onclick={closeMobile}
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                          '/import-p3k-paruh-waktu',
+                        )
+                          ? 'text-blue-700 bg-blue-50 font-semibold'
+                          : 'text-slate-600 hover:bg-slate-50'}"
+                      >
+                        <div
+                          class="w-6 h-6 rounded-md bg-amber-50 flex items-center justify-center shrink-0"
+                        >
+                          <svg
+                            class="w-3.5 h-3.5 text-amber-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        P3K Paruh Waktu
                       </a>
                     {/if}
                     {#if canAccess('setting-statistik-import')}
