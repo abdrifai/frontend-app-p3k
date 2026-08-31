@@ -1111,7 +1111,7 @@
                             </div>
                             <div>
                               <p class="font-medium leading-tight">P3K Paruh Waktu</p>
-                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Data, import & statistik paruh waktu</p>
+                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Data, import & data utama</p>
                             </div>
                           </a>
                         {/if}
