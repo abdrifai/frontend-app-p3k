@@ -370,17 +370,17 @@
   </div>
 
   <!-- Navigation Tabs -->
-  <div class="flex items-center gap-1 p-1 bg-slate-200/60 rounded-xl max-w-lg">
+  <div class="inline-flex items-center gap-1.5 p-1.5 bg-slate-200/70 rounded-2xl max-w-full overflow-x-auto">
     <button
       type="button"
       onclick={() => (activeTab = 'data')}
-      class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 {activeTab === 'data' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'}"
+      class="whitespace-nowrap shrink-0 py-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-2 {activeTab === 'data' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}"
     >
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
       </svg>
       Data Paruh Waktu
-      <span class="text-[10px] px-1.5 py-0.2 rounded-full {activeTab === 'data' ? 'bg-blue-100 text-blue-800' : 'bg-slate-300 text-slate-700'}">
+      <span class="text-[10px] px-2 py-0.5 rounded-full {activeTab === 'data' ? 'bg-blue-100 text-blue-800' : 'bg-slate-300 text-slate-700'}">
         {pagination.total}
       </span>
     </button>
@@ -388,7 +388,7 @@
     <button
       type="button"
       onclick={() => (activeTab = 'upload')}
-      class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 {activeTab === 'upload' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'}"
+      class="whitespace-nowrap shrink-0 py-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-2 {activeTab === 'upload' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}"
     >
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -399,7 +399,7 @@
     <button
       type="button"
       onclick={() => { activeTab = 'sync'; fetchMasterData(1); }}
-      class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 {activeTab === 'sync' ? 'bg-white text-amber-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'}"
+      class="whitespace-nowrap shrink-0 py-2.5 px-4 text-xs font-bold rounded-xl transition-all flex items-center gap-2 {activeTab === 'sync' ? 'bg-white text-amber-700 shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'}"
     >
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
