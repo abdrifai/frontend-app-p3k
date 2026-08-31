@@ -1,11 +1,10 @@
 <script>
-  import { onMount } from "$lib/store";
+  import { onMount } from "svelte";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { authStore } from "$lib/store";
   import { apiRequest } from "$lib/api";
   import { addToast } from "$lib/toastStore";
-  import { onMount as svelteOnMount } from "svelte";
 
   // --- Tab Navigation State ---
   let activeTab = "data"; // "data", "upload", "stats"
@@ -148,7 +147,7 @@
     };
   };
 
-  svelteOnMount(async () => {
+  onMount(async () => {
     if (!$authStore.isAuthenticated) {
       addToast("Anda harus login untuk mengakses halaman ini", "error");
       goto("/login");
@@ -183,11 +182,12 @@
       const res = await apiRequest(`/api/v1/p3k-csv-import?${queryParams.toString()}`, "GET");
       if (res && res.success) {
         records = res.data || [];
+        const meta = res.meta || res.pagination || {};
         pagination = {
-          page: res.pagination?.page || page,
-          limit: res.pagination?.limit || pagination.limit,
-          total: res.pagination?.total || 0,
-          totalPages: res.pagination?.totalPages || 1,
+          page: meta.page || page,
+          limit: meta.limit || pagination.limit,
+          total: meta.total || 0,
+          totalPages: meta.totalPages || 1,
         };
 
         // Extract distinct Unors for filters if empty
