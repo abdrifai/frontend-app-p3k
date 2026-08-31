@@ -1084,34 +1084,18 @@
                         </svg>
                       </div>
                       {#if settingCollapseImport}
-                        {#if canAccess('setting-p3k-import')}
+                        {#if canAccessAny(['setting-p3k-import', 'setting-import-csv', 'setting-statistik-import'])}
                           <a href="/data-p3k-import"
                             class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/data-p3k-import') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
                             onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
-                              <svg class="w-3.5 h-3.5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                              <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                               </svg>
                             </div>
                             <div>
-                              <p class="font-medium leading-tight">Data Import</p>
-                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Lihat data hasil import</p>
-                            </div>
-                          </a>
-                        {/if}
-                        {#if canAccess('setting-import-csv')}
-                          <a href="/import-p3k-csv"
-                            class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/import-p3k-csv') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0">
-                              <svg class="w-3.5 h-3.5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                              </svg>
-                            </div>
-                            <div>
-                              <p class="font-medium leading-tight">Import CSV</p>
-                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Upload file data SIASN</p>
+                              <p class="font-medium leading-tight">P3K Full Waktu</p>
+                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Data, import & statistik full waktu</p>
                             </div>
                           </a>
                         {/if}
@@ -1127,23 +1111,7 @@
                             </div>
                             <div>
                               <p class="font-medium leading-tight">P3K Paruh Waktu</p>
-                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Import & data paruh waktu</p>
-                            </div>
-                          </a>
-                        {/if}
-                        {#if canAccess('setting-statistik-import')}
-                          <a href="/statistik-p3k-import"
-                            class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/statistik-p3k-import') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
-                            onclick={() => (settingMenuOpen = false)}>
-                            <div class="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
-                              <svg class="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                              </svg>
-                            </div>
-                            <div>
-                              <p class="font-medium leading-tight">Statistik Import</p>
-                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Ringkasan data import</p>
+                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Data, import & statistik paruh waktu</p>
                             </div>
                           </a>
                         {/if}
@@ -2288,7 +2256,7 @@
                     >
                       Import SIASN
                     </p>
-                    {#if canAccess('setting-p3k-import')}
+                    {#if canAccessAny(['setting-p3k-import', 'setting-import-csv', 'setting-statistik-import'])}
                       <a
                         href="/data-p3k-import"
                         onclick={closeMobile}
@@ -2299,10 +2267,10 @@
                           : 'text-slate-600 hover:bg-slate-50'}"
                       >
                         <div
-                          class="w-6 h-6 rounded-md bg-violet-50 flex items-center justify-center shrink-0"
+                          class="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center shrink-0"
                         >
                           <svg
-                            class="w-3.5 h-3.5 text-violet-500"
+                            class="w-3.5 h-3.5 text-blue-600"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -2310,40 +2278,11 @@
                               stroke-linecap="round"
                               stroke-linejoin="round"
                               stroke-width="2"
-                              d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                             /></svg
                           >
                         </div>
-                        Data Import
-                      </a>
-                    {/if}
-                    {#if canAccess('setting-import-csv')}
-                      <a
-                        href="/import-p3k-csv"
-                        onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
-                          '/import-p3k-csv',
-                        )
-                          ? 'text-blue-700 bg-blue-50 font-semibold'
-                          : 'text-slate-600 hover:bg-slate-50'}"
-                      >
-                        <div
-                          class="w-6 h-6 rounded-md bg-cyan-50 flex items-center justify-center shrink-0"
-                        >
-                          <svg
-                            class="w-3.5 h-3.5 text-cyan-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            ><path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            /></svg
-                          >
-                        </div>
-                        Import CSV
+                        P3K Full Waktu
                       </a>
                     {/if}
                     {#if canAccessAny(['setting-import-csv', 'setting-p3k-paruh-waktu'])}
@@ -2374,35 +2313,6 @@
                           </svg>
                         </div>
                         P3K Paruh Waktu
-                      </a>
-                    {/if}
-                    {#if canAccess('setting-statistik-import')}
-                      <a
-                        href="/statistik-p3k-import"
-                        onclick={closeMobile}
-                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
-                          '/statistik-p3k-import',
-                        )
-                          ? 'text-blue-700 bg-blue-50 font-semibold'
-                          : 'text-slate-600 hover:bg-slate-50'}"
-                      >
-                        <div
-                          class="w-6 h-6 rounded-md bg-rose-50 flex items-center justify-center shrink-0"
-                        >
-                          <svg
-                            class="w-3.5 h-3.5 text-rose-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            ><path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                            /></svg
-                          >
-                        </div>
-                        Statistik Import
                       </a>
                     {/if}
                     {#if canAccess('setting-import-per-unit-kerja')}
