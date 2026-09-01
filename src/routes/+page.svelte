@@ -110,7 +110,7 @@
             <div class="flex items-start justify-between gap-2">
               <div>
                 <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider leading-snug">
-                  P3K <br />Paruh Waktu
+                  PPPK Paruh <br />Waktu
                 </p>
                 <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">{(stats.summary.paruhWaktu || 0).toLocaleString()}</h3>
               </div>
