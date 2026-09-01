@@ -276,11 +276,9 @@
       <div class="flex-shrink-0">
         <a href="/" class="flex items-center gap-3 group" onclick={closeMobile}>
           <div
-            class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-600/20 group-hover:shadow-blue-600/30 transition-all group-hover:scale-105"
+            class="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-blue-600/20 group-hover:shadow-blue-600/30 transition-all group-hover:scale-105 shrink-0 bg-slate-900 border border-slate-700/50"
           >
-            <span class="text-white font-extrabold text-[11px] tracking-tight"
-              >P3K</span
-            >
+            <img src="/logo.svg" alt="SIPPPK Logo" class="w-full h-full object-cover" />
           </div>
           <div class="hidden sm:block">
             <p class="text-sm font-bold text-slate-800 leading-tight">SIPPPK</p>

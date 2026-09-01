@@ -44,8 +44,13 @@
       <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
       <div class="text-center mb-8">
+        <div
+          class="w-14 h-14 mx-auto rounded-2xl overflow-hidden shadow-xl shadow-blue-500/20 mb-4 bg-slate-900 border border-slate-700/50"
+        >
+          <img src="/logo.svg" alt="Logo SIPPPK" class="w-full h-full object-cover" />
+        </div>
         <h2 class="text-2xl font-bold text-slate-800">Lupa Password</h2>
-        <p class="mt-2 text-sm text-slate-500">Masukkan email yang terdaftar untuk menerima tautan reset password.</p>
+        <p class="mt-2 text-sm text-slate-500">Masukkan email yang terdaftar untuk menerima tautan reset password SIPPPK.</p>
       </div>
 
       <form onsubmit={handleForgotPassword} class="space-y-5">

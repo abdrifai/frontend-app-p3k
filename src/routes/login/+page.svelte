@@ -48,19 +48,12 @@
 
       <div class="text-center mb-8">
         <div
-          class="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 mb-4"
+          class="w-16 h-16 mx-auto rounded-2xl overflow-hidden shadow-xl shadow-blue-500/20 mb-4 bg-slate-900 border border-slate-700/50"
         >
-          <span class="text-white font-bold text-sm">P3</span>
+          <img src="/logo.svg" alt="Logo SIPPPK" class="w-full h-full object-cover" />
         </div>
-        <h2 class="text-2xl font-bold text-slate-800">Masuk ke akun Anda</h2>
-        <!-- <p class="mt-2 text-sm text-slate-500">
-          Belum punya akun?
-          <a
-            href="/register"
-            class="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-            >Daftar sekarang</a
-          >
-        </p> -->
+        <h2 class="text-2xl font-bold text-slate-800">Masuk ke SIPPPK</h2>
+        <p class="text-xs text-slate-500 mt-1">Sistem Informasi Pegawai Pemerintah dengan Perjanjian Kerja</p>
       </div>
 
       <form onsubmit={handleLogin} class="space-y-5">

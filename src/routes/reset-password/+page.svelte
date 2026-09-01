@@ -58,11 +58,11 @@
       <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
       <div class="text-center mb-8">
-        <div class="w-12 h-12 mx-auto rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 mb-4">
-          <span class="text-white font-bold text-sm">P3</span>
+        <div class="w-14 h-14 mx-auto rounded-2xl overflow-hidden shadow-xl shadow-blue-500/20 mb-4 bg-slate-900 border border-slate-700/50">
+          <img src="/logo.svg" alt="Logo SIPPPK" class="w-full h-full object-cover" />
         </div>
         <h2 class="text-2xl font-bold text-slate-800">Ubah Password</h2>
-        <p class="mt-2 text-sm text-slate-500">Silakan masukkan password baru Anda.</p>
+        <p class="mt-2 text-sm text-slate-500">Silakan masukkan password baru untuk akun SIPPPK Anda.</p>
       </div>
 
       <form onsubmit={handleResetPassword} class="space-y-5">

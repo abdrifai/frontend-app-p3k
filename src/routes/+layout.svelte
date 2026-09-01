@@ -75,9 +75,9 @@
     >
       <div class="flex items-center gap-2">
         <div
-          class="w-5 h-5 rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center"
+          class="w-5 h-5 rounded-md overflow-hidden bg-slate-900 flex items-center justify-center shrink-0 border border-slate-700/50"
         >
-          <span class="text-white font-bold text-[6px]">P3K</span>
+          <img src="/logo.svg" alt="SIPPPK" class="w-full h-full object-cover" />
         </div>
         <p class="text-sm text-slate-400">
           &copy; {new Date().getFullYear()} SIPPPK. All rights reserved.
