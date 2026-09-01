@@ -133,7 +133,7 @@
             <div class="flex items-start justify-between gap-2">
               <div>
                 <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider leading-snug">
-                  Sudah <br />Pensiun
+                  PPPK <br />Pensiun
                 </p>
                 <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">{(stats.summary.pensiun || 0).toLocaleString()}</h3>
               </div>
