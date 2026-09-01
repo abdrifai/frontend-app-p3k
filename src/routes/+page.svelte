@@ -60,15 +60,17 @@
       {#if !loading && stats?.summary}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <!-- Card 1: Total Pegawai (P3K Aktif + P3K Paruh Waktu) -->
-          <div class="card p-5 sm:p-6 border-l-4 border-blue-500 bg-white shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
+          <div class="card p-5 sm:p-6 border-l-4 border-blue-500 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div class="flex items-start justify-between gap-2">
               <div>
-                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Pegawai</p>
-                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider leading-snug">
+                  Total <br />Pegawai
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">
                   {((stats.summary.aktif || 0) + (stats.summary.paruhWaktu || 0)).toLocaleString()}
                 </h3>
               </div>
-              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs shrink-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -81,13 +83,15 @@
           </div>
 
           <!-- Card 2: PPPK Aktif -->
-          <div class="card p-5 sm:p-6 border-l-4 border-emerald-500 bg-white shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
+          <div class="card p-5 sm:p-6 border-l-4 border-emerald-500 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div class="flex items-start justify-between gap-2">
               <div>
-                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">PPPK Aktif</p>
-                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{(stats.summary.aktif || 0).toLocaleString()}</h3>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider leading-snug">
+                  PPPK <br />Aktif
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">{(stats.summary.aktif || 0).toLocaleString()}</h3>
               </div>
-              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs">
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs shrink-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -102,13 +106,15 @@
           </div>
 
           <!-- Card 3: P3K Paruh Waktu -->
-          <div class="card p-5 sm:p-6 border-l-4 border-violet-500 bg-white shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
+          <div class="card p-5 sm:p-6 border-l-4 border-violet-500 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div class="flex items-start justify-between gap-2">
               <div>
-                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">P3K Paruh Waktu</p>
-                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{(stats.summary.paruhWaktu || 0).toLocaleString()}</h3>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider leading-snug">
+                  P3K <br />Paruh Waktu
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">{(stats.summary.paruhWaktu || 0).toLocaleString()}</h3>
               </div>
-              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shadow-xs">
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shadow-xs shrink-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -123,13 +129,15 @@
           </div>
 
           <!-- Card 4: Sudah Pensiun -->
-          <div class="card p-5 sm:p-6 border-l-4 border-amber-500 bg-white shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
+          <div class="card p-5 sm:p-6 border-l-4 border-amber-500 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div class="flex items-start justify-between gap-2">
               <div>
-                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">Sudah Pensiun</p>
-                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{(stats.summary.pensiun || 0).toLocaleString()}</h3>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider leading-snug">
+                  Sudah <br />Pensiun
+                </p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">{(stats.summary.pensiun || 0).toLocaleString()}</h3>
               </div>
-              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-xs">
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-xs shrink-0">
                 <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                 </svg>
