@@ -292,7 +292,7 @@
       </div>
 
       <!-- Desktop Navigation -->
-      <nav class="hidden lg:flex items-center gap-1">
+      <nav class="hidden lg:flex items-center gap-1 xl:gap-1.5 shrink-0">
         {#if canAccess('dashboard')}
           <a
             href="/"
@@ -1378,7 +1378,7 @@
                   >
                 {/if}
               </div>
-              <span class="text-sm font-medium text-slate-700"
+              <span class="text-sm font-medium text-slate-700 whitespace-nowrap"
                 >{$authStore.user?.namaLengkap ||
                   $authStore.user?.username}</span
               >

@@ -47,7 +47,7 @@
   }
 
   .nav-link {
-    @apply text-sm font-medium transition-all duration-200 px-3 py-2 rounded-lg;
+    @apply text-sm font-medium transition-all duration-200 px-3 py-2 rounded-lg whitespace-nowrap shrink-0 select-none;
   }
 
   .nav-link-active {
