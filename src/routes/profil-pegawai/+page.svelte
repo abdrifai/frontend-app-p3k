@@ -7,6 +7,7 @@
   import { addToast } from "$lib/toastStore";
 
   // --- State ---
+  let isParuhWaktu = false; // Toggle P3K Paruh Waktu
   let searchInput = "";
   let searchLoading = false;
   let searchSuggestions = [];
@@ -75,6 +76,12 @@
       return;
     }
 
+    // Check query param 'type'
+    const urlType = $page.url.searchParams.get("type");
+    if (urlType === "paruh-waktu" || urlType === "paruh_waktu") {
+      isParuhWaktu = true;
+    }
+
     // Load recent searches from localStorage if available
     try {
       const stored = localStorage.getItem("recent_p3k_searches");
@@ -93,6 +100,26 @@
       await fetchProfile(selectedNip);
     }
   });
+
+  function toggleParuhWaktu(val) {
+    if (isParuhWaktu === val) return;
+    isParuhWaktu = val;
+    searchSuggestions = [];
+    showSuggestions = false;
+    
+    // Update URL param 'type'
+    const url = new URL(window.location.href);
+    if (isParuhWaktu) {
+      url.searchParams.set("type", "paruh-waktu");
+    } else {
+      url.searchParams.delete("type");
+    }
+    window.history.replaceState({}, "", url.toString());
+
+    if (searchInput.trim()) {
+      handleSearchInput();
+    }
+  }
 
   // Handle Search Input Live Debounce
   function handleSearchInput() {
@@ -118,7 +145,11 @@
       });
       if (q) params.set("search", q);
 
-      const res = await apiRequest(`/api/v1/data-p3k?${params.toString()}`);
+      const endpoint = isParuhWaktu
+        ? `/api/v1/p3k-paruh-waktu/master?${params.toString()}`
+        : `/api/v1/data-p3k?${params.toString()}`;
+
+      const res = await apiRequest(endpoint);
       if (res && res.success) {
         searchSuggestions = res.data || [];
         showSuggestions = true;
@@ -145,6 +176,11 @@
     // Update URL without reload
     const url = new URL(window.location.href);
     url.searchParams.set("nip", emp.nipBaru);
+    if (isParuhWaktu) {
+      url.searchParams.set("type", "paruh-waktu");
+    } else {
+      url.searchParams.delete("type");
+    }
     window.history.replaceState({}, "", url.toString());
 
     await fetchProfile(emp.nipBaru);
@@ -188,6 +224,7 @@
         gelarBelakang: emp.gelarBelakang,
         jabatanNama: emp.jabatanNama,
         unorNama: emp.unorInduk?.nama || emp.unorNama,
+        isParuhWaktu: Boolean(isParuhWaktu || emp.isParuhWaktu)
       };
       recentSearches = [item, ...recentSearches.filter((r) => r.nipBaru !== emp.nipBaru)].slice(0, 5);
       localStorage.setItem("recent_p3k_searches", JSON.stringify(recentSearches));
@@ -203,27 +240,53 @@
     notFound = false;
     notFoundQuery = nip;
     try {
-      const res = await apiRequest(`/api/v1/data-p3k/${encodeURIComponent(nip)}`);
-      if (res && res.success && res.data) {
-        profile = res.data;
-        notFound = false;
-      } else {
-        // Fallback: search query
-        const searchRes = await apiRequest(`/api/v1/data-p3k?search=${encodeURIComponent(nip)}&limit=1`);
-        if (searchRes && searchRes.success && searchRes.data?.length > 0) {
-          const matched = searchRes.data[0];
-          const fullRes = await apiRequest(`/api/v1/data-p3k/${encodeURIComponent(matched.nipBaru)}`);
-          if (fullRes && fullRes.success && fullRes.data) {
-            profile = fullRes.data;
-            selectedNip = matched.nipBaru;
-          } else {
-            profile = matched;
-          }
+      if (isParuhWaktu) {
+        const res = await apiRequest(`/api/v1/p3k-paruh-waktu/master/${encodeURIComponent(nip)}`);
+        if (res && res.success && res.data) {
+          profile = { ...res.data, isParuhWaktu: true };
           notFound = false;
         } else {
-          profile = null;
-          notFound = true;
-          addToast("Data Pegawai tidak ditemukan", "warning");
+          // Fallback: search query
+          const searchRes = await apiRequest(`/api/v1/p3k-paruh-waktu/master?search=${encodeURIComponent(nip)}&limit=1`);
+          if (searchRes && searchRes.success && searchRes.data?.length > 0) {
+            const matched = searchRes.data[0];
+            const fullRes = await apiRequest(`/api/v1/p3k-paruh-waktu/master/${encodeURIComponent(matched.nipBaru)}`);
+            if (fullRes && fullRes.success && fullRes.data) {
+              profile = { ...fullRes.data, isParuhWaktu: true };
+              selectedNip = matched.nipBaru;
+            } else {
+              profile = { ...matched, isParuhWaktu: true };
+            }
+            notFound = false;
+          } else {
+            profile = null;
+            notFound = true;
+            addToast("Data Pegawai P3K Paruh Waktu tidak ditemukan", "warning");
+          }
+        }
+      } else {
+        const res = await apiRequest(`/api/v1/data-p3k/${encodeURIComponent(nip)}`);
+        if (res && res.success && res.data) {
+          profile = res.data;
+          notFound = false;
+        } else {
+          // Fallback: search query
+          const searchRes = await apiRequest(`/api/v1/data-p3k?search=${encodeURIComponent(nip)}&limit=1`);
+          if (searchRes && searchRes.success && searchRes.data?.length > 0) {
+            const matched = searchRes.data[0];
+            const fullRes = await apiRequest(`/api/v1/data-p3k/${encodeURIComponent(matched.nipBaru)}`);
+            if (fullRes && fullRes.success && fullRes.data) {
+              profile = fullRes.data;
+              selectedNip = matched.nipBaru;
+            } else {
+              profile = matched;
+            }
+            notFound = false;
+          } else {
+            profile = null;
+            notFound = true;
+            addToast("Data Pegawai tidak ditemukan", "warning");
+          }
         }
       }
     } catch (err) {
@@ -430,23 +493,55 @@
 
   <!-- Search Card & Autocomplete -->
   <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/80 shadow-sm space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <div>
-        <h2 class="text-sm font-bold text-slate-800">Pencarian Pegawai</h2>
-        <p class="text-xs text-slate-500">Ketik NIP Baru atau Nama lengkap untuk menampilkan data profil</p>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-bold text-slate-800">Pencarian Pegawai</h2>
+          {#if isParuhWaktu}
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-violet-100 text-violet-800 border border-violet-200">
+              Mode: Paruh Waktu
+            </span>
+          {/if}
+        </div>
+        <p class="text-xs text-slate-500">
+          {isParuhWaktu ? 'Cari data pegawai P3K Paruh Waktu berdasarkan NIP atau Nama' : 'Ketik NIP Baru atau Nama lengkap untuk menampilkan data profil'}
+        </p>
       </div>
-      {#if profile}
-        <button
-          type="button"
-          on:click={clearSearch}
-          class="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 self-start sm:self-auto"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-          Reset Pencarian
-        </button>
-      {/if}
+
+      <!-- Segmented Toggle: P3K Penuh Waktu vs P3K Paruh Waktu -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="inline-flex p-1 bg-slate-100/90 rounded-2xl border border-slate-200 shadow-inner">
+          <button
+            type="button"
+            on:click={() => toggleParuhWaktu(false)}
+            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 {!isParuhWaktu ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'}"
+          >
+            <span class="w-2 h-2 rounded-full {!isParuhWaktu ? 'bg-blue-600' : 'bg-slate-300'}"></span>
+            P3K Penuh Waktu
+          </button>
+          <button
+            type="button"
+            on:click={() => toggleParuhWaktu(true)}
+            class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 {isParuhWaktu ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20' : 'text-slate-500 hover:text-slate-800'}"
+          >
+            <span class="w-2 h-2 rounded-full {isParuhWaktu ? 'bg-white' : 'bg-slate-300'}"></span>
+            P3K Paruh Waktu
+          </button>
+        </div>
+
+        {#if profile}
+          <button
+            type="button"
+            on:click={clearSearch}
+            class="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Reset
+          </button>
+        {/if}
+      </div>
     </div>
 
     <div class="relative" bind:this={searchContainerRef}>
@@ -457,8 +552,8 @@
             bind:value={searchInput}
             on:input={handleSearchInput}
             on:focus={() => { if (searchInput.trim() && searchSuggestions.length > 0) showSuggestions = true; }}
-            placeholder="Cari NIP Baru atau Nama Pegawai..."
-            class="w-full text-sm pl-11 pr-10 py-3 sm:py-3.5 bg-slate-50/80 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-medium text-slate-800 shadow-inner"
+            placeholder={isParuhWaktu ? "Cari NIP atau Nama Pegawai P3K Paruh Waktu..." : "Cari NIP Baru atau Nama Pegawai P3K..."}
+            class="w-full text-sm pl-11 pr-10 py-3 sm:py-3.5 bg-slate-50/80 border {isParuhWaktu ? 'border-violet-300 focus:ring-violet-500 focus:border-violet-500' : 'border-slate-200 focus:ring-indigo-500 focus:border-indigo-500'} rounded-2xl focus:bg-white focus:ring-2 outline-none transition-all font-medium text-slate-800 shadow-inner"
             autocomplete="off"
           />
           <div class="absolute left-4 top-3.5 text-slate-400 pointer-events-none">
@@ -539,11 +634,18 @@
                     {getAvatarInitial(emp)}
                   </div>
                   <div class="min-w-0 space-y-1">
-                    <!-- Baris 1 (Atas): Nama (NIP) -->
-                    <p class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors leading-tight truncate">
-                      {getNamaLengkap(emp)}
-                      <span class="text-xs font-mono font-bold text-slate-500 ml-1">({emp.nipBaru})</span>
-                    </p>
+                    <!-- Baris 1 (Atas): Nama (NIP) + Type -->
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <p class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors leading-tight truncate">
+                        {getNamaLengkap(emp)}
+                        <span class="text-xs font-mono font-bold text-slate-500 ml-1">({emp.nipBaru})</span>
+                      </p>
+                      {#if isParuhWaktu || emp.isParuhWaktu}
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-100 text-violet-800 border border-violet-200">
+                          Paruh Waktu
+                        </span>
+                      {/if}
+                    </div>
 
                     <!-- Baris 2 (Bawahnya): Jabatan -->
                     <p class="text-xs text-slate-600 font-medium flex items-center gap-1.5 truncate">
@@ -641,9 +743,16 @@
             <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide {profile.statusPensiun === 'PENSIUN' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
               {profile.statusPensiun || "AKTIF"}
             </span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
-              {profile.jenisPegawaiNama || "PPPK"}
-            </span>
+            {#if profile.isParuhWaktu}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wide bg-violet-100 text-violet-800 border border-violet-200 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-violet-600"></span>
+                P3K Paruh Waktu
+              </span>
+            {:else}
+              <span class="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-200">
+                {profile.jenisPegawaiNama || "PPPK"}
+              </span>
+            {/if}
           </div>
 
           <!-- Baris 2: Jabatan -->
@@ -1288,9 +1397,33 @@
       <div class="space-y-1.5">
         <h3 class="text-lg font-bold text-slate-800">Cari dan Buka Profil Pegawai</h3>
         <p class="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
-          Gunakan kolom pencarian di atas untuk memasukkan NIP Baru atau Nama Pegawai. Anda dapat melihat riwayat lengkap pegawai dari data utama hingga SK pengangkatan.
+          Gunakan kolom pencarian di atas untuk memasukkan NIP Baru atau Nama Pegawai ({isParuhWaktu ? 'Mode P3K Paruh Waktu' : 'Mode P3K Penuh Waktu'}). Anda dapat melihat biodata lengkap pegawai.
         </p>
       </div>
+
+      {#if recentSearches && recentSearches.length > 0}
+        <div class="pt-4 border-t border-slate-100 text-left space-y-2">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pencarian Terakhir</p>
+          <div class="flex flex-wrap gap-2">
+            {#each recentSearches as item}
+              <button
+                type="button"
+                on:click={() => {
+                  toggleParuhWaktu(Boolean(item.isParuhWaktu));
+                  selectEmployee(item);
+                }}
+                class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition-all active:scale-95"
+              >
+                <span>{item.nama}</span>
+                <span class="text-[10px] text-slate-400 font-mono">({item.nipBaru})</span>
+                {#if item.isParuhWaktu}
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-100 text-violet-700">Paruh Waktu</span>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
