@@ -1268,6 +1268,25 @@
                         </svg>
                       </div>
                       {#if settingCollapseSystem}
+                        {#if canAccessAny(['setting-manajemen-user', 'setting-user-online', 'admin'])}
+                          <a href="/setting/user-online"
+                            class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/user-online') || isActive('/monitoring-user') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                            onclick={() => (settingMenuOpen = false)}>
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                              <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z"/>
+                              </svg>
+                            </div>
+                            <div>
+                              <div class="flex items-center gap-1.5">
+                                <p class="font-medium leading-tight">User Online</p>
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                              </div>
+                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Monitoring pengguna aktif</p>
+                            </div>
+                          </a>
+                        {/if}
                         {#if canAccess('setting-manajemen-user')}
                           <a href="/manajemen-user"
                             class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/manajemen-user') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
@@ -2509,6 +2528,38 @@
                     >
                       Sistem
                     </p>
+                    {#if canAccessAny(['setting-manajemen-user', 'setting-user-online', 'admin'])}
+                      <a
+                        href="/setting/user-online"
+                        onclick={closeMobile}
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                          '/setting/user-online',
+                        ) || isActive('/monitoring-user')
+                          ? 'text-blue-700 bg-blue-50 font-semibold'
+                          : 'text-slate-600 hover:bg-slate-50'}"
+                      >
+                        <div
+                          class="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center shrink-0"
+                        >
+                          <svg
+                            class="w-3.5 h-3.5 text-emerald-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            ><path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z"
+                            /></svg
+                          >
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <span>User Online</span>
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        </div>
+                      </a>
+                    {/if}
                     {#if canAccess('setting-manajemen-user')}
                       <a
                         href="/manajemen-user"

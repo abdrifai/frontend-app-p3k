@@ -8,7 +8,22 @@
   import Navbar from "$lib/components/Navbar.svelte";
   import { loadMenuPermissions } from "$lib/menuStore";
 
+  import { apiRequest } from "$lib/api";
+
   let { children } = $props();
+
+  // Heartbeat tracking for online monitoring
+  let heartbeatTimer = null;
+
+  const sendHeartbeat = async () => {
+    if ($authStore.isAuthenticated && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      try {
+        await apiRequest('/api/users/heartbeat', 'POST');
+      } catch (e) {
+        // silent fail
+      }
+    }
+  };
 
   // Global auth check for protected routes & menu permission loader
   $effect(() => {
@@ -20,9 +35,27 @@
       goto("/login");
     } else if ($authStore.isAuthenticated) {
       loadMenuPermissions();
+      sendHeartbeat();
+      if (!heartbeatTimer) {
+        heartbeatTimer = setInterval(sendHeartbeat, 45000); // Heartbeat every 45s
+      }
+    } else {
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
     }
+
+    return () => {
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+    };
   });
 </script>
+
+<svelte:window onfocus={sendHeartbeat} />
 
 <svelte:head>
   <link rel="icon" href={favicon} />
