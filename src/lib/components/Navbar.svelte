@@ -276,14 +276,14 @@
       <div class="flex-shrink-0">
         <a href="/" class="flex items-center gap-3 group" onclick={closeMobile}>
           <div
-            class="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-blue-600/20 group-hover:shadow-blue-600/30 transition-all group-hover:scale-105 shrink-0 bg-slate-900 border border-slate-700/50"
+            class="w-9 h-10 overflow-hidden transition-all group-hover:scale-105 shrink-0 flex items-center justify-center"
           >
-            <img src="/logo.svg" alt="SIPPPK Logo" class="w-full h-full object-cover" />
+            <img src="/logo-touna.png" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
           </div>
           <div class="hidden sm:block">
             <p class="text-sm font-bold text-slate-800 leading-tight">SIPPPK</p>
             <p class="text-[10px] text-slate-400 leading-tight">
-              Pegawai Pemerintah dengan Perjanjian Kerja
+              Kabupaten Tojo Una-Una
             </p>
           </div>
         </a>

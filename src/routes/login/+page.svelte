@@ -48,12 +48,12 @@
 
       <div class="text-center mb-8">
         <div
-          class="w-16 h-16 mx-auto rounded-2xl overflow-hidden shadow-xl shadow-blue-500/20 mb-4 bg-slate-900 border border-slate-700/50"
+          class="w-20 h-24 mx-auto mb-3 flex items-center justify-center filter drop-shadow-md"
         >
-          <img src="/logo.svg" alt="Logo SIPPPK" class="w-full h-full object-cover" />
+          <img src="/logo-touna.png" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
         </div>
         <h2 class="text-2xl font-bold text-slate-800">Masuk ke SIPPPK</h2>
-        <p class="text-xs text-slate-500 mt-1">Sistem Informasi Pegawai Pemerintah dengan Perjanjian Kerja</p>
+        <p class="text-xs text-slate-500 mt-1">BKPSDM Kabupaten Tojo Una-Una</p>
       </div>
 
       <form onsubmit={handleLogin} class="space-y-5">

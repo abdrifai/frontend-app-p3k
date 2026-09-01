@@ -45,12 +45,12 @@
 
       <div class="text-center mb-8">
         <div
-          class="w-14 h-14 mx-auto rounded-2xl overflow-hidden shadow-xl shadow-blue-500/20 mb-4 bg-slate-900 border border-slate-700/50"
+          class="w-16 h-20 mx-auto mb-3 flex items-center justify-center filter drop-shadow-md"
         >
-          <img src="/logo.svg" alt="Logo SIPPPK" class="w-full h-full object-cover" />
+          <img src="/logo-touna.png" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
         </div>
         <h2 class="text-2xl font-bold text-slate-800">Lupa Password</h2>
-        <p class="mt-2 text-sm text-slate-500">Masukkan email yang terdaftar untuk menerima tautan reset password SIPPPK.</p>
+        <p class="mt-2 text-sm text-slate-500">Masukkan email yang terdaftar untuk menerima tautan reset password akun SIPPPK.</p>
       </div>
 
       <form onsubmit={handleForgotPassword} class="space-y-5">
