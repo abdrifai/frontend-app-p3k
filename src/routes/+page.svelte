@@ -58,61 +58,92 @@
 
       <!-- Data Summary Metrics -->
       {#if !loading && stats?.summary}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div class="card p-6 border-l-4 border-blue-500 bg-white shadow-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <!-- Card 1: Total Pegawai (P3K Aktif + P3K Paruh Waktu) -->
+          <div class="card p-5 sm:p-6 border-l-4 border-blue-500 bg-white shadow-sm hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Pegawai</p>
-                <h3 class="text-2xl font-bold text-slate-800 mt-1">{stats.summary.total.toLocaleString()}</h3>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Pegawai</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">
+                  {((stats.summary.aktif || 0) + (stats.summary.paruhWaktu || 0)).toLocaleString()}
+                </h3>
               </div>
-              <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
             </div>
-            <div class="mt-4 flex items-center text-xs text-slate-400">
-              <span class="font-medium">Keseluruhan Data</span>
+            <div class="mt-3.5 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>P3K Aktif + Paruh Waktu</span>
+              <span class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">Total</span>
             </div>
           </div>
 
-          <div class="card p-6 border-l-4 border-emerald-500 bg-white shadow-sm">
+          <!-- Card 2: PPPK Aktif -->
+          <div class="card p-5 sm:p-6 border-l-4 border-emerald-500 bg-white shadow-sm hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Pegawai Aktif</p>
-                <h3 class="text-2xl font-bold text-slate-800 mt-1">{stats.summary.aktif.toLocaleString()}</h3>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">PPPK Aktif</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{(stats.summary.aktif || 0).toLocaleString()}</h3>
               </div>
-              <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                <svg class="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-            <div class="mt-4 flex items-center text-xs text-slate-400">
-              <span class="font-medium">{((stats.summary.aktif / stats.summary.total) * 100 || 0).toFixed(1)}% dari total</span>
+            <div class="mt-3.5 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Penuh Waktu</span>
+              <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                {(((stats.summary.aktif || 0) / ((stats.summary.aktif || 0) + (stats.summary.paruhWaktu || 0) || 1)) * 100).toFixed(1)}%
+              </span>
             </div>
           </div>
 
-          <div class="card p-6 border-l-4 border-amber-500 bg-white shadow-sm">
+          <!-- Card 3: P3K Paruh Waktu -->
+          <div class="card p-5 sm:p-6 border-l-4 border-violet-500 bg-white shadow-sm hover:shadow-md transition-shadow">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Sudah Pensiun</p>
-                <h3 class="text-2xl font-bold text-slate-800 mt-1">{stats.summary.pensiun.toLocaleString()}</h3>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">P3K Paruh Waktu</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{(stats.summary.paruhWaktu || 0).toLocaleString()}</h3>
               </div>
-              <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                <svg class="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shadow-xs">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-            <div class="mt-4 flex items-center text-xs text-slate-400">
-              <span class="font-medium">{((stats.summary.pensiun / stats.summary.total) * 100 || 0).toFixed(1)}% dari total</span>
+            <div class="mt-3.5 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Paruh Waktu</span>
+              <span class="text-[11px] font-bold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-md">
+                {(((stats.summary.paruhWaktu || 0) / ((stats.summary.aktif || 0) + (stats.summary.paruhWaktu || 0) || 1)) * 100).toFixed(1)}%
+              </span>
+            </div>
+          </div>
+
+          <!-- Card 4: Sudah Pensiun -->
+          <div class="card p-5 sm:p-6 border-l-4 border-amber-500 bg-white shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">Sudah Pensiun</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">{(stats.summary.pensiun || 0).toLocaleString()}</h3>
+              </div>
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-xs">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </div>
+            </div>
+            <div class="mt-3.5 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Status Pensiun</span>
+              <span class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Arsip</span>
             </div>
           </div>
         </div>
       {:else if loading}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-pulse">
-          {#each Array(3) as _}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-pulse">
+          {#each Array(4) as _}
             <div class="card p-6 h-32 bg-slate-100/50"></div>
           {/each}
         </div>
