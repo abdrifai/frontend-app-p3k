@@ -2,9 +2,8 @@
   import { onMount, onDestroy } from "svelte";
   import { goto } from "$app/navigation";
   import { authStore } from "$lib/store";
-  import { apiRequest } from "$lib/api";
+  import { apiRequest, API_BASE_URL } from "$lib/api";
   import { addToast } from "$lib/toastStore";
-  import { API_BASE_URL } from "$lib/config";
 
   // --- State ---
   let summary = {
