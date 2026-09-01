@@ -344,7 +344,7 @@
           <thead>
             <tr class="bg-slate-50 border-b border-slate-200">
               <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-10">No</th>
-              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[150px]">NIP</th>
+              <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap min-w-[180px] w-48">NIP</th>
               <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[160px]">Nama</th>
               <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[180px]">Nama Jabatan</th>
               <th class="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide min-w-[90px]">Gol/Ruang</th>
@@ -356,9 +356,9 @@
           <tbody class="divide-y divide-slate-100">
             {#each records as rec, i}
               <tr class="hover:bg-slate-50/60 transition-colors">
-                <td class="px-3 sm:px-4 py-3 text-slate-400 text-xs">{(meta.page - 1) * meta.limit + i + 1}</td>
-                <td class="px-3 sm:px-4 py-3">
-                  <span class="font-mono text-xs text-slate-600 break-all">{rec.nipBaru || '-'}</span>
+                <td class="px-3 sm:px-4 py-3 text-slate-400 text-xs">{ (meta.page - 1) * meta.limit + i + 1 }</td>
+                <td class="px-3 sm:px-4 py-3 whitespace-nowrap">
+                  <span class="font-mono text-xs font-medium text-slate-700 whitespace-nowrap select-all">{rec.nipBaru || '-'}</span>
                 </td>
                 <td class="px-3 sm:px-4 py-3">
                   <p class="font-medium text-slate-800 leading-tight break-words">{rec.nama || '-'}</p>
