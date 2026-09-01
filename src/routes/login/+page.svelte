@@ -48,9 +48,9 @@
 
       <div class="text-center mb-8">
         <div
-          class="w-20 h-24 mx-auto mb-3 flex items-center justify-center filter drop-shadow-md"
+          class="w-24 h-24 mx-auto mb-3 flex items-center justify-center filter drop-shadow-md transition-transform hover:scale-105"
         >
-          <img src="/logo-touna.png" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
+          <img src="/logo.svg" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
         </div>
         <h2 class="text-2xl font-bold text-slate-800">Masuk ke SIPPPK</h2>
         <p class="text-xs text-slate-500 mt-1">BKPSDM Kabupaten Tojo Una-Una</p>

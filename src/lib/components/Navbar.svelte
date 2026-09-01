@@ -276,9 +276,9 @@
       <div class="flex-shrink-0">
         <a href="/" class="flex items-center gap-3 group" onclick={closeMobile}>
           <div
-            class="w-9 h-10 overflow-hidden transition-all group-hover:scale-105 shrink-0 flex items-center justify-center"
+            class="w-10 h-10 rounded-full overflow-hidden transition-all group-hover:scale-105 shrink-0 flex items-center justify-center shadow-xs"
           >
-            <img src="/logo-touna.png" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
+            <img src="/logo.svg" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
           </div>
           <div class="hidden sm:block">
             <p class="text-sm font-bold text-slate-800 leading-tight">SIPPPK</p>

@@ -75,9 +75,9 @@
     >
       <div class="flex items-center gap-2">
         <div
-          class="w-5 h-6 overflow-hidden flex items-center justify-center shrink-0"
+          class="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0"
         >
-          <img src="/logo-touna.png" alt="Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
+          <img src="/logo.svg" alt="Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
         </div>
         <p class="text-sm text-slate-400">
           &copy; {new Date().getFullYear()} SIPPPK BKPSDM Kabupaten Tojo Una-Una. All rights reserved.
