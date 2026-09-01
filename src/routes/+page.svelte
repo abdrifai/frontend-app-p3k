@@ -152,7 +152,7 @@
       <!-- Quick Actions -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <a
-          href="/data-p3k"
+          href="/profil-pegawai"
           class="card group p-6 hover:shadow-md hover:border-blue-200 transition-all duration-300"
         >
           <div class="flex items-start gap-4">
@@ -164,22 +164,23 @@
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
-                ><path
+              >
+                <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                /></svg
-              >
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
             </div>
             <div>
               <h3
                 class="font-semibold text-slate-800 group-hover:text-blue-700 transition-colors"
               >
-                Data Pegawai P3K
+                Profil Pegawai
               </h3>
               <p class="mt-1 text-sm text-slate-500">
-                Lihat, cari, dan filter data pegawai PPPK.
+                Pencarian biodata, pendidikan, keluarga, kontrak, dan SK pegawai.
               </p>
             </div>
           </div>
