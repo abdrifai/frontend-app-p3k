@@ -14,9 +14,7 @@
   let records = [];
   let isLoading = false;
   let isLoadingUnor = true;
-  let searchTerm = "";
   let meta = { page: 1, limit: 50, total: 0, totalPages: 1 };
-  let filterStatus = "";
 
   $: filteredUnorList = unorSearchText
     ? unorList.filter((u) => u.nama.toLowerCase().includes(unorSearchText.toLowerCase()))
@@ -55,10 +53,13 @@
     if (!selectedUnorNama) return;
     isLoading = true;
     try {
-      const params = new URLSearchParams({ page, limit: meta.limit, unitKerja: selectedUnorNama });
-      if (searchTerm) params.append("search", searchTerm);
-      if (filterStatus) params.append("statusPensiun", filterStatus);
-      const result = await apiRequest(`/api/v1/data-p3k?${params}`, "GET");
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(meta.limit),
+        unitKerja: selectedUnorNama,
+        statusPensiun: "AKTIF"
+      });
+      const result = await apiRequest(`/api/v1/data-p3k?${params.toString()}`, "GET");
       if (result.success) {
         records = result.data;
         meta = result.meta;
@@ -79,8 +80,6 @@
     showUnorDropdown = false;
     records = [];
     meta = { page: 1, limit: 50, total: 0, totalPages: 1 };
-    searchTerm = "";
-    filterStatus = "";
     fetchData(1);
   };
 
@@ -91,8 +90,6 @@
     showUnorDropdown = false;
     records = [];
     meta = { page: 1, limit: 50, total: 0, totalPages: 1 };
-    searchTerm = "";
-    filterStatus = "";
   };
 
   const onUnorInput = () => {
@@ -163,27 +160,34 @@
   </div>
 
   <!-- Filter Panel -->
-  <div class="card p-3.5 sm:p-5 no-print min-w-0">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+  <div class="card p-4 sm:p-6 no-print min-w-0">
+    <div class="space-y-2">
       <!-- Pilih Unit Kerja (Searchable Combobox) -->
-      <div class="md:col-span-1 relative min-w-0" bind:this={unorDropdownRef}>
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-          Unit Kerja Induk <span class="text-red-400">*</span>
-        </label>
+      <div class="relative min-w-0" bind:this={unorDropdownRef}>
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <label for="unorSearchInput" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Pilih Unit Kerja Induk <span class="text-rose-500">*</span>
+          </label>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Status: Pegawai Aktif
+          </span>
+        </div>
+
         {#if isLoadingUnor}
           <div class="input-field flex items-center gap-2 text-slate-400 text-xs sm:text-sm">
             <svg class="w-4 h-4 animate-spin text-teal-500 shrink-0" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
             </svg>
-            Memuat unit kerja...
+            Memuat daftar unit kerja...
           </div>
         {:else}
           <div class="relative">
             <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 {#if selectedUnorId}
-                  <div class="w-2 h-2 rounded-full bg-teal-500"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-teal-500"></div>
                 {:else}
                   <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -192,12 +196,13 @@
               </div>
 
               <input
+                id="unorSearchInput"
                 type="text"
                 bind:value={unorSearchText}
                 oninput={onUnorInput}
                 onfocus={() => (showUnorDropdown = true)}
-                placeholder="Ketik untuk mencari unit kerja..."
-                class="input-field w-full pl-9 pr-8 text-xs sm:text-sm"
+                placeholder="Ketik untuk mencari dan memilih unit kerja induk..."
+                class="input-field w-full pl-10 pr-10 text-xs sm:text-sm py-2.5 sm:py-3 shadow-xs"
                 autocomplete="off"
               />
 
@@ -205,7 +210,7 @@
                 <button
                   type="button"
                   onclick={clearUnor}
-                  class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                   title="Hapus pilihan"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,7 +218,7 @@
                   </svg>
                 </button>
               {:else}
-                <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-400">
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -222,11 +227,11 @@
             </div>
 
             {#if showUnorDropdown}
-              <div class="absolute z-50 left-0 w-full min-w-0 sm:min-w-[480px] md:min-w-[580px] max-w-full mt-1.5 bg-white rounded-2xl shadow-2xl shadow-slate-300/80 border border-slate-200 overflow-hidden">
+              <div class="absolute z-50 left-0 w-full min-w-0 max-w-full mt-1.5 bg-white rounded-2xl shadow-2xl shadow-slate-300/80 border border-slate-200 overflow-hidden animate-scale-up">
                 <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
                   <span>Hasil Pencarian ({filteredUnorList.length} unit kerja)</span>
                   {#if unorSearchText}
-                    <span class="text-[11px] text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md font-normal truncate max-w-[160px] sm:max-w-[200px]">"{unorSearchText}"</span>
+                    <span class="text-[11px] text-teal-600 bg-teal-50 px-2 py-0.5 rounded-md font-normal truncate max-w-[200px]">"{unorSearchText}"</span>
                   {/if}
                 </div>
 
@@ -269,38 +274,7 @@
           </div>
         {/if}
       </div>
-
-      <!-- Search -->
-      <div class="min-w-0">
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Cari Nama / NIP</label>
-        <input type="text" bind:value={searchTerm} placeholder="Nama atau NIP..."
-          class="input-field w-full text-xs sm:text-sm" disabled={!selectedUnorId}
-          onkeydown={(e) => e.key === 'Enter' && handleFilter()} />
-      </div>
-
-      <!-- Filter Status -->
-      <div class="min-w-0">
-        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Status Pegawai</label>
-        <select bind:value={filterStatus} class="input-field w-full text-xs sm:text-sm"
-          disabled={!selectedUnorId} onchange={handleFilter}>
-          <option value="">Semua Status</option>
-          <option value="AKTIF">Aktif</option>
-          <option value="PENSIUN">Pensiun</option>
-        </select>
-      </div>
     </div>
-
-    {#if selectedUnorId}
-      <div class="flex justify-end mt-3 sm:mt-4">
-        <button onclick={handleFilter} class="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
-          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
-          </svg>
-          Terapkan Filter
-        </button>
-      </div>
-    {/if}
   </div>
 
   <!-- Empty State -->
