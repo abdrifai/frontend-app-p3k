@@ -238,6 +238,8 @@
   let showDetailModal = false;
   let detailStatus = ""; // "PENDING", "APPROVED", "UPLOAD_SRIKANDI", "SELESAI", "REJECTED", or "" (Semua)
   let detailSearch = "";
+  let detailUnorIndukId = null;
+  let detailUnorNama = "";
   let detailPage = 1;
   let detailLimit = 10;
   let detailLoading = false;
@@ -247,9 +249,11 @@
   // Grouping/Rekap State inside Modal
   let selectedUserId = null; // null = Rekap Mode (Grid user), 'ALL' = Semua daftar pegawai, or userId = Daftar pegawai user tersebut
 
-  function openDetailModal(status = "", initialSearch = "") {
+  function openDetailModal(status = "", initialSearch = "", unorIndukId = null, unorNama = "") {
     detailStatus = status;
     detailSearch = initialSearch;
+    detailUnorIndukId = unorIndukId;
+    detailUnorNama = unorNama;
     detailPage = 1;
     selectedUserId = null;
     showDetailModal = true;
@@ -260,6 +264,8 @@
     showDetailModal = false;
     detailRecords = [];
     selectedUserId = null;
+    detailUnorIndukId = null;
+    detailUnorNama = "";
   }
 
   async function fetchDetailUsulan(page = 1) {
@@ -271,6 +277,7 @@
         limit: "all"
       });
       if (detailStatus) queryParams.set("status", detailStatus);
+      if (detailUnorIndukId) queryParams.set("unorIndukId", detailUnorIndukId);
       if (detailSearch.trim()) queryParams.set("search", detailSearch.trim());
 
       const res = await apiRequest(`/api/v1/perpanjangan/usulan?${queryParams.toString()}`);
@@ -888,7 +895,7 @@
                       <td class="py-3.5 px-4 text-center font-semibold">
                         <button
                           type="button"
-                          on:click={() => openDetailModal('', item.unorNama)}
+                          on:click={() => openDetailModal('', '', item.unorIndukId, item.unorNama)}
                           class="text-blue-600 hover:text-blue-800 hover:underline font-bold"
                           title="Lihat seluruh usulan unit kerja ini"
                         >
@@ -899,7 +906,7 @@
                         {#if item.selesai > 0}
                           <button
                             type="button"
-                            on:click={() => openDetailModal('SELESAI', item.unorNama)}
+                            on:click={() => openDetailModal('SELESAI', '', item.unorIndukId, item.unorNama)}
                             class="px-2 py-0.5 rounded-full font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
                             title="Lihat usulan selesai unit kerja ini"
                           >
@@ -913,7 +920,7 @@
                         {#if item.srikandi > 0}
                           <button
                             type="button"
-                            on:click={() => openDetailModal('UPLOAD_SRIKANDI', item.unorNama)}
+                            on:click={() => openDetailModal('UPLOAD_SRIKANDI', '', item.unorIndukId, item.unorNama)}
                             class="px-2 py-0.5 rounded-full font-bold bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-colors"
                             title="Lihat usulan srikandi unit kerja ini"
                           >
@@ -927,7 +934,7 @@
                         {#if item.approved > 0}
                           <button
                             type="button"
-                            on:click={() => openDetailModal('APPROVED', item.unorNama)}
+                            on:click={() => openDetailModal('APPROVED', '', item.unorIndukId, item.unorNama)}
                             class="px-2 py-0.5 rounded-full font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
                             title="Lihat usulan approved unit kerja ini"
                           >
@@ -941,7 +948,7 @@
                         {#if item.pending > 0}
                           <button
                             type="button"
-                            on:click={() => openDetailModal('PENDING', item.unorNama)}
+                            on:click={() => openDetailModal('PENDING', '', item.unorIndukId, item.unorNama)}
                             class="px-2 py-0.5 rounded-full font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
                             title="Lihat usulan pending unit kerja ini"
                           >
@@ -1669,6 +1676,11 @@
                 <h3 class="text-sm sm:text-lg font-bold tracking-tight break-words">
                   Rincian Usulan PK {detailStatus ? `: ${getStatusLabel(detailStatus)}` : '(Semua Status)'}
                 </h3>
+                {#if detailUnorNama}
+                  <span class="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold bg-blue-500/30 text-blue-200 border border-blue-400/30 shrink-0">
+                    🏢 {detailUnorNama}
+                  </span>
+                {/if}
                 <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-white/20 text-white backdrop-blur-sm border border-white/10 shrink-0">
                   {detailRecords.length} Data
                 </span>
