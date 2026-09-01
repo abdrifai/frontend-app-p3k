@@ -270,8 +270,8 @@
 <header
   class="bg-white border-b border-slate-200/60 sticky top-0 z-50 shadow-sm"
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between h-16 items-center">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16 items-center gap-4">
       <!-- Logo -->
       <div class="flex-shrink-0">
         <a href="/" class="flex items-center gap-3 group" onclick={closeMobile}>
@@ -280,9 +280,9 @@
           >
             <img src="/logo.svg" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
           </div>
-          <div class="hidden sm:block">
-            <p class="text-sm font-bold text-slate-800 leading-tight">SIPPPK</p>
-            <p class="text-[10px] text-slate-400 leading-tight">
+          <div class="hidden sm:block shrink-0">
+            <p class="text-sm font-bold text-slate-800 leading-tight whitespace-nowrap">SIPPPK</p>
+            <p class="text-[10px] text-slate-400 leading-tight whitespace-nowrap">
               Kabupaten Tojo Una-Una
             </p>
           </div>
@@ -294,13 +294,13 @@
         {#if canAccess('dashboard')}
           <a
             href="/"
-            class="nav-link {isActive('/')
+            class="nav-link shrink-0 whitespace-nowrap {isActive('/')
               ? 'nav-link-active'
               : 'nav-link-inactive'}"
           >
-            <span class="flex items-center gap-1.5">
+            <span class="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
               <svg
-                class="w-4 h-4"
+                class="w-4 h-4 shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -320,7 +320,7 @@
           <!-- Dropdown: Data P3K Utama -->
           {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pensiun', 'perbedaan-data'])}
             <div
-              class="relative"
+              class="relative shrink-0"
               role="group"
               onmouseenter={openUtama}
               onmouseleave={closeUtamaDelayed}
@@ -329,13 +329,13 @@
                 type="button"
                 onfocus={openUtama}
                 onclick={() => (utamaMenuOpen = !utamaMenuOpen)}
-                class="nav-link flex items-center gap-1 {isUtamaActive()
+                class="nav-link flex items-center gap-1 shrink-0 whitespace-nowrap {isUtamaActive()
                   ? 'nav-link-active'
                   : 'nav-link-inactive'}"
               >
-                <span class="flex items-center gap-1.5">
+                <span class="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                   <svg
-                    class="w-4 h-4"
+                    class="w-4 h-4 shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -346,10 +346,10 @@
                       d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                     /></svg
                   >
-                  Data Utama
+                  <span class="whitespace-nowrap">Data Utama</span>
                 </span>
                 <svg
-                  class="w-3 h-3 transition-transform duration-200 {utamaMenuOpen
+                  class="w-3 h-3 shrink-0 transition-transform duration-200 {utamaMenuOpen
                     ? 'rotate-180'
                     : ''}"
                   fill="none"
@@ -745,7 +745,7 @@
           <!-- Dropdown: Task User -->
           {#if canAccess('task-user') && canAccessAny(['task-peremajaan-dashboard', 'task-peremajaan', 'task-usulan-pk'])}
             <div
-              class="relative"
+              class="relative shrink-0"
               role="group"
               onmouseenter={openTaskUser}
               onmouseleave={closeTaskUserDelayed}
@@ -754,13 +754,13 @@
                 type="button"
                 onfocus={openTaskUser}
                 onclick={() => (taskUserMenuOpen = !taskUserMenuOpen)}
-                class="nav-link flex items-center gap-1 {isTaskUserActive()
+                class="nav-link flex items-center gap-1 shrink-0 whitespace-nowrap {isTaskUserActive()
                   ? 'nav-link-active'
                   : 'nav-link-inactive'}"
               >
-                <span class="flex items-center gap-1.5">
+                <span class="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                   <svg
-                    class="w-4 h-4"
+                    class="w-4 h-4 shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -771,10 +771,10 @@
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
                     /></svg
                   >
-                  Task User
+                  <span class="whitespace-nowrap">Task User</span>
                 </span>
                 <svg
-                  class="w-3.5 h-3.5 transition-transform duration-200 {taskUserMenuOpen
+                  class="w-3.5 h-3.5 shrink-0 transition-transform duration-200 {taskUserMenuOpen
                     ? 'rotate-180 text-blue-600'
                     : 'text-slate-400'}"
                   fill="none"
@@ -1362,31 +1362,31 @@
 
 
       <!-- Right side -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0">
         {#if $authStore.isAuthenticated}
           <!-- Desktop: full user info -->
           <div
-            class="hidden lg:flex items-center gap-2 pl-3 border-l border-slate-200"
+            class="hidden lg:flex items-center gap-2 pl-3 border-l border-slate-200 shrink-0 whitespace-nowrap"
           >
             <a
               href="/profile"
-              class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors {isActive(
+              class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors shrink-0 whitespace-nowrap {isActive(
                 '/profile',
               )
                 ? 'bg-slate-50 shadow-sm ring-1 ring-slate-100'
                 : ''}"
             >
               <div
-                class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-sm ring-2 ring-white overflow-hidden"
+                class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-sm ring-2 ring-white overflow-hidden shrink-0"
               >
                 {#if $authStore.user?.foto}
                   <img
                     src="{API_BASE_URL}{$authStore.user.foto}"
                     alt="Avatar"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-cover shrink-0"
                   />
                 {:else}
-                  <span class="text-white text-xs font-bold uppercase"
+                  <span class="text-white text-xs font-bold uppercase shrink-0"
                     >{(
                       $authStore.user?.namaLengkap ||
                       $authStore.user?.username ||
@@ -1395,18 +1395,18 @@
                   >
                 {/if}
               </div>
-              <span class="text-sm font-medium text-slate-700 whitespace-nowrap"
+              <span class="text-sm font-medium text-slate-700 whitespace-nowrap shrink-0"
                 >{$authStore.user?.namaLengkap ||
                   $authStore.user?.username}</span
               >
             </a>
             <button
               onclick={handleLogout}
-              class="text-sm font-medium text-slate-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
+              class="text-sm font-medium text-slate-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50 shrink-0"
               title="Keluar"
             >
               <svg
-                class="w-5 h-5"
+                class="w-5 h-5 shrink-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
