@@ -5,6 +5,7 @@
     node,
     expandedNodes,
     toggleNode,
+    toggleStatus,
     openAddModal,
     openEditModal,
     confirmDelete,
@@ -29,13 +30,16 @@
   const hasChildren = $derived(node.children && node.children.length > 0);
   const isExpanded = $derived(expandedNodes.has(node.id));
   const meta = $derived(getMeta(node.jenis));
+  const isActive = $derived(node.isActive !== false);
 </script>
 
 <div class="relative select-none">
   <!-- Node Card Row -->
   <div
     class="group flex items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-xl border transition-all
-      {depth === 0
+      {!isActive
+        ? 'bg-slate-100/90 border-slate-300 opacity-75 grayscale-25'
+        : depth === 0
         ? 'bg-white border-slate-200/90 shadow-2xs hover:shadow-xs hover:border-teal-300'
         : depth === 1
         ? 'bg-slate-50/70 border-slate-200/70 hover:bg-white hover:border-teal-200'
@@ -72,7 +76,7 @@
       <!-- Title & Details -->
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-xs sm:text-sm font-bold text-slate-800 leading-snug break-words">
+          <span class="text-xs sm:text-sm font-bold {isActive ? 'text-slate-800' : 'text-slate-500 line-through decoration-slate-400'} leading-snug break-words">
             {node.nama}
           </span>
 
@@ -85,6 +89,20 @@
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 {meta.badge}">
             {meta.label}
           </span>
+
+          <!-- Status Badge (Active / Inactive) -->
+          <button
+            type="button"
+            onclick={() => toggleStatus && toggleStatus(node)}
+            class="text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all flex items-center gap-1 cursor-pointer shrink-0
+              {isActive
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                : 'bg-slate-200 text-slate-600 border-slate-300 hover:bg-slate-300'}"
+            title="Klik untuk {isActive ? 'Menonaktifkan' : 'Mengaktifkan'} unit kerja ini"
+          >
+            <span class="w-1.5 h-1.5 rounded-full {isActive ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+            {isActive ? 'Aktif' : 'Non-Aktif'}
+          </button>
         </div>
 
         <!-- Meta Subtitle -->
@@ -158,6 +176,7 @@
             node={child}
             {expandedNodes}
             {toggleNode}
+            {toggleStatus}
             {openAddModal}
             {openEditModal}
             {confirmDelete}

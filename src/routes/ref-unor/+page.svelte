@@ -15,6 +15,7 @@
   let searchTerm = $state("");
   let filterJenis = $state("");
   let filterParent = $state("");
+  let filterStatus = $state(""); // "" | "true" | "false"
   let expandedNodes = $state(new Set());
 
   let meta = $state({
@@ -36,6 +37,7 @@
     kode: "",
     parentId: "",
     jenis: "INDUK",
+    isActive: true,
     keterangan: "",
   });
 
@@ -82,6 +84,7 @@
       if (searchTerm) queryParams.append("search", searchTerm);
       if (filterJenis) queryParams.append("jenis", filterJenis);
       if (filterParent) queryParams.append("parentId", filterParent);
+      if (filterStatus) queryParams.append("isActive", filterStatus);
 
       const result = await apiRequest(`/api/v1/ref-unor?${queryParams.toString()}`, "GET");
       if (result.success) {
@@ -101,7 +104,11 @@
   const fetchTree = async () => {
     isLoadingTree = true;
     try {
-      const result = await apiRequest("/api/v1/ref-unor/tree", "GET");
+      const queryParams = new URLSearchParams();
+      if (filterStatus) queryParams.append("isActive", filterStatus);
+
+      const url = filterStatus ? `/api/v1/ref-unor/tree?${queryParams.toString()}` : "/api/v1/ref-unor/tree";
+      const result = await apiRequest(url, "GET");
       if (result.success) {
         treeData = result.data || [];
         const initialExpanded = new Set();
@@ -173,6 +180,7 @@
       kode: "",
       parentId: defaultParentId || "",
       jenis: defaultParentId ? "SUB_UNOR" : "INDUK",
+      isActive: true,
       keterangan: "",
     };
     showModal = true;
@@ -187,6 +195,7 @@
       kode: record.kode || "",
       parentId: record.parentId || "",
       jenis: record.jenis || (record.parentId ? "SUB_UNOR" : "INDUK"),
+      isActive: record.isActive !== false,
       keterangan: record.keterangan || "",
     };
     showModal = true;
@@ -201,6 +210,7 @@
       kode: "",
       parentId: "",
       jenis: "INDUK",
+      isActive: true,
       keterangan: "",
     };
   };
@@ -209,6 +219,22 @@
     selectedRecord = record;
     selectedId = record.id;
     showDeleteModal = true;
+  };
+
+  const toggleStatus = async (record) => {
+    try {
+      const nextStatus = record.isActive === false;
+      const result = await apiRequest(`/api/v1/ref-unor/${record.id}/status`, "PATCH", { isActive: nextStatus });
+      if (result.success) {
+        addToast(result.message || `Unit kerja "${record.nama}" berhasil ${nextStatus ? "diaktifkan" : "dinonaktifkan"}`, "success");
+        loadAll();
+      } else {
+        addToast(result.message || "Gagal mengubah status unit kerja", "error");
+      }
+    } catch (err) {
+      console.error("Toggle status error:", err);
+      addToast("Terjadi kesalahan sistem saat mengubah status", "error");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -228,6 +254,7 @@
         kode: formRef.kode?.trim() || null,
         parentId: formRef.parentId || null,
         jenis: formRef.jenis || (formRef.parentId ? "SUB_UNOR" : "INDUK"),
+        isActive: formRef.isActive,
         keterangan: formRef.keterangan?.trim() || null,
       };
 
@@ -304,10 +331,14 @@
   // Stats calculation
   let treeStats = $derived.by(() => {
     let subCount = 0;
+    let activeCount = 0;
+    let inactiveCount = 0;
     let pegawaiCount = 0;
     const traverse = (list, isRoot = true) => {
       list.forEach((n) => {
         if (!isRoot) subCount++;
+        if (n.isActive !== false) activeCount++;
+        else inactiveCount++;
         pegawaiCount += (n._count?.dataP3ks || 0);
         if (n.children && n.children.length > 0) {
           traverse(n.children, false);
@@ -318,6 +349,8 @@
     return {
       totalInduk: treeData.length,
       totalSubUnor: subCount,
+      activeCount,
+      inactiveCount,
       totalPegawai: pegawaiCount
     };
   });
@@ -342,7 +375,7 @@
             Referensi Unit Kerja & Hierarki Sub Unor
           </h1>
           <p class="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Kelola master struktur organisasi (Unit Kerja Induk dan Sub Unit Kerja / Bidang / Puskesmas / Sekolah).
+            Kelola master struktur organisasi (Unit Kerja Induk, Sub Unit Kerja, dan Status Keaktifan).
           </p>
         </div>
       </div>
@@ -391,7 +424,7 @@
   </div>
 
   <!-- Summary Metric Badges -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
     <div class="card p-4 border-l-4 border-teal-500 flex items-center justify-between">
       <div>
         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Unit Kerja Induk</p>
@@ -404,11 +437,26 @@
 
     <div class="card p-4 border-l-4 border-indigo-500 flex items-center justify-between">
       <div>
-        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sub Unit Kerja (Child)</p>
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sub Unit Kerja</p>
         <h4 class="text-xl sm:text-2xl font-bold text-slate-800 mt-0.5">{treeStats.totalSubUnor} Sub-Unor</h4>
       </div>
       <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
         📑
+      </div>
+    </div>
+
+    <div class="card p-4 border-l-4 border-emerald-500 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status Keaktifan</p>
+        <h4 class="text-base sm:text-lg font-bold text-slate-800 mt-0.5">
+          <span class="text-emerald-600">{treeStats.activeCount} Aktif</span>
+          {#if treeStats.inactiveCount > 0}
+            <span class="text-slate-400 font-normal text-xs"> / {treeStats.inactiveCount} Nonaktif</span>
+          {/if}
+        </h4>
+      </div>
+      <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+        🟢
       </div>
     </div>
 
@@ -426,6 +474,7 @@
   <!-- Search & Filter Bar -->
   <div class="card p-4 sm:p-5">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <!-- Search Input -->
       <div class="relative flex-1">
         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -458,6 +507,23 @@
         {/if}
       </div>
 
+      <!-- Status Filter -->
+      <div class="w-full sm:w-44">
+        <select
+          bind:value={filterStatus}
+          onchange={() => {
+            meta.page = 1;
+            fetchData();
+            fetchTree();
+          }}
+          class="input-field w-full text-xs sm:text-sm font-medium"
+        >
+          <option value="">Semua Status (Aktif & Nonaktif)</option>
+          <option value="true">🟢 Hanya Aktif</option>
+          <option value="false">⚪ Hanya Non-Aktif</option>
+        </select>
+      </div>
+
       {#if viewMode === "tree"}
         <div class="flex items-center gap-2">
           <button type="button" onclick={expandAll} class="btn-secondary !px-3 !py-2 text-xs font-semibold">
@@ -483,7 +549,7 @@
           </h2>
         </div>
         <span class="text-xs text-slate-400 font-medium hidden sm:inline">
-          💡 Gunakan tombol <strong class="text-slate-600">+ Sub</strong> untuk menambah cabang di bawah unit kerja
+          💡 Klik badge <strong>Aktif / Non-Aktif</strong> untuk toggle status keaktifan unit kerja
         </span>
       </div>
 
@@ -510,6 +576,7 @@
               node={rootNode}
               {expandedNodes}
               {toggleNode}
+              {toggleStatus}
               {openAddModal}
               {openEditModal}
               {confirmDelete}
@@ -532,6 +599,7 @@
               <th class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider min-w-[180px]">Unit Kerja Induk (Parent)</th>
               <th class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Tingkat</th>
               <th class="px-4 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider w-36">Jenis</th>
+              <th class="px-4 py-3.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-28">Status</th>
               <th class="px-4 py-3.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Sub-Unor</th>
               <th class="px-4 py-3.5 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider w-28">Pegawai P3K</th>
               <th class="px-4 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider w-28">Aksi</th>
@@ -540,7 +608,7 @@
           <tbody class="divide-y divide-slate-100">
             {#if isLoading}
               <tr>
-                <td colspan="8" class="px-6 py-16 text-center">
+                <td colspan="9" class="px-6 py-16 text-center">
                   <div class="flex flex-col items-center gap-3">
                     <div class="w-8 h-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
                     <span class="text-xs sm:text-sm text-slate-400">Memuat data tabel referensi...</span>
@@ -549,16 +617,18 @@
               </tr>
             {:else if records.length === 0}
               <tr>
-                <td colspan="8" class="px-6 py-16 text-center text-slate-400">
+                <td colspan="9" class="px-6 py-16 text-center text-slate-400">
                   Belum ada data unit kerja.
                 </td>
               </tr>
             {:else}
               {#each records as record, i}
-                <tr class="hover:bg-slate-50/70 transition-colors">
+                <tr class="hover:bg-slate-50/70 transition-colors {record.isActive === false ? 'bg-slate-50/50 opacity-75' : ''}">
                   <td class="px-4 py-3.5 text-slate-400 font-mono">{(meta.page - 1) * meta.limit + i + 1}</td>
                   <td class="px-4 py-3.5">
-                    <p class="font-bold text-slate-800 leading-snug">{record.nama}</p>
+                    <p class="font-bold {record.isActive === false ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-800'} leading-snug">
+                      {record.nama}
+                    </p>
                     {#if record.kode}
                       <span class="font-mono text-[10px] text-slate-400">{record.kode}</span>
                     {/if}
@@ -582,6 +652,20 @@
                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border {getJenisBadge(record.jenis)}">
                       {getJenisLabel(record.jenis)}
                     </span>
+                  </td>
+                  <td class="px-4 py-3.5 text-center">
+                    <button
+                      type="button"
+                      onclick={() => toggleStatus(record)}
+                      class="text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all inline-flex items-center gap-1.5 cursor-pointer
+                        {record.isActive !== false
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-slate-200 text-slate-600 border-slate-300 hover:bg-slate-300'}"
+                      title="Klik untuk {record.isActive !== false ? 'Menonaktifkan' : 'Mengaktifkan'} unit kerja ini"
+                    >
+                      <span class="w-1.5 h-1.5 rounded-full {record.isActive !== false ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+                      {record.isActive !== false ? 'Aktif' : 'Non-Aktif'}
+                    </button>
                   </td>
                   <td class="px-4 py-3.5 text-center font-bold text-slate-700">
                     {record._count?.children || 0}
@@ -741,6 +825,20 @@
                 class="input-field w-full text-xs sm:text-sm font-mono"
               />
             </div>
+          </div>
+
+          <!-- Status Keaktifan (Switch / Checkbox) -->
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <span class="block text-xs font-bold text-slate-800">Status Keaktifan Unit Kerja</span>
+              <span class="block text-[11px] text-slate-400 mt-0.5">
+                {formRef.isActive ? '🟢 Unit kerja aktif dan dapat dipilih di seluruh sistem' : '⚪ Unit kerja dinonaktifkan sementara'}
+              </span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" bind:checked={formRef.isActive} class="sr-only peer" />
+              <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+            </label>
           </div>
 
           <!-- Keterangan -->
