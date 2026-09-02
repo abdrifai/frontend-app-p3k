@@ -323,9 +323,9 @@
         ></div>
         <div class="relative space-y-6">
           <div
-            class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25"
+            class="w-24 h-24 mx-auto mb-3 flex items-center justify-center filter drop-shadow-md transition-transform hover:scale-105"
           >
-            <span class="text-white font-bold text-lg">P3</span>
+            <img src="/logo.svg" alt="Lambang Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
           </div>
           <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-slate-800">
