@@ -80,11 +80,37 @@
   // Array for manual mode [{userId, amount}]
   let manualAssignments = [];
 
+  // Search & Assign By Pegawai states
+  let searchPegawaiQuery = "";
+  let searchPegawaiStatus = "ALL"; // 'ALL', 'UNASSIGNED', 'ASSIGNED', 'COMPLETED'
+  let searchPegawaiUnorId = "";
+  let searchPegawaiKegiatan = "";
+  let isSearchingPegawai = false;
+  let pegawaiList = [];
+  let pegawaiMeta = { page: 1, limit: 10, total: 0, totalPages: 1 };
+  let selectedPegawaiIds = [];
+  let targetUserIdForPegawai = "";
+  let targetKegiatanForPegawai = "";
+  let isSubmittingPegawaiAssign = false;
+  let refUnorList = [];
+  let searchDebounce;
+
+  // Single Quick Assign Modal state
+  let showQuickAssignModal = false;
+  let quickAssignTargetPegawai = null;
+  let quickAssignUserId = "";
+  let quickAssignKegiatan = "";
+
+  $: selectedPegawaiCount = selectedPegawaiIds.length;
+  $: isAllPegawaiPageSelected =
+    pegawaiList.length > 0 &&
+    pegawaiList.every((p) => selectedPegawaiIds.includes(p.id));
+
   // Field Builder states
   let fieldConfigs = [];
   let isLoadingFields = true;
   let isSavingFields = false;
-  let activeTab = "assignment"; // 'assignment' or 'fields'
+  let activeTab = "assignment"; // 'assignment' or 'pegawai' or 'fields'
 
   onMount(() => {
     if (!$authStore.isAuthenticated || !isUserAdmin($authStore.user)) {
@@ -97,7 +123,164 @@
     fetchFieldConfigs();
     fetchUnassignedStats(kegiatan);
     fetchKegiatanList();
+    fetchRefUnorList();
   });
+
+  const fetchRefUnorList = async () => {
+    try {
+      const r = await apiRequest("/api/v1/ref-unor?limit=200", "GET");
+      if (r.success) {
+        refUnorList = r.data || [];
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSearchPegawai = async (page = 1) => {
+    isSearchingPegawai = true;
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(pegawaiMeta.limit),
+        search: searchPegawaiQuery,
+        statusPenugasan: searchPegawaiStatus,
+        kegiatan: searchPegawaiKegiatan,
+        unorIndukId: searchPegawaiUnorId
+      });
+      const result = await apiRequest(`/api/tasks/pegawai-list?${params.toString()}`);
+      if (result.success) {
+        pegawaiList = result.data || [];
+        pegawaiMeta = result.meta || pegawaiMeta;
+      } else {
+        addToast(result.message || "Gagal mencari data pegawai", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("Terjadi kesalahan saat memuat data pegawai", "error");
+    } finally {
+      isSearchingPegawai = false;
+    }
+  };
+
+  const onSearchPegawaiInput = () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+      handleSearchPegawai(1);
+    }, 400);
+  };
+
+  const togglePegawaiSelection = (id) => {
+    if (selectedPegawaiIds.includes(id)) {
+      selectedPegawaiIds = selectedPegawaiIds.filter((item) => item !== id);
+    } else {
+      selectedPegawaiIds = [...selectedPegawaiIds, id];
+    }
+  };
+
+  const toggleAllPegawaiPage = () => {
+    if (isAllPegawaiPageSelected) {
+      const pageIds = new Set(pegawaiList.map((p) => p.id));
+      selectedPegawaiIds = selectedPegawaiIds.filter((id) => !pageIds.has(id));
+    } else {
+      const newIds = new Set([...selectedPegawaiIds, ...pegawaiList.map((p) => p.id)]);
+      selectedPegawaiIds = Array.from(newIds);
+    }
+  };
+
+  const clearPegawaiSelection = () => {
+    selectedPegawaiIds = [];
+  };
+
+  const handleAssignByPegawai = async () => {
+    if (selectedPegawaiIds.length === 0) {
+      addToast("Pilih minimal 1 pegawai", "warning");
+      return;
+    }
+    if (!targetUserIdForPegawai) {
+      addToast("Pilih user verifikator tujuan penugasan", "warning");
+      return;
+    }
+
+    isSubmittingPegawaiAssign = true;
+    try {
+      const result = await apiRequest("/api/tasks/assign/by-pegawai", "POST", {
+        dataP3kIds: selectedPegawaiIds,
+        userId: targetUserIdForPegawai,
+        kegiatan: targetKegiatanForPegawai || kegiatan || "Umum"
+      });
+      if (result.success) {
+        addToast(result.message, "success");
+        selectedPegawaiIds = [];
+        handleSearchPegawai(pegawaiMeta.page);
+        fetchReports();
+        fetchUnassignedStats();
+      } else {
+        addToast(result.message || "Gagal menugaskan pegawai", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("Terjadi kesalahan sistem saat penugasan", "error");
+    } finally {
+      isSubmittingPegawaiAssign = false;
+    }
+  };
+
+  const openQuickAssign = (p) => {
+    quickAssignTargetPegawai = p;
+    quickAssignUserId = p.tasksPeremajaan?.[0]?.assignedToUserId || "";
+    quickAssignKegiatan = p.tasksPeremajaan?.[0]?.kegiatan || kegiatan || "Umum";
+    showQuickAssignModal = true;
+  };
+
+  const handleQuickAssignSubmit = async () => {
+    if (!quickAssignTargetPegawai || !quickAssignUserId) {
+      addToast("Pilih user tujuan penugasan", "warning");
+      return;
+    }
+
+    try {
+      const result = await apiRequest("/api/tasks/assign/by-pegawai", "POST", {
+        dataP3kIds: [quickAssignTargetPegawai.id],
+        userId: quickAssignUserId,
+        kegiatan: quickAssignKegiatan || "Umum"
+      });
+      if (result.success) {
+        addToast(result.message, "success");
+        showQuickAssignModal = false;
+        quickAssignTargetPegawai = null;
+        handleSearchPegawai(pegawaiMeta.page);
+        fetchReports();
+        fetchUnassignedStats();
+      } else {
+        addToast(result.message || "Gagal menugaskan pegawai", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("Terjadi kesalahan sistem saat penugasan", "error");
+    }
+  };
+
+  const handleUnassignSinglePegawai = async (p) => {
+    if (!confirm(`Tarik penugasan dari ${p.nama}?`)) return;
+
+    try {
+      const result = await apiRequest("/api/tasks/unassign-pegawai", "POST", {
+        dataP3kIds: [p.id]
+      });
+      if (result.success) {
+        addToast(result.message, "success");
+        handleSearchPegawai(pegawaiMeta.page);
+        fetchReports();
+        fetchUnassignedStats();
+      } else {
+        addToast(result.message || "Gagal menarik tugas", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("Terjadi kesalahan sistem", "error");
+    }
+  };
 
   const fetchUnassignedStats = async (kegiatanLabel = kegiatan) => {
     try {
@@ -361,7 +544,7 @@
   </div>
 
   <!-- Main Tabs -->
-  <div class="flex p-1 bg-slate-100 rounded-xl w-fit">
+  <div class="flex p-1 bg-slate-100 rounded-xl w-fit flex-wrap gap-1">
     <button
       type="button"
       class="px-5 py-2 text-sm font-semibold rounded-lg transition-all {activeTab ===
@@ -383,7 +566,40 @@
             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
           /></svg
         >
-        Pembagian Tugas
+        Pembagian Kuota (Auto/Manual)
+      </span>
+    </button>
+    <button
+      type="button"
+      class="px-5 py-2 text-sm font-semibold rounded-lg transition-all {activeTab ===
+      'pegawai'
+        ? 'bg-white shadow-sm text-blue-600'
+        : 'text-slate-500 hover:text-slate-700'}"
+      on:click={() => {
+        activeTab = "pegawai";
+        if (pegawaiList.length === 0) handleSearchPegawai(1);
+      }}
+    >
+      <span class="flex items-center gap-2">
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          /></svg
+        >
+        Pilih Berdasarkan Pegawai
+        {#if selectedPegawaiCount > 0}
+          <span
+            class="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            >{selectedPegawaiCount}</span
+          >
+        {/if}
       </span>
     </button>
     <button
@@ -848,6 +1064,328 @@
       </div>
     </div>
 
+    <!-- TAB: Pilih Berdasarkan Pegawai -->
+  {:else if activeTab === "pegawai"}
+    <div class="space-y-4">
+      <!-- Search & Filter Card -->
+      <div class="card p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="font-semibold text-slate-800 text-base">
+              Pilih Pegawai untuk Pembagian Tugas
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Cari dan pilih pegawai spesifik untuk ditugaskan ke verifikator tertentu.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+              Total Ditemukan: {pegawaiMeta.total}
+            </span>
+          </div>
+        </div>
+
+        <!-- Filters Form -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Keyword search -->
+          <div>
+            <label for="searchPegawai" class="block text-xs font-medium text-slate-700 mb-1">Cari Nama / NIP / NIK</label>
+            <div class="relative">
+              <input
+                id="searchPegawai"
+                type="text"
+                bind:value={searchPegawaiQuery}
+                on:input={onSearchPegawaiInput}
+                placeholder="Ketik nama / NIP / NIK..."
+                class="input-field w-full pl-8 text-xs sm:text-sm"
+              />
+              <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Status Penugasan -->
+          <div>
+            <label for="filterStatusPegawai" class="block text-xs font-medium text-slate-700 mb-1">Status Penugasan</label>
+            <select
+              id="filterStatusPegawai"
+              bind:value={searchPegawaiStatus}
+              on:change={() => handleSearchPegawai(1)}
+              class="input-field w-full text-xs sm:text-sm"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="UNASSIGNED">Belum Ditugaskan</option>
+              <option value="ASSIGNED">Sudah Ditugaskan (Aktif)</option>
+              <option value="COMPLETED">Sudah Selesai</option>
+            </select>
+          </div>
+
+          <!-- Unit Kerja Induk -->
+          <div>
+            <label for="filterUnorPegawai" class="block text-xs font-medium text-slate-700 mb-1">Unit Kerja Induk</label>
+            <select
+              id="filterUnorPegawai"
+              bind:value={searchPegawaiUnorId}
+              on:change={() => handleSearchPegawai(1)}
+              class="input-field w-full text-xs sm:text-sm"
+            >
+              <option value="">Semua Unit Kerja</option>
+              {#each refUnorList as u}
+                <option value={u.id}>{u.nama}</option>
+              {/each}
+            </select>
+          </div>
+
+          <!-- Kegiatan / Label -->
+          <div>
+            <label for="filterKegiatanPegawai" class="block text-xs font-medium text-slate-700 mb-1">Label Kegiatan</label>
+            <div class="flex gap-1.5">
+              <input
+                id="filterKegiatanPegawai"
+                type="text"
+                bind:value={searchPegawaiKegiatan}
+                placeholder="Kegiatan..."
+                class="input-field w-full text-xs sm:text-sm"
+              />
+              <button
+                type="button"
+                on:click={() => handleSearchPegawai(1)}
+                class="btn-primary !px-3 !py-1 text-xs shrink-0"
+              >
+                Cari
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Toolbar when items selected -->
+      {#if selectedPegawaiCount > 0}
+        <div class="card p-4 bg-blue-50/80 border-blue-200 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm shadow-sm shrink-0">
+              {selectedPegawaiCount}
+            </span>
+            <div>
+              <p class="text-sm font-bold text-blue-900">
+                {selectedPegawaiCount} Pegawai Terpilih
+              </p>
+              <p class="text-xs text-blue-700">
+                Tentukan user verifikator dan kegiatan untuk menugaskan sekaligus.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Target Verifikator -->
+            <select
+              bind:value={targetUserIdForPegawai}
+              class="input-field bg-white text-xs sm:text-sm !py-2 w-48 font-medium text-slate-700 border-blue-300"
+            >
+              <option value="">-- Pilih User Verifikator --</option>
+              {#each users as u}
+                <option value={u.id}>{u.namaLengkap || u.username} ({u.role})</option>
+              {/each}
+            </select>
+
+            <!-- Target Kegiatan -->
+            <input
+              type="text"
+              bind:value={targetKegiatanForPegawai}
+              placeholder="Kegiatan (default: 'Umum')"
+              class="input-field bg-white text-xs sm:text-sm !py-2 w-40 border-blue-300"
+            />
+
+            <!-- Submit button -->
+            <button
+              type="button"
+              on:click={handleAssignByPegawai}
+              disabled={isSubmittingPegawaiAssign}
+              class="btn-primary !py-2 !px-4 text-xs sm:text-sm shadow-sm"
+            >
+              {#if isSubmittingPegawaiAssign}
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5"></div>
+              {/if}
+              Tugaskan Sekarang
+            </button>
+
+            <!-- Clear selection -->
+            <button
+              type="button"
+              on:click={clearPegawaiSelection}
+              class="btn-secondary !py-2 !px-3 text-xs text-slate-600 bg-white"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Pegawai Table -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50 text-slate-600">
+                <th class="p-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isAllPegawaiPageSelected}
+                    on:change={toggleAllPegawaiPage}
+                    class="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
+                    title="Pilih semua di halaman ini"
+                  />
+                </th>
+                <th class="p-3 w-12 text-center font-semibold">No</th>
+                <th class="p-3 font-semibold min-w-[200px]">Pegawai</th>
+                <th class="p-3 font-semibold min-w-[180px]">Jabatan & Unit Kerja</th>
+                <th class="p-3 font-semibold min-w-[180px]">Status Penugasan</th>
+                <th class="p-3 text-center font-semibold w-28">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {#if isSearchingPegawai}
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-slate-500">
+                    <div class="w-7 h-7 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
+                    Memuat data pegawai...
+                  </td>
+                </tr>
+              {:else if pegawaiList.length === 0}
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-slate-500">
+                    <svg class="w-10 h-10 text-slate-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p class="font-medium text-slate-700">Tidak ada pegawai ditemukan</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Coba sesuaikan kata kunci atau filter pencarian</p>
+                  </td>
+                </tr>
+              {:else}
+                {#each pegawaiList as p, index (p.id)}
+                  {@const isSelected = selectedPegawaiIds.includes(p.id)}
+                  {@const activeTask = p.tasksPeremajaan?.find((t) => !t.isCompleted)}
+                  {@const completedTask = p.tasksPeremajaan?.find((t) => t.isCompleted)}
+                  <tr class="hover:bg-slate-50/70 transition-colors {isSelected ? 'bg-blue-50/40' : ''}">
+                    <td class="p-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        on:change={() => togglePegawaiSelection(p.id)}
+                        class="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer"
+                      />
+                    </td>
+                    <td class="p-3 text-center font-mono text-xs text-slate-400">
+                      {(pegawaiMeta.page - 1) * pegawaiMeta.limit + index + 1}
+                    </td>
+                    <td class="p-3">
+                      <div class="font-semibold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                        <span>{p.nama}</span>
+                        {#if p.gelarBelakang || p.gelarDepan}
+                          <span class="text-slate-500 text-xs font-normal">
+                            {[p.gelarDepan, p.gelarBelakang].filter(Boolean).join(", ")}
+                          </span>
+                        {/if}
+                      </div>
+                      <div class="text-xs text-slate-500 font-mono mt-0.5 flex items-center gap-2">
+                        <span>NIP: {p.nipBaru}</span>
+                        {#if p.golAkhirNama}
+                          <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium">{p.golAkhirNama}</span>
+                        {/if}
+                      </div>
+                    </td>
+                    <td class="p-3">
+                      <p class="font-medium text-slate-700 text-xs line-clamp-1">{p.jabatanNama || '-'}</p>
+                      <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{p.unorInduk?.nama || p.unorNama || '-'}</p>
+                    </td>
+                    <td class="p-3">
+                      {#if activeTask}
+                        <div class="space-y-1">
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                            Ditugaskan ke: {activeTask.assignedToUser?.namaLengkap || activeTask.assignedToUser?.username || 'User'}
+                          </span>
+                          {#if activeTask.kegiatan}
+                            <div class="text-[10px] text-slate-500 font-medium">
+                              Kegiatan: <span class="text-blue-600">{activeTask.kegiatan}</span>
+                            </div>
+                          {/if}
+                        </div>
+                      {:else if completedTask}
+                        <div class="space-y-1">
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Selesai ({completedTask.assignedToUser?.namaLengkap || completedTask.assignedToUser?.username || 'User'})
+                          </span>
+                        </div>
+                      {:else}
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
+                          <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                          Belum Ditugaskan
+                        </span>
+                      {/if}
+                    </td>
+                    <td class="p-3 text-center">
+                      <div class="flex items-center justify-center gap-1.5">
+                        <button
+                          type="button"
+                          on:click={() => openQuickAssign(p)}
+                          class="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                          title="Tugaskan atau ganti penugasan"
+                        >
+                          Tugaskan
+                        </button>
+                        {#if activeTask}
+                          <button
+                            type="button"
+                            on:click={() => handleUnassignSinglePegawai(p)}
+                            class="p-1 text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                            title="Tarik tugas dari user"
+                          >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        {/if}
+                      </div>
+                    </td>
+                  </tr>
+                {/each}
+              {/if}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {#if pegawaiMeta.totalPages > 1}
+          <div class="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+            <div>
+              Halaman <strong>{pegawaiMeta.page}</strong> dari <strong>{pegawaiMeta.totalPages}</strong> ({pegawaiMeta.total} data)
+            </div>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={pegawaiMeta.page <= 1}
+                on:click={() => handleSearchPegawai(pegawaiMeta.page - 1)}
+                class="px-2.5 py-1.5 rounded border border-slate-200 bg-white font-medium hover:bg-slate-50 disabled:opacity-50"
+              >
+                Sebelumnya
+              </button>
+              <button
+                type="button"
+                disabled={pegawaiMeta.page >= pegawaiMeta.totalPages}
+                on:click={() => handleSearchPegawai(pegawaiMeta.page + 1)}
+                class="px-2.5 py-1.5 rounded border border-slate-200 bg-white font-medium hover:bg-slate-50 disabled:opacity-50"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
+        {/if}
+      </div>
+    </div>
+
     <!-- TAB: Field Builder -->
   {:else if activeTab === "fields"}
     <div class="space-y-4">
@@ -986,6 +1524,80 @@
           </button>
         </div>
       {/if}
+    </div>
+  {/if}
+
+  <!-- Quick Assign Modal -->
+  {#if showQuickAssignModal && quickAssignTargetPegawai}
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+      <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+        <div class="flex items-center justify-between border-b pb-3">
+          <h3 class="font-bold text-slate-800 text-base">Tugaskan Pegawai</h3>
+          <button
+            type="button"
+            on:click={() => { showQuickAssignModal = false; quickAssignTargetPegawai = null; }}
+            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl space-y-1">
+          <p class="font-semibold text-slate-800 text-sm">{quickAssignTargetPegawai.nama}</p>
+          <p class="text-xs text-slate-500 font-mono">NIP: {quickAssignTargetPegawai.nipBaru}</p>
+          <p class="text-xs text-slate-500">{quickAssignTargetPegawai.unorInduk?.nama || quickAssignTargetPegawai.unorNama || '-'}</p>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label for="quickAssignUser" class="block text-xs font-semibold text-slate-700 mb-1">
+              Pilih User Verifikator <span class="text-rose-500">*</span>
+            </label>
+            <select
+              id="quickAssignUser"
+              bind:value={quickAssignUserId}
+              class="input-field w-full text-sm"
+            >
+              <option value="">-- Pilih User --</option>
+              {#each users as u}
+                <option value={u.id}>{u.namaLengkap || u.username} ({u.role})</option>
+              {/each}
+            </select>
+          </div>
+
+          <div>
+            <label for="quickAssignKegiatan" class="block text-xs font-semibold text-slate-700 mb-1">
+              Label Kegiatan
+            </label>
+            <input
+              id="quickAssignKegiatan"
+              type="text"
+              bind:value={quickAssignKegiatan}
+              placeholder="Contoh: Umum / Peremajaan 2026"
+              class="input-field w-full text-sm"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t">
+          <button
+            type="button"
+            on:click={() => { showQuickAssignModal = false; quickAssignTargetPegawai = null; }}
+            class="btn-secondary !px-4 !py-2 text-xs"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            on:click={handleQuickAssignSubmit}
+            class="btn-primary !px-4 !py-2 text-xs"
+          >
+            Simpan Penugasan
+          </button>
+        </div>
+      </div>
     </div>
   {/if}
 </div>
