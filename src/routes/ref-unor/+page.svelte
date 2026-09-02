@@ -4,6 +4,7 @@
   import { apiRequest } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import TreeNode from "$lib/components/TreeNode.svelte";
 
   let records = $state([]);
   let treeData = $state([]);
@@ -103,7 +104,6 @@
       const result = await apiRequest("/api/v1/ref-unor/tree", "GET");
       if (result.success) {
         treeData = result.data || [];
-        // Expand top root nodes by default
         const initialExpanded = new Set();
         treeData.forEach((root) => {
           if (root.children && root.children.length > 0) {
@@ -300,6 +300,27 @@
   };
 
   let displayTree = $derived(searchTerm ? filterTreeNodes(treeData, searchTerm) : treeData);
+
+  // Stats calculation
+  let treeStats = $derived.by(() => {
+    let subCount = 0;
+    let pegawaiCount = 0;
+    const traverse = (list, isRoot = true) => {
+      list.forEach((n) => {
+        if (!isRoot) subCount++;
+        pegawaiCount += (n._count?.dataP3ks || 0);
+        if (n.children && n.children.length > 0) {
+          traverse(n.children, false);
+        }
+      });
+    };
+    traverse(treeData, true);
+    return {
+      totalInduk: treeData.length,
+      totalSubUnor: subCount,
+      totalPegawai: pegawaiCount
+    };
+  });
 </script>
 
 <svelte:head>
@@ -330,7 +351,7 @@
     <!-- Top Action Buttons -->
     <div class="flex items-center gap-2 flex-wrap">
       <!-- View Mode Switcher -->
-      <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
+      <div class="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 shadow-2xs">
         <button
           type="button"
           onclick={() => (viewMode = "tree")}
@@ -369,6 +390,39 @@
     </div>
   </div>
 
+  <!-- Summary Metric Badges -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+    <div class="card p-4 border-l-4 border-teal-500 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Unit Kerja Induk</p>
+        <h4 class="text-xl sm:text-2xl font-bold text-slate-800 mt-0.5">{treeStats.totalInduk} Induk</h4>
+      </div>
+      <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+        🏛️
+      </div>
+    </div>
+
+    <div class="card p-4 border-l-4 border-indigo-500 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sub Unit Kerja (Child)</p>
+        <h4 class="text-xl sm:text-2xl font-bold text-slate-800 mt-0.5">{treeStats.totalSubUnor} Sub-Unor</h4>
+      </div>
+      <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        📑
+      </div>
+    </div>
+
+    <div class="card p-4 border-l-4 border-blue-500 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pegawai Terhubung</p>
+        <h4 class="text-xl sm:text-2xl font-bold text-slate-800 mt-0.5">{treeStats.totalPegawai.toLocaleString()} Pegawai</h4>
+      </div>
+      <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+        👥
+      </div>
+    </div>
+  </div>
+
   <!-- Search & Filter Bar -->
   <div class="card p-4 sm:p-5">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -381,7 +435,7 @@
         <input
           type="text"
           bind:value={searchTerm}
-          placeholder="Cari nama unit kerja atau sub-unor..."
+          placeholder="Cari nama unit kerja induk atau sub-unor..."
           class="input-field w-full pl-10 pr-10 text-xs sm:text-sm"
           oninput={() => {
             if (viewMode === "table") {
@@ -419,19 +473,24 @@
 
   <!-- CONTENT SECTION -->
   {#if viewMode === "tree"}
-    <!-- ================= TREE VIEW ================= -->
+    <!-- ================= HIERARKI STRUKTUR ORGANISASI (TREE VIEW) ================= -->
     <div class="card p-4 sm:p-6 overflow-hidden">
-      <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">
-          Hierarki Struktur Organisasi ({treeData.length} Induk)
-        </h2>
-        <span class="text-xs text-slate-400 font-medium">Klik tanda panah untuk melihat sub-unor</span>
+      <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-teal-500 animate-pulse"></span>
+          <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">
+            Hierarki Struktur Organisasi ({displayTree.length} Unit Kerja Induk)
+          </h2>
+        </div>
+        <span class="text-xs text-slate-400 font-medium hidden sm:inline">
+          💡 Gunakan tombol <strong class="text-slate-600">+ Sub</strong> untuk menambah cabang di bawah unit kerja
+        </span>
       </div>
 
       {#if isLoadingTree}
-        <div class="py-16 text-center">
+        <div class="py-20 text-center">
           <div class="w-8 h-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p class="text-xs sm:text-sm text-slate-400">Memuat struktur hierarki unit kerja...</p>
+          <p class="text-xs sm:text-sm text-slate-400">Memuat hierarki struktur unit kerja...</p>
         </div>
       {:else if displayTree.length === 0}
         <div class="py-16 text-center">
@@ -444,144 +503,19 @@
           <p class="text-xs text-slate-400 mt-1">Coba kata kunci pencarian yang lain atau tambah unit kerja baru</p>
         </div>
       {:else}
-        <div class="space-y-2">
-          {#each displayTree as rootNode (rootNode.id)}
-            <div class="rounded-xl border border-slate-200/80 bg-slate-50/50 overflow-hidden transition-all">
-              <!-- Root Item -->
-              <div class="p-3.5 sm:p-4 flex items-center justify-between gap-3 hover:bg-slate-100/70 transition-colors">
-                <div class="flex items-center gap-2.5 flex-1 min-w-0">
-                  {#if rootNode.children && rootNode.children.length > 0}
-                    <button
-                      type="button"
-                      onclick={() => toggleNode(rootNode.id)}
-                      class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-teal-50 hover:text-teal-700 flex items-center justify-center shadow-2xs transition-transform"
-                      aria-label="Toggle node"
-                    >
-                      <svg
-                        class="w-4 h-4 transition-transform duration-200 {expandedNodes.has(rootNode.id) ? 'rotate-90 text-teal-600' : ''}"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  {:else}
-                    <span class="w-7 h-7 flex items-center justify-center text-slate-300">🏢</span>
-                  {/if}
-
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <span class="font-bold text-slate-800 text-sm sm:text-base leading-tight">
-                        {rootNode.nama}
-                      </span>
-                      {#if rootNode.kode}
-                        <span class="font-mono text-[10px] text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
-                          {rootNode.kode}
-                        </span>
-                      {/if}
-                      <span class="text-[11px] font-bold px-2 py-0.5 rounded-md border {getJenisBadge(rootNode.jenis)}">
-                        {getJenisLabel(rootNode.jenis)}
-                      </span>
-                    </div>
-
-                    <div class="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium">
-                      <span>Sub-Unor: <strong class="text-slate-700">{rootNode.children ? rootNode.children.length : 0}</strong></span>
-                      <span>•</span>
-                      <span>Pegawai Aktif: <strong class="text-teal-700">{rootNode._count?.dataP3ks || 0}</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onclick={() => openAddModal(rootNode.id)}
-                    class="p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 transition-colors flex items-center gap-1"
-                    title="Tambah Sub Unit Kerja di bawah {rootNode.nama}"
-                  >
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span class="hidden sm:inline">Tambah Sub</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onclick={() => openEditModal(rootNode)}
-                    class="p-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-white transition-colors"
-                    title="Edit {rootNode.nama}"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-
-                  <button
-                    type="button"
-                    onclick={() => confirmDelete(rootNode)}
-                    class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                    title="Hapus {rootNode.nama}"
-                  >
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Nested Sub Unor List (Level 2+) -->
-              {#if expandedNodes.has(rootNode.id) && rootNode.children && rootNode.children.length > 0}
-                <div class="bg-white px-3 sm:px-6 py-2.5 border-t border-slate-200/80 divide-y divide-slate-100">
-                  {#each rootNode.children as child (child.id)}
-                    <div class="py-2.5 pl-6 sm:pl-8 flex items-center justify-between gap-3 relative before:absolute before:left-2 before:top-1/2 before:-translate-y-1/2 before:w-3 before:h-px before:bg-slate-300">
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <span class="text-sm font-semibold text-slate-800 leading-snug">
-                            {child.nama}
-                          </span>
-                          {#if child.kode}
-                            <span class="font-mono text-[10px] text-slate-400 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded">
-                              {child.kode}
-                            </span>
-                          {/if}
-                          <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border {getJenisBadge(child.jenis)}">
-                            {getJenisLabel(child.jenis)}
-                          </span>
-                        </div>
-                        {#if child.keterangan}
-                          <p class="text-xs text-slate-400 mt-0.5">{child.keterangan}</p>
-                        {/if}
-                      </div>
-
-                      <div class="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onclick={() => openEditModal(child)}
-                          class="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                          title="Edit sub-unor"
-                        >
-                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          onclick={() => confirmDelete(child)}
-                          class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                          title="Hapus sub-unor"
-                        >
-                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  {/each}
-                </div>
-              {/if}
-            </div>
+        <!-- Tree Hierarchy List -->
+        <div class="space-y-3">
+          {#each displayTree as rootNode, idx (rootNode.id)}
+            <TreeNode
+              node={rootNode}
+              {expandedNodes}
+              {toggleNode}
+              {openAddModal}
+              {openEditModal}
+              {confirmDelete}
+              depth={0}
+              isLast={idx === displayTree.length - 1}
+            />
           {/each}
         </div>
       {/if}
