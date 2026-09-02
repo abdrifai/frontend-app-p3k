@@ -13,6 +13,7 @@
   let summarySearch = "";
 
   // Selected Unit Kerja State
+  let selectedUnorId = "";
   let selectedUnorNama = "";
   let unorSearchText = "";
   let showUnorDropdown = false;
@@ -36,9 +37,10 @@
 
   $: unorSummaryMap = new Map(unorSummaryList.map((u) => [u.unorNama, u]));
 
-  $: dropdownItems = (refUnorList.length > 0 ? refUnorList : unorSummaryList.map((u) => ({ nama: u.unorNama }))).map((u) => {
+  $: dropdownItems = (refUnorList.length > 0 ? refUnorList : unorSummaryList.map((u) => ({ id: u.unorId, nama: u.unorNama }))).map((u) => {
     const summary = unorSummaryMap.get(u.nama) || { totalUtama: 0, totalImport: 0, selisih: 0 };
     return {
+      unorId: u.id || "",
       unorNama: u.nama,
       totalUtama: summary.totalUtama,
       totalImport: summary.totalImport,
@@ -107,10 +109,11 @@
   };
 
   const fetchDetail = async (page = 1) => {
-    if (!selectedUnorNama) return;
+    if (!selectedUnorId && !selectedUnorNama) return;
     isLoadingDetail = true;
     try {
       const params = new URLSearchParams({
+        ...(selectedUnorId ? { unorIndukId: selectedUnorId } : {}),
         unitKerja: selectedUnorNama,
         page: page,
         limit: meta.limit,
@@ -134,8 +137,9 @@
     }
   };
 
-  const selectUnor = (unorNama) => {
+  const selectUnor = (unorNama, unorId = "") => {
     selectedUnorNama = unorNama;
+    selectedUnorId = unorId || refUnorList.find((r) => r.nama === unorNama)?.id || unorSummaryList.find((u) => u.unorNama === unorNama)?.unorId || "";
     unorSearchText = unorNama;
     showUnorDropdown = false;
     statusFilter = "ALL";
@@ -146,6 +150,7 @@
 
   const clearSelectedUnor = () => {
     selectedUnorNama = "";
+    selectedUnorId = "";
     unorSearchText = "";
     showUnorDropdown = false;
     detailRecords = [];
@@ -330,7 +335,7 @@
             {#each filteredUnorDropdown as u}
               <button
                 type="button"
-                onclick={() => selectUnor(u.unorNama)}
+                onclick={() => selectUnor(u.unorNama, u.unorId)}
                 class="w-full text-left px-4 py-2.5 hover:bg-teal-50 transition-colors flex items-center justify-between text-sm {selectedUnorNama === u.unorNama ? 'bg-teal-50/70 font-semibold text-teal-800' : 'text-slate-700'}"
               >
                 <span class="truncate pr-2">{u.unorNama}</span>
@@ -483,7 +488,7 @@
                   <td class="px-4 py-3.5">
                     <button
                       type="button"
-                      onclick={() => selectUnor(row.unorNama)}
+                      onclick={() => selectUnor(row.unorNama, row.unorId)}
                       class="text-left font-semibold text-slate-800 hover:text-teal-600 transition-colors"
                     >
                       {row.unorNama}
@@ -525,7 +530,7 @@
                   <td class="px-4 py-3.5 text-center no-print">
                     <button
                       type="button"
-                      onclick={() => selectUnor(row.unorNama)}
+                      onclick={() => selectUnor(row.unorNama, row.unorId)}
                       class="px-2.5 py-1 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors"
                       title="Lihat rincian komparasi"
                     >

@@ -50,13 +50,13 @@
   };
 
   const fetchData = async (page = 1) => {
-    if (!selectedUnorNama) return;
+    if (!selectedUnorId && !selectedUnorNama) return;
     isLoading = true;
     try {
       const params = new URLSearchParams({
         page: String(page),
         limit: String(meta.limit),
-        unitKerja: selectedUnorNama,
+        ...(selectedUnorId ? { unorIndukId: selectedUnorId } : { unitKerja: selectedUnorNama }),
         statusPensiun: "AKTIF"
       });
       const result = await apiRequest(`/api/v1/data-p3k?${params.toString()}`, "GET");
