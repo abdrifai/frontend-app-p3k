@@ -145,6 +145,7 @@
   const isLaporanActive = () =>
     isActive("/laporan/perpanjangan-pk") ||
     isActive("/laporan/per-unit-kerja") ||
+    isActive("/laporan/rekap-jabatan") ||
     isActive("/estimasi-pensiun") ||
     isActive("/statistik-task");
 
@@ -866,7 +867,7 @@
           {/if}
 
           <!-- Dropdown: Laporan -->
-          {#if canAccess('laporan') && canAccessAny(['laporan-perpanjangan', 'laporan-unit-kerja', 'laporan-estimasi-pensiun', 'laporan-statistik-task'])}
+          {#if canAccess('laporan') && canAccessAny(['laporan-perpanjangan', 'laporan-unit-kerja', 'laporan-rekap-jabatan', 'laporan-estimasi-pensiun', 'laporan-statistik-task'])}
             <div
               class="relative"
               role="group"
@@ -940,6 +941,50 @@
                         </div>
                       </a>
                     {/if}
+                    {#if canAccess('laporan-unit-kerja')}
+                      <a
+                        href="/laporan/per-unit-kerja"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                          '/laporan/per-unit-kerja',
+                        )
+                          ? 'text-blue-700 bg-blue-50 font-medium'
+                          : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (laporanMenuOpen = false)}
+                      >
+                        <div class="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                            /></svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Per Unit Kerja</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Daftar pegawai per unit kerja induk</p>
+                        </div>
+                      </a>
+                    {/if}
+                    {#if canAccess('laporan-rekap-jabatan')}
+                      <a
+                        href="/laporan/rekap-jabatan"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                          '/laporan/rekap-jabatan',
+                        )
+                          ? 'text-blue-700 bg-blue-50 font-medium'
+                          : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (laporanMenuOpen = false)}
+                      >
+                        <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            /></svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Rekap Jabatan</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Daftar pegawai per jabatan</p>
+                        </div>
+                      </a>
+                    {/if}
                     {#if canAccess('laporan-estimasi-pensiun')}
                       <a
                         href="/estimasi-pensiun"
@@ -981,28 +1026,6 @@
                         <div>
                           <p class="font-medium leading-tight">Statistik Task</p>
                           <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Laporan performa task per operator</p>
-                        </div>
-                      </a>
-                    {/if}
-                    {#if canAccess('laporan-unit-kerja')}
-                      <a
-                        href="/laporan/per-unit-kerja"
-                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
-                          '/laporan/per-unit-kerja',
-                        )
-                          ? 'text-blue-700 bg-blue-50 font-medium'
-                          : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
-                        onclick={() => (laporanMenuOpen = false)}
-                      >
-                        <div class="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-                          <svg class="w-3.5 h-3.5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            ><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
-                            /></svg>
-                        </div>
-                        <div>
-                          <p class="font-medium leading-tight">Per Unit Kerja</p>
-                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Daftar pegawai per unit kerja induk</p>
                         </div>
                       </a>
                     {/if}
@@ -2053,7 +2076,7 @@
           {/if}
 
           <!-- Mobile: Laporan Group -->
-          {#if canAccess('laporan') && canAccessAny(['laporan-perpanjangan', 'laporan-unit-kerja', 'laporan-estimasi-pensiun', 'laporan-statistik-task'])}
+          {#if canAccess('laporan') && canAccessAny(['laporan-perpanjangan', 'laporan-unit-kerja', 'laporan-rekap-jabatan', 'laporan-estimasi-pensiun', 'laporan-statistik-task'])}
             <div class="pt-1">
               <button
                 type="button"
@@ -2126,6 +2149,64 @@
                       Perpanjangan PK
                     </a>
                   {/if}
+                  {#if canAccess('laporan-unit-kerja')}
+                    <a
+                      href="/laporan/per-unit-kerja"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                        '/laporan/per-unit-kerja',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-teal-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          ><path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                          /></svg
+                        >
+                      </div>
+                      Per Unit Kerja
+                    </a>
+                  {/if}
+                  {#if canAccess('laporan-rekap-jabatan')}
+                    <a
+                      href="/laporan/rekap-jabatan"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                        '/laporan/rekap-jabatan',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-emerald-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          ><path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          /></svg
+                        >
+                      </div>
+                      Rekap Jabatan
+                    </a>
+                  {/if}
                   {#if canAccess('laporan-estimasi-pensiun')}
                     <a
                       href="/estimasi-pensiun"
@@ -2182,35 +2263,6 @@
                         >
                       </div>
                       Statistik Task
-                    </a>
-                  {/if}
-                  {#if canAccess('laporan-unit-kerja')}
-                    <a
-                      href="/laporan/per-unit-kerja"
-                      onclick={closeMobile}
-                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
-                        '/laporan/per-unit-kerja',
-                      )
-                        ? 'text-blue-700 bg-blue-50 font-semibold'
-                        : 'text-slate-600 hover:bg-slate-50'}"
-                    >
-                      <div
-                        class="w-6 h-6 rounded-md bg-teal-50 flex items-center justify-center shrink-0"
-                      >
-                        <svg
-                          class="w-3.5 h-3.5 text-teal-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          ><path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
-                          /></svg
-                        >
-                      </div>
-                      Per Unit Kerja
                     </a>
                   {/if}
                 </div>
