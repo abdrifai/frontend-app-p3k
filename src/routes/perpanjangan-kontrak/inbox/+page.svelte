@@ -4,6 +4,7 @@
   import { apiRequest, API_BASE_URL } from "$lib/api";
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import SrikandiTimelineModal from "$lib/components/SrikandiTimelineModal.svelte";
 
   let records = [];
   let isLoading = true;
@@ -20,6 +21,54 @@
   let rejectReason = "";
   let showRejectForm = false;
   let showApproveConfirm = false;
+
+  // Srikandi Modal state
+  let showSrikandiModal = false;
+  let srikandiModalUsulanId = null;
+  let srikandiModalUsulanData = null;
+
+  const srikandiStatusLabels = {
+    VERIFIKASI_KABAN: "Srikandi: Verif Kaban",
+    VERIFIKASI_SEKDA: "Srikandi: Verif Sekda",
+    TTE_PPPK: "Srikandi: TTE PPPK",
+    TTE_BUPATI: "Srikandi: TTE Bupati",
+    TOLAK_TIDAK_DITERUSKAN: "Srikandi: Tolak (Final)",
+    TOLAK_KONSEPTOR: "Srikandi: Tolak (Konseptor)"
+  };
+
+  const srikandiStatusColors = {
+    VERIFIKASI_KABAN: "bg-blue-50 text-blue-700 border-blue-200",
+    VERIFIKASI_SEKDA: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    TTE_PPPK: "bg-purple-50 text-purple-700 border-purple-200",
+    TTE_BUPATI: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    TOLAK_TIDAK_DITERUSKAN: "bg-red-50 text-red-700 border-red-200",
+    TOLAK_KONSEPTOR: "bg-amber-50 text-amber-700 border-amber-200"
+  };
+
+  function openSrikandiTimeline(rec) {
+    srikandiModalUsulanId = rec.id;
+    srikandiModalUsulanData = {
+      namaPegawai: rec.dataP3k?.nama,
+      nipBaru: rec.dataP3k?.nipBaru,
+      nomorKontrak: rec.nomorKontrak,
+      status: rec.status,
+      statusSrikandi: rec.statusSrikandi,
+      jabatanNama: rec.dataP3k?.jabatanNama,
+      unorNama: rec.dataP3k?.unorNama
+    };
+    showSrikandiModal = true;
+  }
+
+  function handleSrikandiStatusUpdated(event) {
+    const { usulanId, statusSrikandi } = event.detail;
+    records = records.map((r) =>
+      r.id === usulanId ? { ...r, statusSrikandi } : r
+    );
+    if (selectedRecord && selectedRecord.id === usulanId) {
+      selectedRecord = { ...selectedRecord, statusSrikandi };
+    }
+    addToast("Status Srikandi berhasil diperbarui", "success");
+  }
 
   // Preview data state
   let previewData = null;
@@ -240,10 +289,11 @@
     if (!dateStr) return "-";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return dateStr;
-    const d = String(date.getDate()).padStart(2, "0");
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const y = date.getFullYear();
-    return `${d}-${m}-${y}`;
+    return date.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
   };
 
   const formatDateIndoFull = (dateStr) => {
@@ -410,11 +460,15 @@
                   </p>
                 </td>
                 <td
-                  class="hidden md:table-cell px-4 sm:px-6 py-3 text-sm text-slate-600"
-                  >{formatDate(rec.tanggalMulai)} — {formatDate(
-                    rec.tanggalSelesai,
-                  )}</td
+                  class="hidden md:table-cell px-4 sm:px-6 py-3 whitespace-nowrap"
                 >
+                  <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/70 text-xs">
+                    <i class="ri-calendar-line text-slate-400 text-xs"></i>
+                    <span class="font-medium text-slate-700">{formatDate(rec.tanggalMulai)}</span>
+                    <span class="text-slate-300 font-bold text-[10px]">&ndash;</span>
+                    <span class="font-medium text-slate-700">{formatDate(rec.tanggalSelesai)}</span>
+                  </div>
+                </td>
                 <td class="hidden lg:table-cell px-4 sm:px-6 py-3">
                   <span
                     class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase whitespace-nowrap"
@@ -429,15 +483,28 @@
                     rec.dataP3k?.unorNama ||
                     "-"}</td
                 >
-                <td class="px-4 sm:px-6 py-3">
-                  <div class="flex flex-col gap-1 items-start">
-                    <span
-                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border {statusColor(
-                        rec.status,
-                      )}">{statusLabel(rec.status)}</span
-                    >
+                <td class="px-4 sm:px-6 py-3 whitespace-nowrap">
+                  <div class="flex items-center gap-1.5">
+                    {#if rec.status === "UPLOAD_SRIKANDI"}
+                      <button
+                        type="button"
+                        on:click|stopPropagation={() => openSrikandiTimeline(rec)}
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/90 transition-all cursor-pointer group"
+                        title="Klik untuk melihat Linimasa Srikandi"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-600 group-hover:scale-125 transition-transform animate-pulse"></span>
+                        <span>{srikandiStatusLabels[rec.statusSrikandi] || 'Srikandi: Verif Kaban'}</span>
+                        <i class="ri-route-line text-xs text-purple-400 group-hover:text-purple-700 transition-colors"></i>
+                      </button>
+                    {:else}
+                      <span
+                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border {statusColor(
+                          rec.status,
+                        )}">{statusLabel(rec.status)}</span
+                      >
+                    {/if}
                     {#if isPensiun}
-                      <span class="text-[10px] text-red-600 font-bold">Hentikan Usulan</span>
+                      <span class="text-[10px] text-red-600 font-bold ml-1">Hentikan Usulan</span>
                     {/if}
                   </div>
                 </td>
@@ -473,7 +540,14 @@
                         <i class="ri-send-plane-2-line text-lg"></i>
                       </button>
                     {/if}
-                    {#if rec.status === "UPLOAD_SRIKANDI"}
+                    {#if rec.status === "UPLOAD_SRIKANDI" || rec.statusSrikandi}
+                      <button
+                        on:click|stopPropagation={() => openSrikandiTimeline(rec)}
+                        class="p-1.5 rounded-lg text-purple-600 hover:bg-purple-50 transition-colors border border-purple-100"
+                        title="Linimasa Status Srikandi"
+                      >
+                        <i class="ri-route-line text-lg"></i>
+                      </button>
                       <button
                         on:click|stopPropagation={() => triggerUpload(rec.id)}
                         class="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors border border-indigo-100"
@@ -950,6 +1024,15 @@
     </div>
   </div>
 {/if}
+
+<!-- Srikandi Timeline Modal -->
+<SrikandiTimelineModal
+  bind:show={showSrikandiModal}
+  usulanId={srikandiModalUsulanId}
+  usulanData={srikandiModalUsulanData}
+  canEdit={isAdmin || true}
+  on:statusUpdated={handleSrikandiStatusUpdated}
+/>
 
 <!-- Hidden File Input -->
 <input

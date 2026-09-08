@@ -201,12 +201,21 @@
     }
   }
 
-  function getStatusLabel(status) {
+  const srikandiLabels = {
+    VERIFIKASI_KABAN: "Verif Kaban",
+    VERIFIKASI_SEKDA: "Verif Sekda",
+    TTE_PPPK: "TTE PPPK",
+    TTE_BUPATI: "TTE Bupati",
+    TOLAK_TIDAK_DITERUSKAN: "Tolak (Final)",
+    TOLAK_KONSEPTOR: "Tolak (Konseptor)"
+  };
+
+  function getStatusLabel(status, statusSrikandi = null) {
     switch (status) {
       case "SELESAI":
         return "Selesai (PK Terbit)";
       case "UPLOAD_SRIKANDI":
-        return "Proses Srikandi";
+        return statusSrikandi ? `Srikandi: ${srikandiLabels[statusSrikandi] || statusSrikandi}` : "Proses Srikandi";
       case "APPROVED":
         return "Approved (Draft Word)";
       case "PENDING":
@@ -2105,7 +2114,7 @@
                         <!-- Status -->
                         <td class="py-3 px-4 text-center whitespace-nowrap">
                           <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border shadow-xs {getStatusBadgeClass(rec.status)}">
-                            {getStatusLabel(rec.status)}
+                            {getStatusLabel(rec.status, rec.statusSrikandi)}
                           </span>
                         </td>
 

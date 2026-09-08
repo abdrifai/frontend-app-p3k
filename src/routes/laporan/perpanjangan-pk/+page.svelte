@@ -66,10 +66,22 @@
     selectedRecord = null;
   };
 
-  const getStatusBadge = (s) => {
+  const srikandiLabels = {
+    VERIFIKASI_KABAN: "Srikandi: Verif Kaban",
+    VERIFIKASI_SEKDA: "Srikandi: Verif Sekda",
+    TTE_PPPK: "Srikandi: TTE PPPK",
+    TTE_BUPATI: "Srikandi: TTE Bupati",
+    TOLAK_TIDAK_DITERUSKAN: "Srikandi: Tolak (Final)",
+    TOLAK_KONSEPTOR: "Srikandi: Tolak (Konseptor)"
+  };
+
+  const getStatusBadge = (s, srikandiStatus = null) => {
     if (s === "SELESAI") return { text: "Selesai", class: "bg-emerald-50 text-emerald-700 border-emerald-200" };
     if (s === "APPROVED") return { text: "Approved", class: "bg-blue-50 text-blue-700 border-blue-200" };
-    if (s === "SRIKANDI") return { text: "Srikandi", class: "bg-purple-50 text-purple-700 border-purple-200" };
+    if (s === "UPLOAD_SRIKANDI" || s === "SRIKANDI") {
+      const text = srikandiLabels[srikandiStatus] || "Srikandi";
+      return { text, class: "bg-purple-50 text-purple-700 border-purple-200" };
+    }
     if (s === "PENDING") return { text: "Pending", class: "bg-amber-50 text-amber-700 border-amber-200" };
     if (s === "REJECTED") return { text: "Ditolak", class: "bg-red-50 text-red-700 border-red-200" };
     return { text: s, class: "bg-slate-50 text-slate-700 border-slate-200" };
@@ -113,7 +125,7 @@
           <option value="">Semua Status</option>
           <option value="SELESAI">Status: Selesai</option>
           <option value="APPROVED">Status: Approved</option>
-          <option value="SRIKANDI">Status: Srikandi</option>
+          <option value="UPLOAD_SRIKANDI">Status: Srikandi</option>
           <option value="PENDING">Status: Pending</option>
           <option value="REJECTED">Status: Ditolak</option>
         </select>
@@ -176,7 +188,7 @@
             </tr>
           {:else}
             {#each records as rec, i}
-              {@const badge = getStatusBadge(rec.status)}
+              {@const badge = getStatusBadge(rec.status, rec.statusSrikandi)}
               <tr class="hover:bg-slate-50/50 transition-colors">
                 <td class="px-5 py-4 text-sm text-slate-400 font-mono">{(meta.page - 1) * meta.limit + i + 1}</td>
                 <td class="px-5 py-4">
