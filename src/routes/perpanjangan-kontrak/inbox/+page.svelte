@@ -10,6 +10,7 @@
   let isLoading = true;
   let searchTerm = "";
   let filterStatus = "PENDING";
+  let filterStatusSrikandi = "";
   let meta = { page: 1, limit: 10, total: 0, totalPages: 1 };
 
   $: isAdmin = isUserAdmin($authStore.user);
@@ -88,6 +89,7 @@
     try {
       const params = new URLSearchParams({ page, limit: meta.limit });
       if (filterStatus) params.append("status", filterStatus);
+      if (filterStatusSrikandi) params.append("statusSrikandi", filterStatusSrikandi);
       if (searchTerm) params.append("search", searchTerm);
       const result = await apiRequest(
         `/api/v1/perpanjangan/usulan?${params}`,
@@ -349,7 +351,7 @@
       <input
         type="text"
         bind:value={searchTerm}
-        placeholder="Cari nama / NIP..."
+        placeholder="Cari nama / NIP / no kontrak..."
         class="input-field flex-1 min-w-[200px]"
       />
       <select
@@ -358,14 +360,31 @@
           meta.page = 1;
           fetchData();
         }}
-        class="input-field w-auto"
+        class="input-field w-auto bg-white"
       >
-        <option value="">Semua Status</option>
-        <option value="PENDING">Menunggu</option>
-        <option value="APPROVED">Disetujui</option>
+        <option value="">Semua Status Usulan</option>
+        <option value="PENDING">Menunggu (Pending)</option>
+        <option value="APPROVED">Disetujui (Approved)</option>
         <option value="UPLOAD_SRIKANDI">Upload Srikandi</option>
         <option value="SELESAI">Selesai</option>
         <option value="REJECTED">Ditolak</option>
+      </select>
+      <select
+        bind:value={filterStatusSrikandi}
+        on:change={() => {
+          meta.page = 1;
+          fetchData();
+        }}
+        class="input-field w-auto bg-white"
+      >
+        <option value="">Semua Status Srikandi</option>
+        <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
+        <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
+        <option value="TTE_PPPK">3. TTE PPPK</option>
+        <option value="TTE_BUPATI">4. TTE Bupati</option>
+        <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
+        <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
+        <option value="NONE">Belum Masuk Srikandi</option>
       </select>
       <button type="submit" class="btn-primary text-sm">Cari</button>
     </form>

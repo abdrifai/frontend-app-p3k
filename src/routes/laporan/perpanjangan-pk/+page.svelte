@@ -9,6 +9,7 @@
   let isLoading = true;
   let searchTerm = "";
   let filterStatus = "SELESAI";
+  let filterStatusSrikandi = "";
   let meta = { page: 1, limit: 10, total: 0, totalPages: 1 };
   const limitOptions = [10, 25, 50, 100, 250];
   
@@ -36,6 +37,7 @@
         isLaporan: "true"
       });
       if (filterStatus) params.append("status", filterStatus);
+      if (filterStatusSrikandi) params.append("statusSrikandi", filterStatusSrikandi);
       if (searchTerm) params.append("search", searchTerm);
       
       const result = await apiRequest(`/api/v1/perpanjangan/usulan?${params}`, "GET");
@@ -122,12 +124,30 @@
           on:change={handleFilterChange}
           class="input-field w-full cursor-pointer bg-white"
         >
-          <option value="">Semua Status</option>
+          <option value="">Semua Status Usulan</option>
           <option value="SELESAI">Status: Selesai</option>
           <option value="APPROVED">Status: Approved</option>
           <option value="UPLOAD_SRIKANDI">Status: Srikandi</option>
           <option value="PENDING">Status: Pending</option>
           <option value="REJECTED">Status: Ditolak</option>
+        </select>
+      </div>
+
+      <!-- Status Srikandi Filter -->
+      <div class="min-w-[170px]">
+        <select 
+          bind:value={filterStatusSrikandi} 
+          on:change={handleFilterChange}
+          class="input-field w-full cursor-pointer bg-white"
+        >
+          <option value="">Semua Srikandi</option>
+          <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
+          <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
+          <option value="TTE_PPPK">3. TTE PPPK</option>
+          <option value="TTE_BUPATI">4. TTE Bupati</option>
+          <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
+          <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
+          <option value="NONE">Belum Masuk Srikandi</option>
         </select>
       </div>
 

@@ -13,6 +13,7 @@
   let isLoading = true;
   let templates = [];
   let searchTerm = "";
+  let filterStatusSrikandi = "";
   let meta = { page: 1, limit: 10, total: 0, totalPages: 1 };
 
   // Employee search
@@ -111,6 +112,7 @@
     try {
       const params = new URLSearchParams({ page, limit: meta.limit });
       if (searchTerm) params.append("search", searchTerm);
+      if (filterStatusSrikandi) params.append("statusSrikandi", filterStatusSrikandi);
       const result = await apiRequest(
         `/api/v1/perpanjangan/usulan?${params}`,
         "GET",
@@ -622,10 +624,27 @@
       <input
         type="text"
         bind:value={searchTerm}
-        placeholder="Cari nama / NIP pegawai..."
+        placeholder="Cari nama / NIP pegawai / no kontrak..."
         class="input-field flex-1"
       />
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
+        <select
+          bind:value={filterStatusSrikandi}
+          on:change={() => {
+            meta.page = 1;
+            fetchData(1);
+          }}
+          class="input-field !w-auto text-sm font-medium text-slate-700 bg-white"
+        >
+          <option value="">Semua Status Srikandi</option>
+          <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
+          <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
+          <option value="TTE_PPPK">3. TTE PPPK</option>
+          <option value="TTE_BUPATI">4. TTE Bupati</option>
+          <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
+          <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
+          <option value="NONE">Belum Masuk Srikandi</option>
+        </select>
         <select
           bind:value={meta.limit}
           on:change={() => {

@@ -17,6 +17,18 @@
   let catatan = "";
   let errorMessage = "";
   let successMessage = "";
+  let timelineFilter = "ALL"; // ALL | REGULER | REVISI
+
+  $: filteredTimeline = timeline.filter((item) => {
+    if (timelineFilter === "ALL") return true;
+    if (timelineFilter === "REGULER") {
+      return ["VERIFIKASI_KABAN", "VERIFIKASI_SEKDA", "TTE_PPPK", "TTE_BUPATI"].includes(item.status);
+    }
+    if (timelineFilter === "REVISI") {
+      return ["TOLAK_KONSEPTOR", "TOLAK_TIDAK_DITERUSKAN"].includes(item.status);
+    }
+    return true;
+  });
 
   const SRIKANDI_STEPS = [
     { key: "VERIFIKASI_KABAN", label: "Verifikasi Kaban", icon: "ri-user-star-line", step: 1, desc: "Pemeriksaan berkas oleh Kepala Badan" },
@@ -342,19 +354,43 @@
 
           <!-- Riwayat Log Linimasa (Activity Feed) -->
           <div>
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center justify-between">
-              <span class="flex items-center gap-1.5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                 <i class="ri-history-line text-purple-600"></i>
                 Riwayat Linimasa ({timeline.length})
-              </span>
-              <button
-                type="button"
-                on:click={loadTimeline}
-                class="text-[11px] font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 normal-case"
-              >
-                <i class="ri-refresh-line"></i> Refresh
-              </button>
-            </h4>
+              </h4>
+              <div class="flex items-center gap-1">
+                <button
+                  type="button"
+                  on:click={() => (timelineFilter = "ALL")}
+                  class="px-2 py-0.5 rounded text-[11px] font-semibold transition-colors {timelineFilter === 'ALL' ? 'bg-purple-100 text-purple-700 font-bold' : 'text-slate-500 hover:bg-slate-100'}"
+                >
+                  Semua ({timeline.length})
+                </button>
+                <button
+                  type="button"
+                  on:click={() => (timelineFilter = "REGULER")}
+                  class="px-2 py-0.5 rounded text-[11px] font-semibold transition-colors {timelineFilter === 'REGULER' ? 'bg-purple-100 text-purple-700 font-bold' : 'text-slate-500 hover:bg-slate-100'}"
+                >
+                  Tahapan Reguler
+                </button>
+                <button
+                  type="button"
+                  on:click={() => (timelineFilter = "REVISI")}
+                  class="px-2 py-0.5 rounded text-[11px] font-semibold transition-colors {timelineFilter === 'REVISI' ? 'bg-red-100 text-red-700 font-bold' : 'text-slate-500 hover:bg-slate-100'}"
+                >
+                  Penolakan/Catatan
+                </button>
+                <button
+                  type="button"
+                  on:click={loadTimeline}
+                  class="text-[11px] font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-0.5 ml-2"
+                  title="Refresh Riwayat"
+                >
+                  <i class="ri-refresh-line"></i>
+                </button>
+              </div>
+            </div>
 
             {#if isLoading}
               <div class="py-8 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
@@ -364,15 +400,19 @@
                 </svg>
                 <span>Memuat riwayat linimasa...</span>
               </div>
-            {:else if timeline.length === 0}
+            {:else if filteredTimeline.length === 0}
               <div class="bg-slate-50 rounded-xl p-6 text-center border border-dashed border-slate-200">
                 <i class="ri-time-line text-3xl text-slate-300 block mb-1"></i>
-                <p class="text-xs font-medium text-slate-500">Belum ada riwayat perubahan status Srikandi.</p>
-                <p class="text-[11px] text-slate-400 mt-0.5">Status awal akan tercatat saat pertama kali diperbarui.</p>
+                <p class="text-xs font-medium text-slate-500">
+                  {timeline.length === 0 ? "Belum ada riwayat perubahan status Srikandi." : "Tidak ada catatan riwayat pada filter ini."}
+                </p>
+                <p class="text-[11px] text-slate-400 mt-0.5">
+                  {timeline.length === 0 ? "Status awal akan tercatat saat pertama kali diperbarui." : "Coba pilih tab filter 'Semua'."}
+                </p>
               </div>
             {:else}
               <div class="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-                {#each timeline as item, idx}
+                {#each filteredTimeline as item, idx}
                   {@const cfg = STATUS_CONFIG[item.status] || { label: item.status, color: "bg-slate-50 text-slate-700 border-slate-200", badgeColor: "bg-slate-600 text-white" }}
                   
                   <div class="relative flex items-start gap-3 group">
