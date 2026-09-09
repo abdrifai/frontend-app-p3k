@@ -20,9 +20,10 @@
   let notFound = false;
   let notFoundQuery = "";
 
-  let activeTab = "utama"; // "utama", "pendidikan", "keluarga", "kontrak", "sk_pengangkatan"
+  let activeTab = "utama"; // "utama", "pendidikan", "keluarga", "kontrak", "sk_pengangkatan", "masalah"
   let recentSearches = [];
   let searchContainerRef;
+  let masalahPegawaiList = [];
 
   // --- PDF Preview Modal State ---
   let showPdfModal = false;
@@ -289,6 +290,11 @@
           }
         }
       }
+      if (profile && profile.id && !profile.isParuhWaktu) {
+        loadMasalahPegawai(profile.id);
+      } else {
+        masalahPegawaiList = [];
+      }
     } catch (err) {
       console.error(err);
       addToast("Terjadi kesalahan saat memuat data profil", "error");
@@ -296,6 +302,16 @@
       notFound = true;
     } finally {
       isLoadingProfile = false;
+    }
+  }
+
+  async function loadMasalahPegawai(dataP3kId) {
+    try {
+      const res = await apiRequest(`/api/v1/masalah-pegawai/pegawai/${dataP3kId}`);
+      masalahPegawaiList = res.data || [];
+    } catch (e) {
+      console.error('Failed to load employee issues:', e);
+      masalahPegawaiList = [];
     }
   }
 
@@ -864,6 +880,17 @@
         </svg>
         SK Pengangkatan
       </button>
+
+      <button
+        type="button"
+        on:click={() => (activeTab = "masalah")}
+        class="flex-1 min-w-[110px] sm:min-w-[140px] py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap {activeTab === 'masalah' ? 'bg-white shadow-sm text-red-600 font-bold' : 'text-slate-600 hover:text-slate-900'}"
+      >
+        <svg class="w-4 h-4 shrink-0 {masalahPegawaiList.length > 0 ? 'text-red-500' : 'text-slate-400'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        Catatan Masalah ({ masalahPegawaiList.length })
+      </button>
     </div>
 
     <!-- TAB 1: DATA UTAMA -->
@@ -1380,6 +1407,93 @@
                 • Tanggal SK: <b>{profile.arsipSkPensiun.tanggalSk}</b>
               {/if}
             </p>
+          </div>
+        {/if}
+      </div>
+
+    <!-- TAB 6: CATATAN MASALAH PEGAWAI -->
+    {:else if activeTab === "masalah"}
+      <div class="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800">Catatan Masalah & Rekam Disiplin</h3>
+              <p class="text-xs text-slate-500">Rekam jejak permasalahan, evaluasi, dan tindak lanjut kasus pegawai ini</p>
+            </div>
+          </div>
+          <a
+            href="/masalah-pegawai"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-all shadow-xs self-start sm:self-auto"
+          >
+            <span>+ Buka Manajemen Masalah</span>
+          </a>
+        </div>
+
+        {#if masalahPegawaiList.length === 0}
+          <div class="text-center py-10 text-slate-400">
+            <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p class="text-sm font-bold text-slate-700">Tidak Ada Catatan Masalah</p>
+            <p class="text-xs text-slate-400 mt-0.5">Pegawai ini memiliki rekam jejak bersih tanpa pelanggaran atau masalah tercatat.</p>
+          </div>
+        {:else}
+          <div class="space-y-4">
+            {#each masalahPegawaiList as item}
+              <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2.5">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs font-bold px-2 py-0.5 bg-slate-200 rounded text-slate-700">{item.nomorKasus}</span>
+                    <span
+                      class="px-2 py-0.5 rounded-full text-xs font-semibold border"
+                      style="background-color: {item.kategori?.warnaBadge || '#64748b'}15; border-color: {item.kategori?.warnaBadge || '#64748b'}40; color: {item.kategori?.warnaBadge || '#64748b'};"
+                    >
+                      {item.kategori?.nama || '-'}
+                    </span>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">
+                      Tingkat {item.tingkatKeparahan}
+                    </span>
+                  </div>
+                  <span class="text-xs font-bold px-2.5 py-0.5 rounded-full {item.status === 'SELESAI' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}">
+                    Status: {item.status}
+                  </span>
+                </div>
+
+                <div>
+                  <h4 class="text-sm sm:text-base font-bold text-slate-800">{item.judul}</h4>
+                  <p class="text-xs text-slate-400 mt-0.5">
+                    Tanggal Kejadian: {formatDate(item.tanggalKejadian)} &bull; Dicatat oleh: {item.createdBy?.namaLengkap || '-'}
+                  </p>
+                </div>
+
+                <div class="text-xs text-slate-700 bg-white p-3.5 rounded-xl border border-slate-200/80 line-clamp-4">
+                  {@html item.deskripsi}
+                </div>
+
+                {#if item.lampiran && item.lampiran.length > 0}
+                  <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <span class="text-[11px] font-bold text-slate-400">Bukti Lampiran:</span>
+                    {#each item.lampiran as lamp}
+                      <a
+                        href="{API_BASE_URL}{lamp.fileUrl}"
+                        target="_blank"
+                        class="text-xs text-blue-600 hover:underline flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200"
+                      >
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        <span class="truncate max-w-[150px]">{lamp.namaFile}</span>
+                      </a>
+                    {/each}
+                  </div>
+                {/if}
+              </div>
+            {/each}
           </div>
         {/if}
       </div>

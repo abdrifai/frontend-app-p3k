@@ -102,6 +102,7 @@
   const isUtamaActive = () =>
     isActive("/profil-pegawai") ||
     isActive("/data-p3k") ||
+    isActive("/masalah-pegawai") ||
     isActive("/statistik-p3k") ||
     isActive("/manajemen-pensiun") ||
     isActive("/perbedaan-data") ||
@@ -127,6 +128,7 @@
     isActive("/setting/pembagian-task-peremajaan") ||
     isActive("/setting/pembagian-task-usulan-pk") ||
     isActive("/setting/referensi-gaji") ||
+    isActive("/setting/kategori-masalah") ||
     isActive("/setting/kegiatan") ||
     isActive("/setting/activity-log") ||
     isActive("/setting/backup") ||
@@ -560,6 +562,42 @@
                         </div>
                       </a>
                     {/if}
+
+                    <a
+                      href="/masalah-pegawai"
+                      class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                        '/masalah-pegawai',
+                      )
+                        ? 'text-red-700 bg-red-50 font-medium'
+                        : 'text-slate-600 hover:text-red-600 hover:bg-slate-50'}"
+                      onclick={() => (utamaMenuOpen = false)}
+                    >
+                      <div
+                        class="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-red-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="font-medium leading-tight">Catatan Masalah</p>
+                        <p
+                          class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                        >
+                          Rekam kasus & rekapitulasi
+                        </p>
+                      </div>
+                    </a>
                   </div>
                 </div>
               {/if}
@@ -1270,6 +1308,20 @@
                             </div>
                           </a>
                         {/if}
+                        <a href="/setting/kategori-masalah"
+                          class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/kategori-masalah') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                          onclick={() => (settingMenuOpen = false)}>
+                          <div class="w-7 h-7 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <p class="font-medium leading-tight">Ref Kategori Masalah</p>
+                            <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Master kategori masalah pegawai</p>
+                          </div>
+                        </a>
                       {/if}
 
                       <div class="my-1.5 mx-3 border-t border-slate-100"></div>
@@ -1807,6 +1859,35 @@
                       Mapping Unor
                     </a>
                   {/if}
+
+                  <a
+                    href="/masalah-pegawai"
+                    onclick={closeMobile}
+                    class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                      '/masalah-pegawai',
+                    )
+                      ? 'text-red-700 bg-red-50 font-semibold'
+                      : 'text-slate-600 hover:bg-slate-50'}"
+                  >
+                    <div
+                      class="w-6 h-6 rounded-md bg-red-50 flex items-center justify-center shrink-0"
+                    >
+                      <svg
+                        class="w-3.5 h-3.5 text-red-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                    </div>
+                    Catatan Masalah Pegawai
+                  </a>
                 </div>
               {/if}
             </div>
@@ -2569,6 +2650,34 @@
                         Ref Unit Kerja
                       </a>
                     {/if}
+                    <a
+                      href="/setting/kategori-masalah"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                        '/setting/kategori-masalah',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-rose-50 flex items-center justify-center shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-rose-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                          />
+                        </svg>
+                      </div>
+                      Ref Kategori Masalah
+                    </a>
                     <div class="my-1.5 border-t border-slate-100"></div>
                   {/if}
 
