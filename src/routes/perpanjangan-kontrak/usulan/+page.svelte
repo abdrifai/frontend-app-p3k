@@ -725,16 +725,17 @@
           {:else}
             {#each records as rec, i}
               {@const isPensiun = rec.dataP3k?.statusPensiun === 'PENSIUN'}
-              <tr class="transition-colors {isPensiun ? 'bg-red-50/40 hover:bg-red-50/70 border-l-4 border-l-red-500' : 'hover:bg-slate-50/50'}">
+              {@const isPensiunUnfinished = isPensiun && rec.status !== 'SELESAI'}
+              <tr class="transition-colors {isPensiunUnfinished ? 'bg-red-50/40 hover:bg-red-50/70 border-l-4 border-l-red-500' : 'hover:bg-slate-50/50'}">
                 <td class="px-4 sm:px-6 py-3 text-sm text-slate-400 font-mono"
                   >{(meta.page - 1) * meta.limit + i + 1}</td
                 >
                 <td class="px-4 sm:px-6 py-3">
                   <div class="flex items-center gap-1.5">
-                    <p class="text-sm font-semibold {isPensiun ? 'text-red-900' : 'text-slate-800'}">
+                    <p class="text-sm font-semibold {isPensiunUnfinished ? 'text-red-900' : 'text-slate-800'}">
                       {rec.dataP3k?.nama || "-"}
                     </p>
-                    {#if isPensiun}
+                    {#if isPensiunUnfinished}
                       <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">
                         ⚠️ PENSIUN
                       </span>
@@ -782,7 +783,7 @@
                         )}">{statusLabel(rec.status)}</span
                       >
                     {/if}
-                    {#if isPensiun}
+                    {#if isPensiunUnfinished}
                       <span class="text-[10px] text-red-600 font-bold ml-1">Hentikan Usulan</span>
                     {/if}
                   </div>
