@@ -936,11 +936,11 @@
                           /></svg
                         >
                       </button>
-                    {:else if rec.status === "PENDING" || rec.status === "REJECTED"}
+                    {:else if rec.status === "PENDING" || rec.status === "REJECTED" || (isPensiun && rec.status !== "SELESAI")}
                        <button
                         on:click={() => confirmDeleteUsulan(rec.id)}
                         class="p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                        title="Hapus"
+                        title={isPensiun && rec.status !== "PENDING" && rec.status !== "REJECTED" ? "Hapus Usulan (Pegawai Pensiun)" : "Hapus"}
                       >
                         <svg
                           class="w-5 h-5"

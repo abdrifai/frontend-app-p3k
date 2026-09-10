@@ -114,7 +114,7 @@
                 searchFoundPensiun = true;
                 searchFoundPensiunNames = pensiunData.map(r => r.nama);
                 const firstNama = searchFoundPensiunNames[0] || searchTerm;
-                addToast(`Pegawai "${firstNama}" sudah berstatus PENSIUN. Data tidak ditampilkan di tab Set Pensiun.`, "warning");
+                addToast(`Pegawai "${firstNama}" sudah berstatus PENSIUN. Data tidak ditampilkan di tab Pemberhentian.`, "warning");
               }
             }
           } catch (_) {
@@ -137,7 +137,7 @@
       if (filterJenisPensiunId) params.set("jenisPensiunId", filterJenisPensiunId);
       if (filterPensiunKategori) params.set("kategori", filterPensiunKategori);
 
-      const result = await apiRequest(`/api/v1/data-p3k/pensiun?${params.toString()}`, "GET");
+      const result = await apiRequest(`/api/v1/pemberhentian?${params.toString()}`, "GET");
       if (result.success) {
         pensiunRecords = result.data;
         pensiunMeta = result.meta;
@@ -165,7 +165,7 @@
       }
       fd.append("file", pensiunForm.file);
 
-      const result = await apiRequest("/api/v1/data-p3k/set-pensiun", "POST", fd, true);
+      const result = await apiRequest("/api/v1/pemberhentian/set", "POST", fd, true);
       if (result.success) {
         addToast(
           `${selectedRecord.nama} (${isParuhWaktu(selectedRecord) ? 'P3K Paruh Waktu' : 'P3K Penuh Waktu'}) berhasil diubah menjadi PENSIUN`,
@@ -197,7 +197,7 @@
       fd.append("jenisPensiunId", editForm.jenisPensiunId || "");
       if (editForm.file) fd.append("file", editForm.file);
 
-      const result = await apiRequest("/api/v1/data-p3k/update-pensiun", "PUT", fd, true);
+      const result = await apiRequest("/api/v1/pemberhentian/update", "PUT", fd, true);
       if (result.success) {
         addToast("Data SK & Jenis Pensiun berhasil diperbarui", "success");
         closeEditModal();
@@ -214,7 +214,7 @@
   const handleRevertPensiun = async () => {
     isReverting = true;
     try {
-      const result = await apiRequest("/api/v1/data-p3k/revert-pensiun", "POST", { nipBaru: revertRecord.nipBaru });
+      const result = await apiRequest("/api/v1/pemberhentian/revert", "POST", { nipBaru: revertRecord.nipBaru });
       if (result.success) {
         addToast(
           `${revertRecord.nama} berhasil dikembalikan ke status AKTIF`,
@@ -417,7 +417,7 @@
 </script>
 
 <svelte:head>
-  <title>Manajemen Pensiun (Penuh & Paruh Waktu) — SIPPPK</title>
+  <title>Manajemen Pemberhentian (Penuh & Paruh Waktu) — SIPPPK</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-6">
@@ -444,10 +444,10 @@
         </div>
         <div>
           <h1 class="text-2xl font-bold text-slate-800">
-            Manajemen Pensiun P3K
+            Manajemen Pemberhentian P3K
           </h1>
           <p class="text-sm text-slate-500 mt-0.5">
-            Kelola pensiun PPPK Penuh Waktu & Paruh Waktu, jenis pensiun, dan arsip SK
+            Kelola pemberhentian PPPK Penuh Waktu & Paruh Waktu, jenis pensiun/pemberhentian, dan arsip SK
           </p>
         </div>
       </div>
@@ -504,7 +504,7 @@
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
           /></svg
         >
-        Set Pensiun
+        Pemberhentian
       </span>
     </button>
     <button
@@ -754,7 +754,7 @@
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                           /></svg
                         >
-                        Set Pensiun
+                        Set Pemberhentian
                       </button>
                     </td>
                   </tr>
@@ -1364,7 +1364,7 @@
             >
           </div>
           <div>
-            <h3 class="text-lg font-bold text-slate-800">Set Pensiun</h3>
+            <h3 class="text-lg font-bold text-slate-800">Set Pemberhentian</h3>
             <p class="text-sm text-slate-400">
               Arsip SK untuk <span class="font-semibold text-slate-600"
                 >{selectedRecord.nama}</span
@@ -1504,7 +1504,7 @@
                 ></div>
                 Memproses...
               {:else}
-                Simpan & Set Pensiun
+                Simpan & Set Pemberhentian
               {/if}
             </button>
           </div>

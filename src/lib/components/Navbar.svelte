@@ -29,7 +29,7 @@
 
     // Default fallback while initial permissions are being loaded
     if (isUserPensiun && !userRoles.includes('user')) {
-      return ['dashboard', 'data-utama', 'profil-pegawai', 'manajemen-pensiun', 'laporan', 'laporan-estimasi-pensiun'].includes(key);
+      return ['dashboard', 'data-utama', 'profil-pegawai', 'manajemen-pemberhentian', 'laporan', 'laporan-estimasi-pensiun'].includes(key);
     }
     // Default for user/operator role: all main apps except settings (unless admin)
     return !key.startsWith('setting-');
@@ -104,7 +104,7 @@
     isActive("/data-p3k") ||
     isActive("/masalah-pegawai") ||
     isActive("/statistik-p3k") ||
-    isActive("/manajemen-pensiun") ||
+    isActive("/manajemen-pemberhentian") ||
     isActive("/perbedaan-data") ||
     isActive("/data-p3k/mapping-unor") ||
     isActive("/mapping-unor");
@@ -116,7 +116,7 @@
     isActive("/statistik-p3k-import") ||
     isActive("/setting/import-per-unit-kerja");
 
-  const isPensiunActive = () => isActive("/manajemen-pensiun");
+  const isPensiunActive = () => isActive("/manajemen-pemberhentian");
   let canAccessPensiun = $derived(isUserAdmin || isUserPensiun);
 
   const isSettingActive = () =>
@@ -321,7 +321,7 @@
 
         {#if $authStore.isAuthenticated}
           <!-- Dropdown: Data P3K Utama -->
-          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pensiun', 'perbedaan-data'])}
+          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pemberhentian', 'perbedaan-data'])}
             <div
               class="relative shrink-0"
               role="group"
@@ -451,11 +451,11 @@
                       </a>
                     {/if}
 
-                    {#if canAccess('manajemen-pensiun')}
+                    {#if canAccess('manajemen-pemberhentian')}
                       <a
-                        href="/manajemen-pensiun"
+                        href="/manajemen-pemberhentian"
                         class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
-                          '/manajemen-pensiun',
+                          '/manajemen-pemberhentian',
                         )
                           ? 'text-blue-700 bg-blue-50 font-medium'
                           : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
@@ -478,7 +478,7 @@
                           >
                         </div>
                         <div>
-                          <p class="font-medium leading-tight">Manajemen Pensiun</p>
+                          <p class="font-medium leading-tight">Manajemen Pemberhentian</p>
                           <p
                             class="text-[10px] text-slate-400 leading-tight mt-0.5"
                           >
@@ -1668,7 +1668,7 @@
 
         {#if $authStore.isAuthenticated}
           <!-- Mobile: Data P3K Utama Group -->
-          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pensiun', 'perbedaan-data', 'mapping-unor'])}
+          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pemberhentian', 'perbedaan-data', 'mapping-unor'])}
             <div class="pt-1">
               <button
                 type="button"
@@ -1771,12 +1771,12 @@
                       Statistik
                     </a>
                   {/if}
-                  {#if canAccess('manajemen-pensiun')}
+                  {#if canAccess('manajemen-pemberhentian')}
                     <a
-                      href="/manajemen-pensiun"
+                      href="/manajemen-pemberhentian"
                       onclick={closeMobile}
                       class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
-                        '/manajemen-pensiun',
+                        '/manajemen-pemberhentian',
                       )
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
@@ -1797,7 +1797,7 @@
                           /></svg
                         >
                       </div>
-                      Manajemen Pensiun
+                      Manajemen Pemberhentian
                     </a>
                   {/if}
                   {#if canAccess('perbedaan-data')}
