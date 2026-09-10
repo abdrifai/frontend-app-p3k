@@ -1244,6 +1244,11 @@
                     </dt>
                     <dd class="mt-1 text-sm text-red-700 font-bold">
                       PENSIUN (Sudah Berhenti)
+                      {#if selectedRecord.jenisPensiun}
+                        <span class="ml-1 text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-800 border border-red-200">
+                          {selectedRecord.jenisPensiun.nama}
+                        </span>
+                      {/if}
                     </dd>
                     {#if selectedRecord.arsipSkPensiun}
                       <dd class="text-xs text-red-500 mt-1">

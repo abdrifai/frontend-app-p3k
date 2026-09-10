@@ -1406,6 +1406,9 @@
               {#if profile.arsipSkPensiun.tanggalSk}
                 • Tanggal SK: <b>{profile.arsipSkPensiun.tanggalSk}</b>
               {/if}
+              {#if profile.jenisPensiun}
+                • Jenis: <b class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">{profile.jenisPensiun.nama}</b>
+              {/if}
             </p>
           </div>
         {/if}

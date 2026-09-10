@@ -5,28 +5,29 @@
   import { apiRequest, API_BASE_URL } from "$lib/api";
   import { addToast } from "$lib/toastStore";
 
-  const API_BASE = `${API_BASE_URL}/api/v1/data-p3k`;
-
   // State
-  let activeTab = "set-pensiun"; // 'set-pensiun' | 'data-pensiun'
+  let activeTab = "set-pensiun"; // 'set-pensiun' | 'data-pensiun' | 'ref-jenis-pensiun'
   let isLoading = false;
   let records = [];
   let pensiunRecords = [];
+  let refJenisPensiunList = [];
   let meta = { total: 0, page: 1, limit: 10, totalPages: 0 };
   let pensiunMeta = { total: 0, page: 1, limit: 10, totalPages: 0 };
   let searchTerm = "";
   let pensiunSearchTerm = "";
+  let filterJenisPensiunId = "";
+  let refSearchTerm = "";
 
   // Set Pensiun Modal
   let showSetPensiunModal = false;
   let selectedRecord = null;
-  let pensiunForm = { nomorSk: "", tanggalSk: "", file: null };
+  let pensiunForm = { nomorSk: "", tanggalSk: "", jenisPensiunId: "", file: null };
   let isSubmitting = false;
 
   // Edit Pensiun Modal
   let showEditModal = false;
   let editRecord = null;
-  let editForm = { nomorSk: "", tanggalSk: "", file: null };
+  let editForm = { nomorSk: "", tanggalSk: "", jenisPensiunId: "", file: null };
   let isEditing = false;
 
   // Revert Confirmation Modal
@@ -38,10 +39,43 @@
   let showDetailModal = false;
   let detailRecord = null;
 
-  // --- API calls ---
+  // Ref Jenis Pensiun Modal (Add/Edit)
+  let showRefModal = false;
+  let editingRef = null;
+  let refForm = { kode: "", nama: "", keterangan: "", isActive: true };
+  let isSavingRef = false;
+
+  // Delete Ref Modal
+  let showDeleteRefModal = false;
+  let deletingRef = null;
+  let isDeletingRef = false;
+
   // Flag: apakah hasil pencarian menunjukkan pegawai sudah pensiun
   let searchFoundPensiun = false;
   let searchFoundPensiunNames = [];
+
+  // Helper badge color for jenis pensiun
+  const getJenisBadgeClass = (kode) => {
+    const k = (kode || "").toUpperCase();
+    if (k === "BUP") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (k === "MENINGGAL") return "bg-rose-50 text-rose-700 border-rose-200";
+    if (k === "APS") return "bg-amber-50 text-amber-700 border-amber-200";
+    if (k === "UZUR") return "bg-purple-50 text-purple-700 border-purple-200";
+    if (k === "PERAMPINGAN") return "bg-blue-50 text-blue-700 border-blue-200";
+    return "bg-slate-50 text-slate-700 border-slate-200";
+  };
+
+  // --- API calls ---
+  const fetchRefJenisPensiun = async () => {
+    try {
+      const result = await apiRequest("/api/v1/ref-jenis-pensiun", "GET");
+      if (result.success) {
+        refJenisPensiunList = result.data || [];
+      }
+    } catch (err) {
+      console.error("fetchRefJenisPensiun error:", err);
+    }
+  };
 
   const fetchActiveEmployees = async (page = 1) => {
     isLoading = true;
@@ -63,12 +97,10 @@
         // Jika pencarian aktif dan hasilnya kosong, cek apakah pegawai ada tapi sudah pensiun
         if (searchTerm.trim() && records.length === 0) {
           try {
-            // Cari TANPA filter statusPensiun — untuk melihat apakah ada data dengan nama/NIP tersebut
             const allParams = new URLSearchParams({ page: 1, limit: 5 });
             allParams.set("search", searchTerm.trim());
             const allResult = await apiRequest(`/api/v1/data-p3k?${allParams.toString()}`, "GET");
             if (allResult.success && allResult.data && allResult.data.length > 0) {
-              // Filter hanya yang statusPensiun bukan AKTIF
               const pensiunData = allResult.data.filter(r => r.statusPensiun && r.statusPensiun !== "AKTIF");
               if (pensiunData.length > 0) {
                 searchFoundPensiun = true;
@@ -78,7 +110,7 @@
               }
             }
           } catch (_) {
-            // Abaikan error pengecekan — tidak mengganggu flow utama
+            // ignore
           }
         }
       }
@@ -94,6 +126,7 @@
     try {
       const params = new URLSearchParams({ page, limit: 10 });
       if (pensiunSearchTerm) params.set("search", pensiunSearchTerm);
+      if (filterJenisPensiunId) params.set("jenisPensiunId", filterJenisPensiunId);
 
       const result = await apiRequest(`/api/v1/data-p3k/pensiun?${params.toString()}`, "GET");
       if (result.success) {
@@ -109,7 +142,7 @@
 
   const handleSetPensiun = async () => {
     if (!pensiunForm.nomorSk || !pensiunForm.tanggalSk || !pensiunForm.file) {
-      addToast("Semua field wajib diisi termasuk file SK", "error");
+      addToast("Nomor SK, Tanggal SK, dan File SK wajib diisi", "error");
       return;
     }
     isSubmitting = true;
@@ -118,6 +151,9 @@
       fd.append("nipBaru", selectedRecord.nipBaru);
       fd.append("nomorSk", pensiunForm.nomorSk);
       fd.append("tanggalSk", pensiunForm.tanggalSk);
+      if (pensiunForm.jenisPensiunId) {
+        fd.append("jenisPensiunId", pensiunForm.jenisPensiunId);
+      }
       fd.append("file", pensiunForm.file);
 
       const result = await apiRequest("/api/v1/data-p3k/set-pensiun", "POST", fd, true);
@@ -129,6 +165,7 @@
         closeSetPensiunModal();
         fetchActiveEmployees(meta.page);
         fetchPegawaiPensiun(pensiunMeta.page);
+        fetchRefJenisPensiun();
       }
     } catch (err) {
       console.error("handleSetPensiun error:", err);
@@ -138,7 +175,7 @@
   };
 
   const handleUpdatePensiun = async () => {
-    if (!editForm.nomorSk && !editForm.tanggalSk && !editForm.file) {
+    if (!editForm.nomorSk && !editForm.tanggalSk && !editForm.file && editForm.jenisPensiunId === (editRecord.jenisPensiunId || "")) {
       addToast("Minimal satu field harus diubah", "error");
       return;
     }
@@ -148,13 +185,15 @@
       fd.append("nipBaru", editRecord.nipBaru);
       if (editForm.nomorSk) fd.append("nomorSk", editForm.nomorSk);
       if (editForm.tanggalSk) fd.append("tanggalSk", editForm.tanggalSk);
+      fd.append("jenisPensiunId", editForm.jenisPensiunId || "");
       if (editForm.file) fd.append("file", editForm.file);
 
       const result = await apiRequest("/api/v1/data-p3k/update-pensiun", "PUT", fd, true);
       if (result.success) {
-        addToast("Data SK Pensiun berhasil diperbarui", "success");
+        addToast("Data SK & Jenis Pensiun berhasil diperbarui", "success");
         closeEditModal();
         fetchPegawaiPensiun(pensiunMeta.page);
+        fetchRefJenisPensiun();
       }
     } catch (err) {
       console.error("handleUpdatePensiun error:", err);
@@ -175,6 +214,7 @@
         closeRevertModal();
         fetchActiveEmployees(meta.page);
         fetchPegawaiPensiun(pensiunMeta.page);
+        fetchRefJenisPensiun();
       }
     } catch (err) {
       console.error("handleRevertPensiun error:", err);
@@ -183,10 +223,95 @@
     }
   };
 
+  // --- Ref Jenis Pensiun actions ---
+  const openAddRefModal = () => {
+    editingRef = null;
+    refForm = { kode: "", nama: "", keterangan: "", isActive: true };
+    showRefModal = true;
+  };
+
+  const openEditRefModal = (ref) => {
+    editingRef = ref;
+    refForm = {
+      kode: ref.kode || "",
+      nama: ref.nama || "",
+      keterangan: ref.keterangan || "",
+      isActive: ref.isActive !== undefined ? ref.isActive : true
+    };
+    showRefModal = true;
+  };
+
+  const closeRefModal = () => {
+    showRefModal = false;
+    editingRef = null;
+  };
+
+  const handleSaveRef = async () => {
+    if (!refForm.nama.trim()) {
+      addToast("Nama jenis pensiun wajib diisi", "error");
+      return;
+    }
+
+    isSavingRef = true;
+    try {
+      let result;
+      if (editingRef) {
+        result = await apiRequest(`/api/v1/ref-jenis-pensiun/${editingRef.id}`, "PUT", refForm);
+      } else {
+        result = await apiRequest("/api/v1/ref-jenis-pensiun", "POST", refForm);
+      }
+
+      if (result.success) {
+        addToast(
+          editingRef ? "Jenis pensiun berhasil diperbarui" : "Jenis pensiun baru berhasil ditambahkan",
+          "success"
+        );
+        closeRefModal();
+        fetchRefJenisPensiun();
+      }
+    } catch (err) {
+      console.error("handleSaveRef error:", err);
+    } finally {
+      isSavingRef = false;
+    }
+  };
+
+  const openDeleteRefModal = (ref) => {
+    deletingRef = ref;
+    showDeleteRefModal = true;
+  };
+
+  const closeDeleteRefModal = () => {
+    showDeleteRefModal = false;
+    deletingRef = null;
+  };
+
+  const handleDeleteRef = async () => {
+    if (!deletingRef) return;
+    isDeletingRef = true;
+    try {
+      const result = await apiRequest(`/api/v1/ref-jenis-pensiun/${deletingRef.id}`, "DELETE");
+      if (result.success) {
+        addToast("Jenis pensiun berhasil dihapus", "success");
+        closeDeleteRefModal();
+        fetchRefJenisPensiun();
+      }
+    } catch (err) {
+      console.error("handleDeleteRef error:", err);
+    } finally {
+      isDeletingRef = false;
+    }
+  };
+
   // --- Modal handlers ---
   const openSetPensiunModal = (rec) => {
     selectedRecord = rec;
-    pensiunForm = { nomorSk: "", tanggalSk: "", file: null };
+    pensiunForm = {
+      nomorSk: "",
+      tanggalSk: "",
+      jenisPensiunId: refJenisPensiunList.find(j => j.kode === "BUP")?.id || (refJenisPensiunList[0]?.id || ""),
+      file: null
+    };
     showSetPensiunModal = true;
   };
   const closeSetPensiunModal = () => {
@@ -199,6 +324,7 @@
     editForm = {
       nomorSk: rec.arsipSkPensiun?.nomorSk || "",
       tanggalSk: rec.arsipSkPensiun?.tanggalSk || "",
+      jenisPensiunId: rec.jenisPensiun?.id || rec.jenisPensiunId || "",
       file: null,
     };
     showEditModal = true;
@@ -240,9 +366,19 @@
   const switchTab = (tab) => {
     activeTab = tab;
     if (tab === "set-pensiun" && records.length === 0) fetchActiveEmployees();
-    if (tab === "data-pensiun" && pensiunRecords.length === 0)
-      fetchPegawaiPensiun();
+    if (tab === "data-pensiun") fetchPegawaiPensiun();
+    if (tab === "ref-jenis-pensiun" && refJenisPensiunList.length === 0) fetchRefJenisPensiun();
   };
+
+  $: filteredRefList = refJenisPensiunList.filter(item => {
+    if (!refSearchTerm) return true;
+    const s = refSearchTerm.toLowerCase();
+    return (
+      (item.nama && item.nama.toLowerCase().includes(s)) ||
+      (item.kode && item.kode.toLowerCase().includes(s)) ||
+      (item.keterangan && item.keterangan.toLowerCase().includes(s))
+    );
+  });
 
   onMount(() => {
     if (!$authStore.isAuthenticated) {
@@ -255,6 +391,7 @@
       goto("/");
       return;
     }
+    fetchRefJenisPensiun();
     fetchActiveEmployees();
     fetchPegawaiPensiun();
   });
@@ -291,7 +428,7 @@
             Manajemen Pensiun P3K
           </h1>
           <p class="text-sm text-slate-500 mt-0.5">
-            Kelola status pensiun dan arsip SK pegawai PPPK
+            Kelola status pensiun, jenis pensiun, dan arsip SK pegawai PPPK
           </p>
         </div>
       </div>
@@ -313,6 +450,12 @@
           Pensiun
         </p>
         <p class="text-lg font-bold text-red-700">{pensiunMeta.total}</p>
+      </div>
+      <div class="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200">
+        <p class="text-[10px] uppercase font-bold text-amber-600 tracking-wider">
+          Jenis Pensiun
+        </p>
+        <p class="text-lg font-bold text-amber-700">{refJenisPensiunList.length}</p>
       </div>
     </div>
   </div>
@@ -371,6 +514,36 @@
           <span
             class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
             >{pensiunMeta.total}</span
+          >
+        {/if}
+      </span>
+    </button>
+    <button
+      type="button"
+      on:click={() => switchTab("ref-jenis-pensiun")}
+      class="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200
+        {activeTab === 'ref-jenis-pensiun'
+        ? 'bg-white text-indigo-700 shadow-sm border border-slate-200/50'
+        : 'text-slate-500 hover:text-slate-700'}"
+    >
+      <span class="flex items-center justify-center gap-2">
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          /></svg
+        >
+        Referensi Jenis Pensiun
+        {#if refJenisPensiunList.length > 0}
+          <span
+            class="bg-indigo-100 text-indigo-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            >{refJenisPensiunList.length}</span
           >
         {/if}
       </span>
@@ -587,9 +760,9 @@
   <!-- ============ TAB 2: DATA PENSIUN ============ -->
   {#if activeTab === "data-pensiun"}
     <div class="space-y-4">
-      <!-- Search bar -->
+      <!-- Search & Filter bar -->
       <form on:submit={handleSearchPensiun} class="card p-4">
-        <div class="flex gap-3">
+        <div class="flex flex-col sm:flex-row gap-3">
           <div class="flex-1 relative">
             <svg
               class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -609,6 +782,18 @@
               placeholder="Cari pegawai pensiun..."
               class="input-field !pl-10"
             />
+          </div>
+          <div class="w-full sm:w-64">
+            <select
+              bind:value={filterJenisPensiunId}
+              on:change={() => fetchPegawaiPensiun(1)}
+              class="input-field"
+            >
+              <option value="">Semua Jenis Pensiun</option>
+              {#each refJenisPensiunList as jp}
+                <option value={jp.id}>{jp.nama}</option>
+              {/each}
+            </select>
           </div>
           <button
             type="submit"
@@ -637,6 +822,10 @@
                   >Nama</th
                 >
                 <th
+                  class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Jenis Pensiun</th
+                >
+                <th
                   class="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
                   >No. SK</th
                 >
@@ -653,7 +842,7 @@
             <tbody class="bg-white divide-y divide-slate-100">
               {#if isLoading}
                 <tr>
-                  <td colspan="6" class="px-6 py-12 text-center">
+                  <td colspan="7" class="px-6 py-12 text-center">
                     <div
                       class="w-8 h-8 border-3 border-red-500 border-t-transparent rounded-full animate-spin mx-auto"
                     ></div>
@@ -662,7 +851,7 @@
                 </tr>
               {:else if pensiunRecords.length === 0}
                 <tr>
-                  <td colspan="6" class="px-6 py-12 text-center">
+                  <td colspan="7" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center gap-2">
                       <svg
                         class="w-12 h-12 text-slate-300"
@@ -702,6 +891,21 @@
                       <p class="text-xs text-slate-400">
                         {rec.unorNama || "-"}
                       </p>
+                    </td>
+                    <td class="px-4 sm:px-6 py-3">
+                      {#if rec.jenisPensiun}
+                        <span
+                          class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border {getJenisBadgeClass(rec.jenisPensiun.kode)}"
+                        >
+                          {rec.jenisPensiun.nama}
+                        </span>
+                      {:else}
+                        <span
+                          class="inline-flex items-center px-2 py-0.5 rounded text-xs text-slate-400 bg-slate-50 border border-slate-200 font-normal"
+                        >
+                          Belum Diset
+                        </span>
+                      {/if}
                     </td>
                     <td
                       class="hidden md:table-cell px-4 sm:px-6 py-3 text-sm text-slate-600 font-mono"
@@ -765,7 +969,7 @@
                         <button
                           on:click={() => openEditModal(rec)}
                           class="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 transition-colors"
-                          title="Edit SK"
+                          title="Edit SK & Jenis Pensiun"
                         >
                           <svg
                             class="w-4 h-4"
@@ -862,6 +1066,165 @@
       </div>
     </div>
   {/if}
+
+  <!-- ============ TAB 3: REFERENSI JENIS PENSIUN ============ -->
+  {#if activeTab === "ref-jenis-pensiun"}
+    <div class="space-y-4">
+      <!-- Header Actions & Search -->
+      <div class="card p-4 sm:p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex-1 relative">
+            <svg
+              class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              /></svg
+            >
+            <input
+              type="text"
+              bind:value={refSearchTerm}
+              placeholder="Cari jenis pensiun atau kode..."
+              class="input-field !pl-10"
+            />
+          </div>
+          <button
+            type="button"
+            on:click={openAddRefModal}
+            class="btn-primary !bg-indigo-600 hover:!bg-indigo-700 shadow-indigo-200 inline-flex items-center justify-center gap-2 whitespace-nowrap"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Tambah Jenis Pensiun
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Referensi -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead>
+              <tr class="bg-indigo-50/50">
+                <th
+                  class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >No</th
+                >
+                <th
+                  class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Kode</th
+                >
+                <th
+                  class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Nama Jenis Pensiun</th
+                >
+                <th
+                  class="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Keterangan</th
+                >
+                <th
+                  class="px-4 sm:px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Pegawai Pensiun</th
+                >
+                <th
+                  class="px-4 sm:px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Status</th
+                >
+                <th
+                  class="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Aksi</th
+                >
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-slate-100">
+              {#if filteredRefList.length === 0}
+                <tr>
+                  <td colspan="7" class="px-6 py-12 text-center text-slate-400 text-sm">
+                    Tidak ada data referensi jenis pensiun
+                  </td>
+                </tr>
+              {:else}
+                {#each filteredRefList as item, i}
+                  <tr class="hover:bg-indigo-50/20 transition-colors">
+                    <td class="px-4 sm:px-6 py-3.5 text-sm text-slate-400 font-mono">
+                      {i + 1}
+                    </td>
+                    <td class="px-4 sm:px-6 py-3.5 text-sm font-bold font-mono">
+                      {#if item.kode}
+                        <span class="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 text-xs">
+                          {item.kode}
+                        </span>
+                      {:else}
+                        <span class="text-slate-300">-</span>
+                      {/if}
+                    </td>
+                    <td class="px-4 sm:px-6 py-3.5">
+                      <p class="text-sm font-semibold text-slate-800">
+                        {item.nama}
+                      </p>
+                      <p class="text-xs text-slate-400 md:hidden mt-0.5">
+                        {item.keterangan || "-"}
+                      </p>
+                    </td>
+                    <td class="hidden md:table-cell px-4 sm:px-6 py-3.5 text-xs text-slate-500 max-w-xs">
+                      {item.keterangan || "-"}
+                    </td>
+                    <td class="px-4 sm:px-6 py-3.5 text-center">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                        {item._count?.dataP3k || 0} orang
+                      </span>
+                    </td>
+                    <td class="px-4 sm:px-6 py-3.5 text-center">
+                      {#if item.isActive}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                          Aktif
+                        </span>
+                      {:else}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
+                          Nonaktif
+                        </span>
+                      {/if}
+                    </td>
+                    <td class="px-4 sm:px-6 py-3.5 text-right">
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          on:click={() => openEditRefModal(item)}
+                          class="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 transition-colors"
+                          title="Edit"
+                        >
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          on:click={() => openDeleteRefModal(item)}
+                          disabled={item._count?.dataP3k > 0}
+                          class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                          title={item._count?.dataP3k > 0 ? "Tidak dapat dihapus karena sudah digunakan" : "Hapus"}
+                        >
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {/each}
+              {/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <!-- ==================== MODALS ==================== -->
@@ -902,7 +1265,7 @@
           <div>
             <h3 class="text-lg font-bold text-slate-800">Set Pensiun</h3>
             <p class="text-sm text-slate-400">
-              Arsip SK untuk <span class="font-semibold text-slate-600"
+              Arsip SK & Jenis Pensiun untuk <span class="font-semibold text-slate-600"
                 >{selectedRecord.nama}</span
               >
             </p>
@@ -929,6 +1292,23 @@
           on:submit|preventDefault={handleSetPensiun}
           class="mt-6 space-y-4"
         >
+          <div>
+            <label
+              for="sp-jenisPensiun"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Jenis Pensiun</label
+            >
+            <select
+              id="sp-jenisPensiun"
+              bind:value={pensiunForm.jenisPensiunId}
+              class="input-field"
+            >
+              <option value="">-- Pilih Jenis Pensiun --</option>
+              {#each refJenisPensiunList.filter(j => j.isActive) as jp}
+                <option value={jp.id}>{jp.nama} {jp.kode ? `(${jp.kode})` : ''}</option>
+              {/each}
+            </select>
+          </div>
           <div>
             <label
               for="sp-nomorSk"
@@ -1064,9 +1444,9 @@
             >
           </div>
           <div>
-            <h3 class="text-lg font-bold text-slate-800">Edit SK Pensiun</h3>
+            <h3 class="text-lg font-bold text-slate-800">Edit SK & Jenis Pensiun</h3>
             <p class="text-sm text-slate-400">
-              Perbarui data SK untuk <span class="font-semibold text-slate-600"
+              Perbarui data pensiun untuk <span class="font-semibold text-slate-600"
                 >{editRecord.nama}</span
               >
             </p>
@@ -1093,6 +1473,23 @@
           on:submit|preventDefault={handleUpdatePensiun}
           class="mt-6 space-y-4"
         >
+          <div>
+            <label
+              for="ed-jenisPensiun"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Jenis Pensiun</label
+            >
+            <select
+              id="ed-jenisPensiun"
+              bind:value={editForm.jenisPensiunId}
+              class="input-field"
+            >
+              <option value="">-- Pilih Jenis Pensiun --</option>
+              {#each refJenisPensiunList.filter(j => j.isActive) as jp}
+                <option value={jp.id}>{jp.nama} {jp.kode ? `(${jp.kode})` : ''}</option>
+              {/each}
+            </select>
+          </div>
           <div>
             <label
               for="ed-nomorSk"
@@ -1244,7 +1641,7 @@
             >
             akan dikembalikan menjadi
             <span class="font-bold text-emerald-600">AKTIF</span>. Arsip SK
-            Pensiun akan dihapus.
+            Pensiun dan jenis pensiun akan dibersihkan.
           </p>
         </div>
         <div class="mt-6 flex gap-3">
@@ -1373,6 +1770,28 @@
                 {detailRecord.tanggalLahir || "-"}
               </dd>
             </div>
+            
+            <!-- Jenis Pensiun Info Card -->
+            <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-100 sm:col-span-2">
+              <dt class="text-xs font-medium text-indigo-600 uppercase tracking-wide">
+                Jenis Pensiun
+              </dt>
+              <dd class="mt-1 flex items-center gap-2">
+                {#if detailRecord.jenisPensiun}
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border {getJenisBadgeClass(detailRecord.jenisPensiun.kode)}">
+                    {detailRecord.jenisPensiun.nama} {detailRecord.jenisPensiun.kode ? `(${detailRecord.jenisPensiun.kode})` : ''}
+                  </span>
+                  {#if detailRecord.jenisPensiun.keterangan}
+                    <span class="text-xs text-slate-500 italic">
+                      — {detailRecord.jenisPensiun.keterangan}
+                    </span>
+                  {/if}
+                {:else}
+                  <span class="text-xs text-slate-400 italic">Belum dikategorikan</span>
+                {/if}
+              </dd>
+            </div>
+
             <!-- SK info -->
             <div
               class="p-4 rounded-xl bg-gradient-to-br from-red-50 to-rose-50 border border-red-100 sm:col-span-2"
@@ -1444,6 +1863,219 @@
             on:click={closeDetailModal}
             class="btn-secondary">Tutup</button
           >
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- ADD / EDIT REF JENIS PENSIUN MODAL -->
+{#if showRefModal}
+  <div
+    class="fixed z-[60] inset-0 overflow-y-auto"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+      <button
+        type="button"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm w-full h-full border-none cursor-default"
+        on:click={closeRefModal}
+      ></button>
+      <div
+        class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 z-10"
+      >
+        <div class="flex items-center gap-4 pb-5 border-b border-slate-100">
+          <div
+            class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20"
+          >
+            <svg
+              class="h-6 w-6 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              /></svg
+            >
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">
+              {editingRef ? "Edit Jenis Pensiun" : "Tambah Jenis Pensiun"}
+            </h3>
+            <p class="text-sm text-slate-400">
+              {editingRef ? `Perbarui referensi "${editingRef.nama}"` : "Buat referensi kategori pensiun baru"}
+            </p>
+          </div>
+          <button
+            on:click={closeRefModal}
+            class="ml-auto p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              /></svg
+            >
+          </button>
+        </div>
+        <form
+          on:submit|preventDefault={handleSaveRef}
+          class="mt-6 space-y-4"
+        >
+          <div>
+            <label
+              for="rf-kode"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Kode (Opsional)</label
+            >
+            <input
+              id="rf-kode"
+              type="text"
+              bind:value={refForm.kode}
+              placeholder="Contoh: BUP, APS, MENINGGAL"
+              class="input-field uppercase"
+            />
+          </div>
+          <div>
+            <label
+              for="rf-nama"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Nama Jenis Pensiun <span class="text-red-500">*</span></label
+            >
+            <input
+              id="rf-nama"
+              type="text"
+              bind:value={refForm.nama}
+              placeholder="Contoh: Batas Usia Pensiun (BUP)"
+              class="input-field"
+              required
+            />
+          </div>
+          <div>
+            <label
+              for="rf-keterangan"
+              class="block text-sm font-medium text-slate-700 mb-1"
+              >Keterangan</label
+            >
+            <textarea
+              id="rf-keterangan"
+              bind:value={refForm.keterangan}
+              rows="3"
+              placeholder="Deskripsi atau penjelasan mengenai jenis pensiun ini..."
+              class="input-field"
+            ></textarea>
+          </div>
+          <div class="flex items-center gap-3 pt-1">
+            <input
+              type="checkbox"
+              id="rf-isActive"
+              bind:checked={refForm.isActive}
+              class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+            />
+            <label for="rf-isActive" class="text-sm font-medium text-slate-700 cursor-pointer">
+              Status Aktif (Ditampilkan dalam pilihan)
+            </label>
+          </div>
+          <div class="pt-4 flex gap-3">
+            <button
+              type="button"
+              on:click={closeRefModal}
+              class="flex-1 btn-secondary">Batal</button
+            >
+            <button
+              type="submit"
+              disabled={isSavingRef}
+              class="flex-1 btn-primary !bg-indigo-600 hover:!bg-indigo-700 shadow-indigo-200 disabled:opacity-50"
+            >
+              {#if isSavingRef}
+                <div
+                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 inline-block"
+                ></div>
+                Menyimpan...
+              {:else}
+                Simpan
+              {/if}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- DELETE REF CONFIRMATION MODAL -->
+{#if showDeleteRefModal && deletingRef}
+  <div
+    class="fixed z-[60] inset-0 overflow-y-auto"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+      <button
+        type="button"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm w-full h-full border-none cursor-default"
+        on:click={closeDeleteRefModal}
+      ></button>
+      <div
+        class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 z-10"
+      >
+        <div class="text-center">
+          <div
+            class="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/25 mb-4"
+          >
+            <svg
+              class="w-7 h-7 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              ><path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              /></svg
+            >
+          </div>
+          <h3 class="text-lg font-bold text-slate-800">
+            Hapus Jenis Pensiun?
+          </h3>
+          <p class="mt-2 text-sm text-slate-500">
+            Apakah Anda yakin ingin menghapus referensi jenis pensiun <span class="font-semibold text-slate-700"
+              >"{deletingRef.nama}"</span
+            >? Tindakan ini tidak dapat dibatalkan.
+          </p>
+        </div>
+        <div class="mt-6 flex gap-3">
+          <button
+            type="button"
+            on:click={closeDeleteRefModal}
+            class="flex-1 btn-secondary">Batal</button
+          >
+          <button
+            type="button"
+            on:click={handleDeleteRef}
+            disabled={isDeletingRef}
+            class="flex-1 btn-primary !bg-red-600 hover:!bg-red-700 shadow-red-200 disabled:opacity-50"
+          >
+            {#if isDeletingRef}
+              <div
+                class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 inline-block"
+              ></div>
+              Menghapus...
+            {:else}
+              Ya, Hapus
+            {/if}
+          </button>
         </div>
       </div>
     </div>
