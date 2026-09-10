@@ -14,8 +14,10 @@
   let meta = { total: 0, page: 1, limit: 10, totalPages: 0 };
   let pensiunMeta = { total: 0, page: 1, limit: 10, totalPages: 0 };
   let searchTerm = "";
+  let activeKategori = "ALL"; // 'ALL' | 'PENUH_WAKTU' | 'PARUH_WAKTU'
   let pensiunSearchTerm = "";
   let filterJenisPensiunId = "";
+  let filterPensiunKategori = "ALL"; // 'ALL' | 'PENUH_WAKTU' | 'PARUH_WAKTU'
   let refSearchTerm = "";
 
   // Set Pensiun Modal
@@ -65,6 +67,11 @@
     return "bg-slate-50 text-slate-700 border-slate-200";
   };
 
+  // Helper badge for kategori pegawai
+  const isParuhWaktu = (rec) => {
+    return rec?.kategoriPegawai === "PARUH_WAKTU" || rec?.eselonId !== undefined;
+  };
+
   // --- API calls ---
   const fetchRefJenisPensiun = async () => {
     try {
@@ -86,6 +93,7 @@
         page,
         limit: 10,
         statusPensiun: "AKTIF",
+        kategori: activeKategori,
       });
       if (searchTerm) params.set("search", searchTerm);
 
@@ -97,7 +105,7 @@
         // Jika pencarian aktif dan hasilnya kosong, cek apakah pegawai ada tapi sudah pensiun
         if (searchTerm.trim() && records.length === 0) {
           try {
-            const allParams = new URLSearchParams({ page: 1, limit: 5 });
+            const allParams = new URLSearchParams({ page: 1, limit: 5, kategori: "ALL" });
             allParams.set("search", searchTerm.trim());
             const allResult = await apiRequest(`/api/v1/data-p3k?${allParams.toString()}`, "GET");
             if (allResult.success && allResult.data && allResult.data.length > 0) {
@@ -127,6 +135,7 @@
       const params = new URLSearchParams({ page, limit: 10 });
       if (pensiunSearchTerm) params.set("search", pensiunSearchTerm);
       if (filterJenisPensiunId) params.set("jenisPensiunId", filterJenisPensiunId);
+      if (filterPensiunKategori) params.set("kategori", filterPensiunKategori);
 
       const result = await apiRequest(`/api/v1/data-p3k/pensiun?${params.toString()}`, "GET");
       if (result.success) {
@@ -159,7 +168,7 @@
       const result = await apiRequest("/api/v1/data-p3k/set-pensiun", "POST", fd, true);
       if (result.success) {
         addToast(
-          `${selectedRecord.nama} berhasil diubah menjadi PENSIUN`,
+          `${selectedRecord.nama} (${isParuhWaktu(selectedRecord) ? 'P3K Paruh Waktu' : 'P3K Penuh Waktu'}) berhasil diubah menjadi PENSIUN`,
           "success",
         );
         closeSetPensiunModal();
@@ -362,6 +371,16 @@
     fetchPegawaiPensiun(1);
   };
 
+  const handleActiveKategoriChange = (kat) => {
+    activeKategori = kat;
+    fetchActiveEmployees(1);
+  };
+
+  const handlePensiunKategoriChange = (kat) => {
+    filterPensiunKategori = kat;
+    fetchPegawaiPensiun(1);
+  };
+
   // --- Tab switch ---
   const switchTab = (tab) => {
     activeTab = tab;
@@ -398,7 +417,7 @@
 </script>
 
 <svelte:head>
-  <title>Manajemen Pensiun — SIPPPK</title>
+  <title>Manajemen Pensiun (Penuh & Paruh Waktu) — SIPPPK</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8 space-y-6">
@@ -428,7 +447,7 @@
             Manajemen Pensiun P3K
           </h1>
           <p class="text-sm text-slate-500 mt-0.5">
-            Kelola status pensiun, jenis pensiun, dan arsip SK pegawai PPPK
+            Kelola pensiun PPPK Penuh Waktu & Paruh Waktu, jenis pensiun, dan arsip SK
           </p>
         </div>
       </div>
@@ -553,9 +572,35 @@
   <!-- ============ TAB 1: SET PENSIUN ============ -->
   {#if activeTab === "set-pensiun"}
     <div class="space-y-4">
-      <!-- Search bar -->
-      <form on:submit={handleSearchActive} class="card p-4">
-        <div class="flex gap-3">
+      <!-- Search & Kategori Filter bar -->
+      <div class="card p-4 space-y-3">
+        <!-- Sub-filter pills for kategori -->
+        <div class="flex items-center gap-2 pb-2 border-b border-slate-100 text-xs font-semibold">
+          <span class="text-slate-400 uppercase tracking-wider text-[10px] mr-1">Kategori:</span>
+          <button
+            type="button"
+            on:click={() => handleActiveKategoriChange("ALL")}
+            class="px-3 py-1.5 rounded-lg transition-colors {activeKategori === 'ALL' ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          >
+            Semua PPPK
+          </button>
+          <button
+            type="button"
+            on:click={() => handleActiveKategoriChange("PENUH_WAKTU")}
+            class="px-3 py-1.5 rounded-lg transition-colors {activeKategori === 'PENUH_WAKTU' ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          >
+            P3K Penuh Waktu
+          </button>
+          <button
+            type="button"
+            on:click={() => handleActiveKategoriChange("PARUH_WAKTU")}
+            class="px-3 py-1.5 rounded-lg transition-colors {activeKategori === 'PARUH_WAKTU' ? 'bg-amber-500 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          >
+            P3K Paruh Waktu
+          </button>
+        </div>
+
+        <form on:submit={handleSearchActive} class="flex gap-3">
           <div class="flex-1 relative">
             <svg
               class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -577,8 +622,8 @@
             />
           </div>
           <button type="submit" class="btn-primary">Cari</button>
-        </div>
-      </form>
+        </form>
+      </div>
 
       <!-- Table -->
       <div class="card overflow-hidden">
@@ -599,6 +644,10 @@
                   >Nama</th
                 >
                 <th
+                  class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Kategori</th
+                >
+                <th
                   class="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
                   >Unit Kerja</th
                 >
@@ -611,7 +660,7 @@
             <tbody class="bg-white divide-y divide-slate-100">
               {#if isLoading}
                 <tr>
-                  <td colspan="5" class="px-6 py-12 text-center">
+                  <td colspan="6" class="px-6 py-12 text-center">
                     <div
                       class="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"
                     ></div>
@@ -620,7 +669,7 @@
                 </tr>
               {:else if records.length === 0}
                 <tr>
-                  <td colspan="5" class="px-6 py-12 text-center">
+                  <td colspan="6" class="px-6 py-12 text-center">
                     {#if searchFoundPensiun}
                       <!-- Notifikasi: pegawai sudah pensiun -->
                       <div class="max-w-md mx-auto">
@@ -672,6 +721,17 @@
                       <p class="text-xs text-slate-400 md:hidden">
                         {rec.unorNama || "-"}
                       </p>
+                    </td>
+                    <td class="px-4 sm:px-6 py-3">
+                      {#if isParuhWaktu(rec)}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                          Paruh Waktu
+                        </span>
+                      {:else}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                          Penuh Waktu
+                        </span>
+                      {/if}
                     </td>
                     <td
                       class="hidden md:table-cell px-4 sm:px-6 py-3 text-sm text-slate-500 max-w-[200px] truncate"
@@ -761,7 +821,33 @@
   {#if activeTab === "data-pensiun"}
     <div class="space-y-4">
       <!-- Search & Filter bar -->
-      <form on:submit={handleSearchPensiun} class="card p-4">
+      <form on:submit={handleSearchPensiun} class="card p-4 space-y-3">
+        <!-- Sub-filter pills for kategori -->
+        <div class="flex items-center gap-2 pb-2 border-b border-slate-100 text-xs font-semibold">
+          <span class="text-slate-400 uppercase tracking-wider text-[10px] mr-1">Kategori:</span>
+          <button
+            type="button"
+            on:click={() => handlePensiunKategoriChange("ALL")}
+            class="px-3 py-1.5 rounded-lg transition-colors {filterPensiunKategori === 'ALL' ? 'bg-red-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          >
+            Semua PPPK
+          </button>
+          <button
+            type="button"
+            on:click={() => handlePensiunKategoriChange("PENUH_WAKTU")}
+            class="px-3 py-1.5 rounded-lg transition-colors {filterPensiunKategori === 'PENUH_WAKTU' ? 'bg-red-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          >
+            P3K Penuh Waktu
+          </button>
+          <button
+            type="button"
+            on:click={() => handlePensiunKategoriChange("PARUH_WAKTU")}
+            class="px-3 py-1.5 rounded-lg transition-colors {filterPensiunKategori === 'PARUH_WAKTU' ? 'bg-red-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+          >
+            P3K Paruh Waktu
+          </button>
+        </div>
+
         <div class="flex flex-col sm:flex-row gap-3">
           <div class="flex-1 relative">
             <svg
@@ -823,6 +909,10 @@
                 >
                 <th
                   class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  >Kategori</th
+                >
+                <th
+                  class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
                   >Jenis Pensiun</th
                 >
                 <th
@@ -842,7 +932,7 @@
             <tbody class="bg-white divide-y divide-slate-100">
               {#if isLoading}
                 <tr>
-                  <td colspan="7" class="px-6 py-12 text-center">
+                  <td colspan="8" class="px-6 py-12 text-center">
                     <div
                       class="w-8 h-8 border-3 border-red-500 border-t-transparent rounded-full animate-spin mx-auto"
                     ></div>
@@ -851,7 +941,7 @@
                 </tr>
               {:else if pensiunRecords.length === 0}
                 <tr>
-                  <td colspan="7" class="px-6 py-12 text-center">
+                  <td colspan="8" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center gap-2">
                       <svg
                         class="w-12 h-12 text-slate-300"
@@ -891,6 +981,17 @@
                       <p class="text-xs text-slate-400">
                         {rec.unorNama || "-"}
                       </p>
+                    </td>
+                    <td class="px-4 sm:px-6 py-3">
+                      {#if isParuhWaktu(rec)}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                          Paruh Waktu
+                        </span>
+                      {:else}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                          Penuh Waktu
+                        </span>
+                      {/if}
                     </td>
                     <td class="px-4 sm:px-6 py-3">
                       {#if rec.jenisPensiun}
@@ -1177,7 +1278,7 @@
                     </td>
                     <td class="px-4 sm:px-6 py-3.5 text-center">
                       <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                        {item._count?.dataP3k || 0} orang
+                        {(item._count?.dataP3k || 0) + (item._count?.dataP3kParuhWaktu || 0)} orang
                       </span>
                     </td>
                     <td class="px-4 sm:px-6 py-3.5 text-center">
@@ -1206,9 +1307,9 @@
                         <button
                           type="button"
                           on:click={() => openDeleteRefModal(item)}
-                          disabled={item._count?.dataP3k > 0}
+                          disabled={((item._count?.dataP3k || 0) + (item._count?.dataP3kParuhWaktu || 0)) > 0}
                           class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-                          title={item._count?.dataP3k > 0 ? "Tidak dapat dihapus karena sudah digunakan" : "Hapus"}
+                          title={((item._count?.dataP3k || 0) + (item._count?.dataP3kParuhWaktu || 0)) > 0 ? "Tidak dapat dihapus karena sudah digunakan" : "Hapus"}
                         >
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1265,9 +1366,12 @@
           <div>
             <h3 class="text-lg font-bold text-slate-800">Set Pensiun</h3>
             <p class="text-sm text-slate-400">
-              Arsip SK & Jenis Pensiun untuk <span class="font-semibold text-slate-600"
+              Arsip SK untuk <span class="font-semibold text-slate-600"
                 >{selectedRecord.nama}</span
               >
+              <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold {isParuhWaktu(selectedRecord) ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-sky-50 text-sky-700 border border-sky-200'}">
+                {isParuhWaktu(selectedRecord) ? 'Paruh Waktu' : 'Penuh Waktu'}
+              </span>
             </p>
           </div>
           <button
@@ -1449,6 +1553,9 @@
               Perbarui data pensiun untuk <span class="font-semibold text-slate-600"
                 >{editRecord.nama}</span
               >
+              <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold {isParuhWaktu(editRecord) ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-sky-50 text-sky-700 border border-sky-200'}">
+                {isParuhWaktu(editRecord) ? 'Paruh Waktu' : 'Penuh Waktu'}
+              </span>
             </p>
           </div>
           <button
@@ -1639,6 +1746,7 @@
             Status pegawai <span class="font-semibold text-slate-700"
               >{revertRecord.nama}</span
             >
+            ({isParuhWaktu(revertRecord) ? 'P3K Paruh Waktu' : 'P3K Penuh Waktu'})
             akan dikembalikan menjadi
             <span class="font-bold text-emerald-600">AKTIF</span>. Arsip SK
             Pensiun dan jenis pensiun akan dibersihkan.
@@ -1705,9 +1813,14 @@
             >
           </div>
           <div>
-            <h3 class="text-lg font-bold text-slate-800">
-              Detail Pegawai Pensiun
-            </h3>
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-bold text-slate-800">
+                Detail Pegawai Pensiun
+              </h3>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold {isParuhWaktu(detailRecord) ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-sky-50 text-sky-700 border border-sky-200'}">
+                {isParuhWaktu(detailRecord) ? 'P3K Paruh Waktu' : 'P3K Penuh Waktu'}
+              </span>
+            </div>
             <p class="text-sm text-slate-400">{detailRecord.nama}</p>
           </div>
           <button
@@ -1764,10 +1877,10 @@
               <dt
                 class="text-xs font-medium text-slate-400 uppercase tracking-wide"
               >
-                Tanggal Lahir
+                Kategori PPPK
               </dt>
-              <dd class="mt-1.5 text-sm text-slate-700">
-                {detailRecord.tanggalLahir || "-"}
+              <dd class="mt-1.5 text-sm font-semibold {isParuhWaktu(detailRecord) ? 'text-teal-700' : 'text-sky-700'}">
+                {isParuhWaktu(detailRecord) ? 'PPPK Paruh Waktu' : 'PPPK Penuh Waktu'}
               </dd>
             </div>
             
