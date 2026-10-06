@@ -178,8 +178,27 @@
   $: totalPagesUnor = Math.max(1, Math.ceil(filteredUnor.length / limitUnor));
   $: displayedUnor = filteredUnor.slice((pageUnor - 1) * limitUnor, pageUnor * limitUnor);
 
-  $: totalPagesOperator = Math.max(1, Math.ceil((stats.byOperator || []).length / limitOperator));
-  $: displayedOperator = (stats.byOperator || []).slice((pageOperator - 1) * limitOperator, pageOperator * limitOperator);
+  $: filteredOperator = (stats.byOperator || []).filter((op) => (op.assignedTasks || 0) > 0);
+  $: totalPagesOperator = Math.max(1, Math.ceil(filteredOperator.length / limitOperator));
+  $: displayedOperator = filteredOperator.slice((pageOperator - 1) * limitOperator, pageOperator * limitOperator);
+
+  $: filteredKinerjaUser = (kinerjaData.byUser || []).filter((u) => {
+    if (u.assignedTasks !== undefined) {
+      return u.assignedTasks > 0;
+    }
+    const op = (stats.byOperator || []).find((o) => o.id === u.userId || o.username === u.username);
+    if (op) {
+      return (op.assignedTasks || 0) > 0;
+    }
+    return true;
+  });
+
+  $: kinerjaSummaryTotal = filteredKinerjaUser.reduce((s, u) => s + (u.total || 0), 0);
+  $: kinerjaSummaryPending = filteredKinerjaUser.reduce((s, u) => s + (u.pending || 0), 0);
+  $: kinerjaSummaryApproved = filteredKinerjaUser.reduce((s, u) => s + (u.approved || 0), 0);
+  $: kinerjaSummarySrikandi = filteredKinerjaUser.reduce((s, u) => s + (u.srikandi || 0), 0);
+  $: kinerjaSummarySelesai = filteredKinerjaUser.reduce((s, u) => s + (u.selesai || 0), 0);
+  $: kinerjaSummaryRejected = filteredKinerjaUser.reduce((s, u) => s + (u.rejected || 0), 0);
 
   $: totalPagesRecent = Math.max(1, Math.ceil((stats.recentUsulan || []).length / limitRecent));
   $: displayedRecent = (stats.recentUsulan || []).slice((pageRecent - 1) * limitRecent, pageRecent * limitRecent);
@@ -777,7 +796,7 @@
             <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Performa Operator ({stats.byOperator?.length || 0})
+            Performa Operator ({filteredOperator.length || 0})
           </button>
 
           <button
@@ -800,9 +819,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             Kinerja
-            {#if kinerjaData.summary?.totalDikerjakan > 0}
+            {#if kinerjaSummaryTotal > 0}
               <span class="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold {selectedTab === 'kinerja' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700'}">
-                {kinerjaData.summary.totalDikerjakan}
+                {kinerjaSummaryTotal}
               </span>
             {/if}
           </button>
@@ -1029,14 +1048,14 @@
 
       <!-- Tab Content: Operator Performance -->
       {#if selectedTab === "operator"}
-        {#if (stats.byOperator || []).length === 0}
+        {#if filteredOperator.length === 0}
           <div class="bg-white rounded-2xl p-8 sm:p-12 text-center border border-slate-200/80">
             <p class="text-slate-500 text-sm">Belum ada data performa operator.</p>
           </div>
         {:else}
           <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-0">
             <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 text-xs text-slate-500">
-              <span>Menampilkan <b>{displayedOperator.length}</b> dari total <b>{(stats.byOperator || []).length}</b> Operator</span>
+              <span>Menampilkan <b>{displayedOperator.length}</b> dari total <b>{filteredOperator.length}</b> Operator</span>
               <span class="text-[11px] text-slate-400">Default: 10 | Max: 500</span>
             </div>
             <div class="overflow-x-auto max-w-full scrollbar-thin">
@@ -1128,7 +1147,7 @@
             <!-- Pagination Bar -->
             <div class="px-4 py-3 bg-slate-50/80 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
               <p class="text-slate-500 font-medium text-center sm:text-left">
-                Menampilkan <b>{(stats.byOperator || []).length > 0 ? (pageOperator - 1) * limitOperator + 1 : 0}</b> - <b>{Math.min(pageOperator * limitOperator, (stats.byOperator || []).length)}</b> dari <b>{(stats.byOperator || []).length}</b> Operator
+                Menampilkan <b>{filteredOperator.length > 0 ? (pageOperator - 1) * limitOperator + 1 : 0}</b> - <b>{Math.min(pageOperator * limitOperator, filteredOperator.length)}</b> dari <b>{filteredOperator.length}</b> Operator
               </p>
               <div class="flex items-center gap-2">
                 <button
@@ -1265,7 +1284,7 @@
               />
 
               <!-- Indikator Live vs Cache -->
-              {#if !kinerjaLoading && kinerjaData.byUser?.length > 0}
+              {#if !kinerjaLoading && filteredKinerjaUser.length > 0}
                 {#if kinerjaIsToday}
                   <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1315,7 +1334,7 @@
               </div>
 
               <!-- Tombol Simpan Snapshot Manual (hanya untuk tanggal bukan hari ini) -->
-              {#if !kinerjaIsToday && kinerjaData.byUser?.length > 0 && !kinerjaFromCache}
+              {#if !kinerjaIsToday && filteredKinerjaUser.length > 0 && !kinerjaFromCache}
                 <button
                   type="button"
                   on:click={triggerKinerjaSnapshot}
@@ -1359,13 +1378,13 @@
                 <div class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 rounded-full animate-pulse w-full"></div>
               </div>
             </div>
-          {:else if (kinerjaData.summary?.totalDikerjakan || 0) > 0}
-            {@const total = kinerjaData.summary.totalDikerjakan}
-            {@const selesai = kinerjaData.summary.selesaiCount || 0}
-            {@const srikandi = kinerjaData.summary.srikandiCount || 0}
-            {@const approved = kinerjaData.summary.approvedCount || 0}
-            {@const pending = kinerjaData.summary.pendingCount || 0}
-            {@const rejected = kinerjaData.summary.rejectedCount || 0}
+          {:else if kinerjaSummaryTotal > 0}
+            {@const total = kinerjaSummaryTotal}
+            {@const selesai = kinerjaSummarySelesai}
+            {@const srikandi = kinerjaSummarySrikandi}
+            {@const approved = kinerjaSummaryApproved}
+            {@const pending = kinerjaSummaryPending}
+            {@const rejected = kinerjaSummaryRejected}
             {@const percentSelesai = Math.round((selesai / total) * 100)}
 
             <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm space-y-3.5">
@@ -1487,7 +1506,7 @@
                       </span>
                     {/if}
                   </div>
-                  <span class="text-slate-500 font-semibold text-xs">Total: <b class="text-slate-800 font-mono text-sm">{total}</b> Berkas ({kinerjaData.byUser?.length || 0} Operator)</span>
+                  <span class="text-slate-500 font-semibold text-xs">Total: <b class="text-slate-800 font-mono text-sm">{total}</b> Berkas ({filteredKinerjaUser.length} Operator)</span>
                 </div>
               </div>
             </div>
@@ -1512,7 +1531,7 @@
           <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden min-w-0">
             <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <span class="font-bold text-slate-700">
-                Daftar Rekap per Operator ({kinerjaData.byUser?.length || 0} User) — Total <b class="text-blue-600 font-mono">{kinerjaData.summary?.totalDikerjakan || 0}</b> Berkas Direkap
+                Daftar Rekap per Operator ({filteredKinerjaUser.length} User) — Total <b class="text-blue-600 font-mono">{kinerjaSummaryTotal}</b> Berkas Direkap
               </span>
               <span class="font-semibold text-slate-600">
                 Tanggal: <b>{kinerjaDate || getTodayString()}</b>
@@ -1542,7 +1561,7 @@
                         <span>Memuat rekap kinerja...</span>
                       </td>
                     </tr>
-                  {:else if !kinerjaData.byUser || kinerjaData.byUser.length === 0}
+                  {:else if !filteredKinerjaUser || filteredKinerjaUser.length === 0}
                     <tr>
                       <td colspan="9" class="py-12 text-center text-slate-400">
                         <svg class="w-8 h-8 mx-auto mb-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1553,7 +1572,7 @@
                       </td>
                     </tr>
                   {:else}
-                    {#each kinerjaData.byUser as u, idx}
+                    {#each filteredKinerjaUser as u, idx}
                       {@const userPercent = u.total > 0 ? Math.round((u.selesai / u.total) * 100) : 0}
                       <tr class="hover:bg-slate-50/70 transition-colors">
                         <td class="py-3.5 px-4 text-center text-slate-400 font-mono text-xs">
@@ -1610,9 +1629,9 @@
                     {/each}
                   {/if}
                 </tbody>
-                {#if kinerjaData.byUser && kinerjaData.byUser.length > 0}
-                  {@const totalAll = kinerjaData.summary?.totalDikerjakan || 0}
-                  {@const selesaiAll = kinerjaData.summary?.selesaiCount || 0}
+                {#if filteredKinerjaUser && filteredKinerjaUser.length > 0}
+                  {@const totalAll = kinerjaSummaryTotal}
+                  {@const selesaiAll = kinerjaSummarySelesai}
                   {@const percentAll = totalAll > 0 ? Math.round((selesaiAll / totalAll) * 100) : 0}
                   <tfoot>
                     <tr class="bg-slate-100/80 border-t-2 border-slate-300 text-xs font-black text-slate-800">
@@ -1620,19 +1639,19 @@
                         Total Keseluruhan :
                       </td>
                       <td class="py-3.5 px-4 text-center text-amber-700 bg-amber-100/40">
-                        {kinerjaData.summary?.pendingCount || 0}
+                        {kinerjaSummaryPending}
                       </td>
                       <td class="py-3.5 px-4 text-center text-blue-700 bg-blue-100/40">
-                        {kinerjaData.summary?.approvedCount || 0}
+                        {kinerjaSummaryApproved}
                       </td>
                       <td class="py-3.5 px-4 text-center text-purple-700 bg-purple-100/40">
-                        {kinerjaData.summary?.srikandiCount || 0}
+                        {kinerjaSummarySrikandi}
                       </td>
                       <td class="py-3.5 px-4 text-center text-emerald-700 bg-emerald-100/40">
-                        {kinerjaData.summary?.selesaiCount || 0}
+                        {kinerjaSummarySelesai}
                       </td>
                       <td class="py-3.5 px-4 text-center text-rose-700 bg-rose-100/40">
-                        {kinerjaData.summary?.rejectedCount || 0}
+                        {kinerjaSummaryRejected}
                       </td>
                       <td class="py-3.5 px-4 text-center text-sm font-black text-slate-900 bg-slate-200/80">
                         {totalAll}

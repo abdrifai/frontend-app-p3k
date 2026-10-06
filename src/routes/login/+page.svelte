@@ -21,7 +21,15 @@
       if (data.success && data.data) {
         setAuth(data.data);
         addToast("Berhasil masuk!", "success");
-        goto("/");
+        const userRoles = Array.isArray(data.data.user?.roles)
+          ? data.data.user.roles.map(r => String(r).toLowerCase().trim())
+          : String(data.data.user?.role || '').toLowerCase().split(',').map(r => r.trim()).filter(Boolean);
+        
+        if (userRoles.includes('pegawai')) {
+          goto("/portal");
+        } else {
+          goto("/");
+        }
       } else {
         errorMsg = data.message || "Login gagal";
       }
@@ -144,8 +152,19 @@
         </button>
       </form>
       
-      <div class="mt-6 text-center">
-        <a href="/forgot-password" class="text-sm font-medium text-blue-600 hover:text-blue-700 relative z-20">Lupa password?</a>
+      <div class="mt-6 pt-5 border-t border-slate-100 text-center space-y-3">
+        <a href="/forgot-password" class="text-xs font-medium text-slate-500 hover:text-blue-600 block transition-colors">Lupa password?</a>
+        <div class="pt-1">
+          <a
+            href="/aktivasi-akun"
+            class="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 transition-colors shadow-sm"
+          >
+            <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            Pegawai PPPK Baru? Aktivasi Akun di Sini
+          </a>
+        </div>
       </div>
     </div>
   </div>

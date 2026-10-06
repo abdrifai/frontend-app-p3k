@@ -43,6 +43,8 @@
 
   const AVAILABLE_ROLES = [
     { id: "user", label: "Operator P3K (user)", description: "Data P3K, Usulan Kontrak, Task User, dan Laporan", color: "blue" },
+    { id: "verifikator", label: "Verifikator Perbaikan (verifikator)", description: "Verifikasi & validasi usulan perbaikan data riwayat pegawai", color: "teal" },
+    { id: "pegawai", label: "Pegawai Mandiri (pegawai)", description: "Akses portal mandiri pegawai untuk profil, usulan perbaikan, dan TTE", color: "emerald" },
     { id: "pensiun", label: "Operator Pensiun (pensiun)", description: "Pengajuan & Manajemen Pensiun Pegawai, Estimasi Pensiun", color: "rose" },
     { id: "admin", label: "Administrator (admin)", description: "Akses penuh seluruh modul, manajemen user, dan pengaturan sistem", color: "purple" }
   ];
@@ -597,6 +599,14 @@
                       {#if r === 'admin'}
                         <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-800 border border-purple-200">
                           <i class="ri-shield-keyhole-line text-[11px]"></i> Admin
+                        </span>
+                      {:else if r === 'pegawai'}
+                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <i class="ri-user-smile-line text-[11px]"></i> Pegawai Mandiri
+                        </span>
+                      {:else if r === 'verifikator'}
+                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-teal-100 text-teal-800 border border-teal-200">
+                          <i class="ri-checkbox-circle-line text-[11px]"></i> Verifikator
                         </span>
                       {:else if r === 'pensiun' || r === 'operator_pensiun'}
                         <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-200">

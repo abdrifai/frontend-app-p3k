@@ -13,8 +13,32 @@
   let isLoading = true;
   let templates = [];
   let searchTerm = "";
+  let filterStatus = "";
   let filterStatusSrikandi = "";
   let meta = { page: 1, limit: 10, total: 0, totalPages: 1 };
+
+  $: isSrikandiDisabled = filterStatus === "PENDING" || filterStatus === "APPROVED" || filterStatus === "REJECTED";
+
+  function handleStatusChange() {
+    if (isSrikandiDisabled) {
+      filterStatusSrikandi = "";
+    }
+    meta.page = 1;
+    fetchData(1);
+  }
+
+  function handleStatusSrikandiChange() {
+    meta.page = 1;
+    fetchData(1);
+  }
+
+  function resetFilter() {
+    searchTerm = "";
+    filterStatus = "";
+    filterStatusSrikandi = "";
+    meta.page = 1;
+    fetchData(1);
+  }
 
   // Employee search
   let employeeSearch = "";
@@ -103,6 +127,15 @@
       goto("/login");
       return;
     }
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("status")) {
+        filterStatus = urlParams.get("status") || "";
+      }
+      if (urlParams.has("statusSrikandi")) {
+        filterStatusSrikandi = urlParams.get("statusSrikandi") || "";
+      }
+    }
     fetchData();
     fetchTemplates();
   });
@@ -112,6 +145,7 @@
     try {
       const params = new URLSearchParams({ page, limit: meta.limit });
       if (searchTerm) params.append("search", searchTerm);
+      if (filterStatus) params.append("status", filterStatus);
       if (filterStatusSrikandi) params.append("statusSrikandi", filterStatusSrikandi);
       const result = await apiRequest(
         `/api/v1/perpanjangan/usulan?${params}`,
@@ -613,38 +647,90 @@
   </div>
 
   <!-- Search & Limit Selector -->
-  <div class="card p-4">
+  <div class="card p-4 space-y-3">
     <form
       on:submit|preventDefault={() => {
         meta.page = 1;
         fetchData(1);
       }}
-      class="flex flex-col sm:flex-row gap-3"
+      class="flex flex-col lg:flex-row gap-3"
     >
-      <input
-        type="text"
-        bind:value={searchTerm}
-        placeholder="Cari nama / NIP pegawai / no kontrak..."
-        class="input-field flex-1"
-      />
-      <div class="flex flex-wrap gap-2">
+      <div class="relative flex-1">
+        <input
+          type="text"
+          bind:value={searchTerm}
+          placeholder="Cari nama / NIP pegawai / no kontrak..."
+          class="input-field pl-9 w-full"
+        />
+        <svg
+          class="w-4 h-4 text-slate-400 absolute left-3 top-3"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Filter 1: Status Usulan (Induk) -->
+        <select
+          bind:value={filterStatus}
+          on:change={handleStatusChange}
+          class="input-field !w-auto text-sm font-medium text-slate-700 bg-white"
+          title="Filter Status Usulan (Tahap Dokumen)"
+        >
+          <option value="">Semua Status Usulan</option>
+          <option value="PENDING">Menunggu (Pending)</option>
+          <option value="APPROVED">Disetujui (Approved)</option>
+          <option value="UPLOAD_SRIKANDI">Upload Srikandi</option>
+          <option value="SELESAI">Selesai</option>
+          <option value="REJECTED">Ditolak</option>
+        </select>
+
+        <!-- Filter 2: Status Srikandi (Berjenjang) -->
         <select
           bind:value={filterStatusSrikandi}
-          on:change={() => {
-            meta.page = 1;
-            fetchData(1);
-          }}
-          class="input-field !w-auto text-sm font-medium text-slate-700 bg-white"
+          on:change={handleStatusSrikandiChange}
+          disabled={isSrikandiDisabled}
+          class="input-field !w-auto text-sm font-medium text-slate-700 bg-white disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+          title={isSrikandiDisabled
+            ? "Status ini belum/tidak melalui proses Srikandi"
+            : "Filter berdasarkan tahapan Srikandi"}
         >
-          <option value="">Semua Status Srikandi</option>
-          <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
-          <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
-          <option value="TTE_PPPK">3. TTE PPPK</option>
-          <option value="TTE_BUPATI">4. TTE Bupati</option>
-          <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
-          <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
-          <option value="NONE">Belum Masuk Srikandi</option>
+          {#if isSrikandiDisabled}
+            <option value="">- Tidak Ada Srikandi -</option>
+          {:else if filterStatus === "UPLOAD_SRIKANDI"}
+            <option value="">Semua Tahap Srikandi</option>
+            <option value="NONE">Belum Masuk Srikandi</option>
+            <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
+            <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
+            <option value="TTE_PPPK">3. TTE PPPK</option>
+            <option value="TTE_BUPATI">4. TTE Bupati</option>
+            <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
+            <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
+          {:else if filterStatus === "SELESAI"}
+            <option value="">Semua Srikandi (Selesai)</option>
+            <option value="TTE_BUPATI">TTE Bupati (Selesai)</option>
+            <option value="TTE_PPPK">TTE PPPK</option>
+            <option value="NONE">Non-Srikandi / Selesai Langsung</option>
+          {:else}
+            <option value="">Semua Status Srikandi</option>
+            <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
+            <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
+            <option value="TTE_PPPK">3. TTE PPPK</option>
+            <option value="TTE_BUPATI">4. TTE Bupati</option>
+            <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
+            <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
+            <option value="NONE">Belum Masuk Srikandi</option>
+          {/if}
         </select>
+
         <select
           bind:value={meta.limit}
           on:change={() => {
@@ -659,9 +745,63 @@
           <option value={100}>100 baris</option>
           <option value="all">Semua baris</option>
         </select>
+
         <button type="submit" class="btn-primary text-sm">Cari</button>
+
+        {#if filterStatus || filterStatusSrikandi || searchTerm}
+          <button
+            type="button"
+            on:click={resetFilter}
+            class="px-2.5 py-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl font-bold flex items-center gap-1 transition-colors"
+            title="Reset semua filter"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Reset
+          </button>
+        {/if}
       </div>
     </form>
+
+    <!-- Filter aktif indicator -->
+    {#if filterStatus || filterStatusSrikandi}
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
+        <span class="text-slate-400 font-medium">Filter berjenjang aktif:</span>
+        {#if filterStatus}
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            <span>Status: <b>{filterStatus}</b></span>
+            <button
+              type="button"
+              on:click={() => {
+                filterStatus = "";
+                handleStatusChange();
+              }}
+              class="hover:bg-blue-200/60 rounded-full w-4 h-4 inline-flex items-center justify-center ml-0.5"
+              title="Hapus filter status"
+            >
+              ×
+            </button>
+          </span>
+        {/if}
+        {#if filterStatusSrikandi}
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+            <span>Srikandi: <b>{srikandiStatusLabels[filterStatusSrikandi] || (filterStatusSrikandi === 'NONE' ? 'Belum Masuk Srikandi' : filterStatusSrikandi)}</b></span>
+            <button
+              type="button"
+              on:click={() => {
+                filterStatusSrikandi = "";
+                handleStatusSrikandiChange();
+              }}
+              class="hover:bg-purple-200/60 rounded-full w-4 h-4 inline-flex items-center justify-center ml-0.5"
+              title="Hapus filter status Srikandi"
+            >
+              ×
+            </button>
+          </span>
+        {/if}
+      </div>
+    {/if}
   </div>
 
   <!-- Table -->
@@ -782,6 +922,18 @@
                           rec.status,
                         )}">{statusLabel(rec.status)}</span
                       >
+                    {/if}
+                    {#if rec.statusTte}
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border {
+                        rec.statusTte === 'TTE_SELESAI' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        rec.statusTte === 'DITOLAK_PENANDATANGAN' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                        'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      }">
+                        <svg class="w-2.5 h-2.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        {rec.statusTte.replaceAll('_', ' ')}
+                      </span>
                     {/if}
                     {#if isPensiunUnfinished}
                       <span class="text-[10px] text-red-600 font-bold ml-1">Hentikan Usulan</span>

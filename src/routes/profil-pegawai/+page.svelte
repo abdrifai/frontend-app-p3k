@@ -1127,6 +1127,41 @@
             <p class="text-[11px] text-slate-500">Layanan Satu Pintu BKN</p>
           </div>
         </div>
+
+        <!-- Tabel Riwayat Keluarga Terverifikasi -->
+        {#if profile.riwayatKeluarga && profile.riwayatKeluarga.length > 0}
+          <div class="mt-4 pt-4 border-t border-slate-100 space-y-2">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Daftar Anggota Keluarga (Database)</h4>
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+              <table class="w-full text-xs text-left">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
+                  <tr>
+                    <th class="p-2.5">Hubungan</th>
+                    <th class="p-2.5">Nama Lengkap</th>
+                    <th class="p-2.5">NIK</th>
+                    <th class="p-2.5">Tgl Lahir</th>
+                    <th class="p-2.5">Tanggungan</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  {#each profile.riwayatKeluarga as k}
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-2.5 font-semibold text-slate-800">{k.hubungan}</td>
+                      <td class="p-2.5">{k.nama}</td>
+                      <td class="p-2.5 font-mono text-slate-500">{k.nik || "-"}</td>
+                      <td class="p-2.5 text-slate-600">{k.tanggalLahir || "-"}</td>
+                      <td class="p-2.5">
+                        <span class={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${k.isTanggungan ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
+                          {k.isTanggungan ? 'Ya' : 'Tidak'}
+                        </span>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {/if}
       </div>
 
     <!-- TAB 4: KONTRAK -->

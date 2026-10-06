@@ -25,16 +25,35 @@
     }
   };
 
+  const userRoles = $derived(
+    Array.isArray($authStore.user?.roles)
+      ? $authStore.user.roles.map(r => String(r).toLowerCase().trim())
+      : String($authStore.user?.role || '').toLowerCase().split(',').map(r => r.trim()).filter(Boolean)
+  );
+  const isPegawaiUser = $derived(userRoles.includes('pegawai'));
+  const isPortalRoute = $derived($page.url.pathname.startsWith('/portal'));
+
   // Global auth check for protected routes & menu permission loader
   $effect(() => {
     const path = $page.url.pathname;
-    const publicPaths = ["/login", "/register", "/", "/forgot-password", "/forget-password", "/reset-password"];
+    const publicPaths = ["/login", "/register", "/", "/forgot-password", "/forget-password", "/reset-password", "/aktivasi-akun"];
     const isPublicPath = publicPaths.some(p => path === p || path === p + "/");
 
     if (!$authStore.isAuthenticated && !isPublicPath) {
       goto("/login");
     } else if ($authStore.isAuthenticated) {
-      loadMenuPermissions();
+      if (isPegawaiUser) {
+        if (!isPortalRoute && !isPublicPath) {
+          goto("/portal");
+        }
+      } else {
+        if (isPortalRoute) {
+          goto("/");
+        } else {
+          loadMenuPermissions();
+        }
+      }
+
       sendHeartbeat();
       if (!heartbeatTimer) {
         heartbeatTimer = setInterval(sendHeartbeat, 45000); // Heartbeat every 45s
@@ -63,7 +82,9 @@
 </svelte:head>
 
 <div class="min-h-screen bg-slate-50 flex flex-col">
-  <Navbar />
+  {#if !isPegawaiUser && !isPortalRoute}
+    <Navbar />
+  {/if}
 
   <main class="flex-grow flex flex-col">
     {@render children()}

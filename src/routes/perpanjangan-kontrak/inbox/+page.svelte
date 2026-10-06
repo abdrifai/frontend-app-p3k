@@ -13,6 +13,29 @@
   let filterStatusSrikandi = "";
   let meta = { page: 1, limit: 10, total: 0, totalPages: 1 };
 
+  $: isSrikandiDisabled = filterStatus === "PENDING" || filterStatus === "APPROVED" || filterStatus === "REJECTED";
+
+  function handleStatusChange() {
+    if (isSrikandiDisabled) {
+      filterStatusSrikandi = "";
+    }
+    meta.page = 1;
+    fetchData(1);
+  }
+
+  function handleStatusSrikandiChange() {
+    meta.page = 1;
+    fetchData(1);
+  }
+
+  function resetFilter() {
+    searchTerm = "";
+    filterStatus = "PENDING";
+    filterStatusSrikandi = "";
+    meta.page = 1;
+    fetchData(1);
+  }
+
   $: isAdmin = isUserAdmin($authStore.user);
 
   // Detail modal
@@ -80,6 +103,15 @@
       addToast("Anda harus login", "error");
       goto("/login");
       return;
+    }
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("status")) {
+        filterStatus = urlParams.get("status") || "";
+      }
+      if (urlParams.has("statusSrikandi")) {
+        filterStatusSrikandi = urlParams.get("statusSrikandi") || "";
+      }
     }
     fetchData();
   });
@@ -340,54 +372,161 @@
   </div>
 
   <!-- Filters -->
-  <div class="card p-4">
+  <div class="card p-4 space-y-3">
     <form
       on:submit|preventDefault={() => {
         meta.page = 1;
-        fetchData();
+        fetchData(1);
       }}
-      class="flex flex-wrap gap-3"
+      class="flex flex-col lg:flex-row gap-3"
     >
-      <input
-        type="text"
-        bind:value={searchTerm}
-        placeholder="Cari nama / NIP / no kontrak..."
-        class="input-field flex-1 min-w-[200px]"
-      />
-      <select
-        bind:value={filterStatus}
-        on:change={() => {
-          meta.page = 1;
-          fetchData();
-        }}
-        class="input-field w-auto bg-white"
-      >
-        <option value="">Semua Status Usulan</option>
-        <option value="PENDING">Menunggu (Pending)</option>
-        <option value="APPROVED">Disetujui (Approved)</option>
-        <option value="UPLOAD_SRIKANDI">Upload Srikandi</option>
-        <option value="SELESAI">Selesai</option>
-        <option value="REJECTED">Ditolak</option>
-      </select>
-      <select
-        bind:value={filterStatusSrikandi}
-        on:change={() => {
-          meta.page = 1;
-          fetchData();
-        }}
-        class="input-field w-auto bg-white"
-      >
-        <option value="">Semua Status Srikandi</option>
-        <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
-        <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
-        <option value="TTE_PPPK">3. TTE PPPK</option>
-        <option value="TTE_BUPATI">4. TTE Bupati</option>
-        <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
-        <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
-        <option value="NONE">Belum Masuk Srikandi</option>
-      </select>
-      <button type="submit" class="btn-primary text-sm">Cari</button>
+      <div class="relative flex-1">
+        <input
+          type="text"
+          bind:value={searchTerm}
+          placeholder="Cari nama / NIP / no kontrak..."
+          class="input-field pl-9 w-full"
+        />
+        <svg
+          class="w-4 h-4 text-slate-400 absolute left-3 top-3"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Filter 1: Status Usulan (Induk) -->
+        <select
+          bind:value={filterStatus}
+          on:change={handleStatusChange}
+          class="input-field !w-auto text-sm font-medium text-slate-700 bg-white"
+          title="Filter Status Usulan (Tahap Dokumen)"
+        >
+          <option value="">Semua Status Usulan</option>
+          <option value="PENDING">Menunggu (Pending)</option>
+          <option value="APPROVED">Disetujui (Approved)</option>
+          <option value="UPLOAD_SRIKANDI">Upload Srikandi</option>
+          <option value="SELESAI">Selesai</option>
+          <option value="REJECTED">Ditolak</option>
+        </select>
+
+        <!-- Filter 2: Status Srikandi (Berjenjang) -->
+        <select
+          bind:value={filterStatusSrikandi}
+          on:change={handleStatusSrikandiChange}
+          disabled={isSrikandiDisabled}
+          class="input-field !w-auto text-sm font-medium text-slate-700 bg-white disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+          title={isSrikandiDisabled
+            ? "Status ini belum/tidak melalui proses Srikandi"
+            : "Filter berdasarkan tahapan Srikandi"}
+        >
+          {#if isSrikandiDisabled}
+            <option value="">- Tidak Ada Srikandi -</option>
+          {:else if filterStatus === "UPLOAD_SRIKANDI"}
+            <option value="">Semua Tahap Srikandi</option>
+            <option value="NONE">Belum Masuk Srikandi</option>
+            <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
+            <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
+            <option value="TTE_PPPK">3. TTE PPPK</option>
+            <option value="TTE_BUPATI">4. TTE Bupati</option>
+            <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
+            <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
+          {:else if filterStatus === "SELESAI"}
+            <option value="">Semua Srikandi (Selesai)</option>
+            <option value="TTE_BUPATI">TTE Bupati (Selesai)</option>
+            <option value="TTE_PPPK">TTE PPPK</option>
+            <option value="NONE">Non-Srikandi / Selesai Langsung</option>
+          {:else}
+            <option value="">Semua Status Srikandi</option>
+            <option value="VERIFIKASI_KABAN">1. Verifikasi Kaban</option>
+            <option value="VERIFIKASI_SEKDA">2. Verifikasi Sekda</option>
+            <option value="TTE_PPPK">3. TTE PPPK</option>
+            <option value="TTE_BUPATI">4. TTE Bupati</option>
+            <option value="TOLAK_KONSEPTOR">Tolak (ke Konseptor)</option>
+            <option value="TOLAK_TIDAK_DITERUSKAN">Tolak (Final)</option>
+            <option value="NONE">Belum Masuk Srikandi</option>
+          {/if}
+        </select>
+
+        <select
+          bind:value={meta.limit}
+          on:change={() => {
+            meta.page = 1;
+            fetchData(1);
+          }}
+          class="input-field !w-auto text-sm font-medium text-slate-700 bg-white"
+        >
+          <option value={10}>10 baris</option>
+          <option value={25}>25 baris</option>
+          <option value={50}>50 baris</option>
+          <option value={100}>100 baris</option>
+          <option value="all">Semua baris</option>
+        </select>
+
+        <button type="submit" class="btn-primary text-sm">Cari</button>
+
+        {#if filterStatus !== "PENDING" || filterStatusSrikandi || searchTerm}
+          <button
+            type="button"
+            on:click={resetFilter}
+            class="px-2.5 py-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl font-bold flex items-center gap-1 transition-colors"
+            title="Reset filter ke default (Pending)"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Reset
+          </button>
+        {/if}
+      </div>
     </form>
+
+    <!-- Filter aktif indicator -->
+    {#if filterStatus || filterStatusSrikandi}
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
+        <span class="text-slate-400 font-medium">Filter berjenjang aktif:</span>
+        {#if filterStatus}
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            <span>Status: <b>{filterStatus}</b></span>
+            <button
+              type="button"
+              on:click={() => {
+                filterStatus = "";
+                handleStatusChange();
+              }}
+              class="hover:bg-blue-200/60 rounded-full w-4 h-4 inline-flex items-center justify-center ml-0.5"
+              title="Hapus filter status"
+            >
+              ×
+            </button>
+          </span>
+        {/if}
+        {#if filterStatusSrikandi}
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+            <span>Srikandi: <b>{srikandiStatusLabels[filterStatusSrikandi] || (filterStatusSrikandi === 'NONE' ? 'Belum Masuk Srikandi' : filterStatusSrikandi)}</b></span>
+            <button
+              type="button"
+              on:click={() => {
+                filterStatusSrikandi = "";
+                handleStatusSrikandiChange();
+              }}
+              class="hover:bg-purple-200/60 rounded-full w-4 h-4 inline-flex items-center justify-center ml-0.5"
+              title="Hapus filter status Srikandi"
+            >
+              ×
+            </button>
+          </span>
+        {/if}
+      </div>
+    {/if}
   </div>
 
   <!-- Table -->
@@ -605,54 +744,62 @@
         </tbody>
       </table>
     </div>
-    {#if meta.totalPages > 1}
+    {#if meta.total > 0}
       <div
-        class="border-t border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between gap-3"
+        class="border-t border-slate-100 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3"
       >
         <p class="text-sm text-slate-500">
-          Hal. <span class="font-medium text-slate-700">{meta.page}</span> dari
-          <span class="font-medium text-slate-700">{meta.totalPages}</span>
+          Menampilkan <span class="font-medium text-slate-700">{records.length}</span> dari
+          <span class="font-medium text-slate-700">{meta.total}</span> usulan
         </p>
-        <div class="flex gap-1">
-          <button
-            aria-label="Halaman Sebelumnya"
-            disabled={meta.page === 1}
-            on:click={() => fetchData(meta.page - 1)}
-            class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              /></svg
-            >
-          </button>
-          <button
-            aria-label="Halaman Selanjutnya"
-            disabled={meta.page === meta.totalPages}
-            on:click={() => fetchData(meta.page + 1)}
-            class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              /></svg
-            >
-          </button>
-        </div>
+        {#if meta.totalPages > 1}
+          <div class="flex items-center gap-2">
+            <p class="text-xs text-slate-500">
+              Hal. <span class="font-medium text-slate-700">{meta.page}</span> dari
+              <span class="font-medium text-slate-700">{meta.totalPages}</span>
+            </p>
+            <div class="flex gap-1">
+              <button
+                aria-label="Halaman Sebelumnya"
+                disabled={meta.page === 1}
+                on:click={() => fetchData(meta.page - 1)}
+                class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  ><path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 19l-7-7 7-7"
+                  /></svg
+                >
+              </button>
+              <button
+                aria-label="Halaman Selanjutnya"
+                disabled={meta.page === meta.totalPages}
+                on:click={() => fetchData(meta.page + 1)}
+                class="btn-secondary !px-2.5 !py-1.5 disabled:opacity-40"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  ><path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  /></svg
+                >
+              </button>
+            </div>
+          </div>
+        {/if}
       </div>
     {/if}
   </div>

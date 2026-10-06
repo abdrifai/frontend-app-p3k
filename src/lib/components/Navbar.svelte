@@ -16,6 +16,7 @@
   );
   let isUserAdmin = $derived(userRoles.some(r => ['admin', 'admin_utama', 'superadmin'].includes(r)));
   let isUserPensiun = $derived(userRoles.some(r => ['pensiun', 'operator_pensiun'].includes(r)));
+  let isPejabatTte = $derived(userRoles.some(r => ['kepala_bkpsdm', 'sekda', 'bupati', 'admin', 'admin_utama', 'superadmin'].includes(r)));
 
   function canAccess(key) {
     if (!$authStore.isAuthenticated) return false;
@@ -321,7 +322,7 @@
 
         {#if $authStore.isAuthenticated}
           <!-- Dropdown: Data P3K Utama -->
-          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pemberhentian', 'perbedaan-data'])}
+          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pemberhentian', 'perbedaan-data', 'verifikasi-perbaikan'])}
             <div
               class="relative shrink-0"
               role="group"
@@ -598,6 +599,44 @@
                         </p>
                       </div>
                     </a>
+
+                    {#if canAccess('verifikasi-perbaikan')}
+                      <a
+                        href="/verifikasi-perbaikan"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                          '/verifikasi-perbaikan',
+                        )
+                          ? 'text-emerald-700 bg-emerald-50 font-medium'
+                          : 'text-slate-600 hover:text-emerald-600 hover:bg-slate-50'}"
+                        onclick={() => (utamaMenuOpen = false)}
+                      >
+                        <div
+                          class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0"
+                        >
+                          <svg
+                            class="w-3.5 h-3.5 text-emerald-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Verifikasi Usulan</p>
+                          <p
+                            class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                          >
+                            Inbox perbaikan data mandiri
+                          </p>
+                        </div>
+                      </a>
+                    {/if}
                   </div>
                 </div>
               {/if}
@@ -605,7 +644,7 @@
           {/if}
 
           <!-- Dropdown: Perpanjangan Kontrak -->
-          {#if canAccess('perpanjangan-pk') && canAccessAny(['perpanjangan-dashboard', 'perpanjangan-usulan', 'perpanjangan-inbox'])}
+          {#if (canAccess('perpanjangan-pk') && canAccessAny(['perpanjangan-dashboard', 'perpanjangan-usulan', 'perpanjangan-inbox'])) || isPejabatTte}
             <div
               class="relative"
               role="group"
@@ -771,6 +810,45 @@
                             class="text-[10px] text-slate-400 leading-tight mt-0.5"
                           >
                             Proses persetujuan kontrak
+                          </p>
+                        </div>
+                      </a>
+                    {/if}
+                    {#if isPejabatTte}
+                      <a
+                        href="/tte-kontrak"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                          '/tte-kontrak',
+                        )
+                          ? 'text-indigo-700 bg-indigo-50 font-medium'
+                          : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50'}"
+                        onclick={() => (perpanjanganMenuOpen = false)}
+                      >
+                        <div
+                          class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0"
+                        >
+                          <svg
+                            class="w-3.5 h-3.5 text-purple-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">
+                            TTE & Paraf Kontrak
+                          </p>
+                          <p
+                            class="text-[10px] text-slate-400 leading-tight mt-0.5"
+                          >
+                            Penandatanganan BSrE
                           </p>
                         </div>
                       </a>
@@ -1408,6 +1486,21 @@
                             </div>
                           </a>
                         {/if}
+                        {#if isUserAdmin}
+                          <a href="/setting/pejabat-penandatangan"
+                            class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/pejabat-penandatangan') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                            onclick={() => (settingMenuOpen = false)}>
+                            <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                              <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7 7z"/>
+                              </svg>
+                            </div>
+                            <div>
+                              <p class="font-medium leading-tight">Pejabat TTE BSrE</p>
+                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Konfigurasi penandatangan</p>
+                            </div>
+                          </a>
+                        {/if}
                         {#if canAccess('setting-backup')}
                           <a href="/setting/backup"
                             class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/backup') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
@@ -1668,7 +1761,7 @@
 
         {#if $authStore.isAuthenticated}
           <!-- Mobile: Data P3K Utama Group -->
-          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pemberhentian', 'perbedaan-data', 'mapping-unor'])}
+          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pemberhentian', 'perbedaan-data', 'mapping-unor', 'verifikasi-perbaikan'])}
             <div class="pt-1">
               <button
                 type="button"
@@ -1888,13 +1981,44 @@
                     </div>
                     Catatan Masalah Pegawai
                   </a>
+
+                  {#if canAccess('verifikasi-perbaikan')}
+                    <a
+                      href="/verifikasi-perbaikan"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                        '/verifikasi-perbaikan',
+                      )
+                        ? 'text-emerald-700 bg-emerald-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-emerald-50 flex items-center justify-center shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-emerald-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                      Verifikasi Usulan Pegawai
+                    </a>
+                  {/if}
                 </div>
               {/if}
             </div>
           {/if}
 
           <!-- Mobile: Perpanjangan Kontrak Group -->
-          {#if canAccess('perpanjangan-pk') && canAccessAny(['perpanjangan-dashboard', 'perpanjangan-usulan', 'perpanjangan-inbox'])}
+          {#if (canAccess('perpanjangan-pk') && canAccessAny(['perpanjangan-dashboard', 'perpanjangan-usulan', 'perpanjangan-inbox'])) || isPejabatTte}
             <div class="pt-1">
               <button
                 type="button"
@@ -2023,6 +2147,36 @@
                         >
                       </div>
                       Inbox Perpanjangan
+                    </a>
+                  {/if}
+                  {#if isPejabatTte}
+                    <a
+                      href="/tte-kontrak"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                        '/tte-kontrak',
+                      )
+                        ? 'text-indigo-700 bg-indigo-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-purple-50 flex items-center justify-center shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-purple-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                          />
+                        </svg>
+                      </div>
+                      TTE & Paraf Kontrak
                     </a>
                   {/if}
                 </div>
@@ -2786,6 +2940,26 @@
                           </svg>
                         </div>
                         Log Aktivitas
+                      </a>
+                    {/if}
+                    {#if isUserAdmin}
+                      <a
+                        href="/setting/pejabat-penandatangan"
+                        onclick={closeMobile}
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                          '/setting/pejabat-penandatangan',
+                        )
+                          ? 'text-blue-700 bg-blue-50 font-semibold'
+                          : 'text-slate-600 hover:bg-slate-50'}"
+                      >
+                        <div
+                          class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
+                        >
+                          <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7 7z" />
+                          </svg>
+                        </div>
+                        Pejabat TTE BSrE
                       </a>
                     {/if}
                     {#if canAccess('setting-backup')}

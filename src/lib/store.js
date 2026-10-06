@@ -88,3 +88,11 @@ export const isUserAdmin = (user) => {
     return hasRole(user, 'admin', 'admin_utama', 'superadmin');
 };
 
+export const isPegawai = (user) => {
+    return hasRole(user, 'pegawai');
+};
+
+export const isVerifikator = (user) => {
+    return hasRole(user, 'verifikator');
+};
+
