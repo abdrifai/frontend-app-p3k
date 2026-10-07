@@ -13,12 +13,29 @@
   // Edit modal state
   let showEditModal = false;
   let editUser = null;
-  let editForm = { namaLengkap: "", email: "", password: "", roles: ["user"] };
+  let editForm = {
+    namaLengkap: "",
+    email: "",
+    password: "",
+    roles: ["user"],
+    nik: "",
+    jabatanPejabat: "KEPALA_BKPSDM",
+    nipPejabat: ""
+  };
   let isSubmitting = false;
 
   // Add modal state
   let showAddModal = false;
-  let addForm = { username: "", namaLengkap: "", email: "", password: "", roles: ["user"] };
+  let addForm = {
+    username: "",
+    namaLengkap: "",
+    email: "",
+    password: "",
+    roles: ["user"],
+    nik: "",
+    jabatanPejabat: "KEPALA_BKPSDM",
+    nipPejabat: ""
+  };
   let isAdding = false;
 
   // Delete modal state
@@ -173,11 +190,15 @@
 
   const openEditModal = (user) => {
     editUser = user;
+    const userRoles = getUserRoles(user);
     editForm = {
       namaLengkap: user.namaLengkap || "",
       email: user.email || "",
       password: "",
-      roles: getUserRoles(user),
+      roles: userRoles,
+      nik: user.pejabatPenandatangan?.nik || user.nik || "",
+      jabatanPejabat: user.pejabatPenandatangan?.jabatan || user.jabatanPejabat || "KEPALA_BKPSDM",
+      nipPejabat: user.pejabatPenandatangan?.nip || user.nipPejabat || ""
     };
     showEditModal = true;
   };
@@ -188,7 +209,16 @@
   };
 
   const openAddModal = () => {
-    addForm = { username: "", namaLengkap: "", email: "", password: "", roles: ["user"] };
+    addForm = {
+      username: "",
+      namaLengkap: "",
+      email: "",
+      password: "",
+      roles: ["user"],
+      nik: "",
+      jabatanPejabat: "KEPALA_BKPSDM",
+      nipPejabat: ""
+    };
     showAddModal = true;
   };
 
@@ -202,12 +232,36 @@
       addToast("Pilih minimal 1 role untuk user", "warning");
       return;
     }
+
+    if (addForm.roles.includes("pejabat_ttd")) {
+      const cleanNik = (addForm.nik || "").trim();
+      if (!cleanNik) {
+        addToast("NIK Pejabat Penandatangan wajib diisi untuk keperluan TTE", "warning");
+        return;
+      }
+      if (!/^\d{16}$/.test(cleanNik)) {
+        addToast("NIK Pejabat Penandatangan harus berupa 16 digit angka", "warning");
+        return;
+      }
+    }
+
     isAdding = true;
     try {
       const payload = {
-        ...addForm,
+        username: addForm.username,
+        namaLengkap: addForm.namaLengkap,
+        email: addForm.email,
+        password: addForm.password,
+        roles: addForm.roles,
         role: addForm.roles.join(","),
       };
+
+      if (addForm.roles.includes("pejabat_ttd")) {
+        payload.nik = addForm.nik.trim();
+        payload.jabatanPejabat = addForm.jabatanPejabat || "KEPALA_BKPSDM";
+        if (addForm.nipPejabat) payload.nipPejabat = addForm.nipPejabat.trim();
+      }
+
       const result = await apiRequest("/api/users/register", "POST", payload);
       
       if (result.isSoftDeleted) {
@@ -325,6 +379,19 @@
       addToast("Pilih minimal 1 role untuk user", "warning");
       return;
     }
+
+    if (editForm.roles.includes("pejabat_ttd")) {
+      const cleanNik = (editForm.nik || "").trim();
+      if (!cleanNik) {
+        addToast("NIK Pejabat Penandatangan wajib diisi untuk keperluan TTE", "warning");
+        return;
+      }
+      if (!/^\d{16}$/.test(cleanNik)) {
+        addToast("NIK Pejabat Penandatangan harus berupa 16 digit angka", "warning");
+        return;
+      }
+    }
+
     isSubmitting = true;
     try {
       const payload = {};
@@ -334,6 +401,12 @@
       if (editForm.roles && editForm.roles.length > 0) {
         payload.roles = editForm.roles;
         payload.role = editForm.roles.join(",");
+      }
+
+      if (editForm.roles.includes("pejabat_ttd")) {
+        payload.nik = editForm.nik.trim();
+        payload.jabatanPejabat = editForm.jabatanPejabat || "KEPALA_BKPSDM";
+        payload.nipPejabat = editForm.nipPejabat ? editForm.nipPejabat.trim() : null;
       }
 
       const result = await apiRequest(`/api/users/${editUser.id}`, "PUT", payload);
@@ -610,8 +683,14 @@
                           <i class="ri-checkbox-circle-line text-[11px]"></i> Verifikator
                         </span>
                       {:else if r === 'pejabat_ttd'}
-                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                        {@const nikPejabat = user.pejabatPenandatangan?.nik || user.nik}
+                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200" title={nikPejabat ? `NIK TTE: ${nikPejabat}` : "NIK Pejabat belum diset"}>
                           <i class="ri-quill-pen-line text-[11px]"></i> Pejabat TTD
+                          {#if nikPejabat}
+                            <span class="font-mono text-[10px] bg-indigo-200/90 text-indigo-950 px-1.5 py-0.2 rounded font-bold">
+                              {nikPejabat}
+                            </span>
+                          {/if}
                         </span>
                       {:else if r === 'pensiun' || r === 'operator_pensiun'}
                         <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-200">
@@ -922,6 +1001,63 @@
             </div>
           </div>
 
+          {#if addForm.roles?.includes('pejabat_ttd')}
+            <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200/80 space-y-3.5 transition-all">
+              <div class="flex items-center gap-2 text-indigo-900 font-bold text-xs uppercase tracking-wider">
+                <i class="ri-shield-user-line text-sm text-indigo-600"></i>
+                <span>Data Pejabat Penandatangan & TTE (BSrE BSSN)</span>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                NIK KTP wajib valid 16 digit angka untuk verifikasi sertifikat elektronik TTE dokumen kontrak via BSrE BSSN.
+              </p>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label for="addNikPejabat" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    NIK KTP (16 Digit) <span class="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="addNikPejabat"
+                    type="text"
+                    bind:value={addForm.nik}
+                    maxlength="16"
+                    required
+                    class="input-field font-mono"
+                    placeholder="Contoh: 3201xxxxxxxxxxxx"
+                  />
+                </div>
+
+                <div>
+                  <label for="addJabatanPejabat" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Jabatan Penandatangan <span class="text-rose-500">*</span>
+                  </label>
+                  <select
+                    id="addJabatanPejabat"
+                    bind:value={addForm.jabatanPejabat}
+                    class="input-field font-medium"
+                  >
+                    <option value="KEPALA_BKPSDM">Kepala BKPSDM (Paraf / TTE)</option>
+                    <option value="SEKDA">Sekretaris Daerah (Paraf / TTE)</option>
+                    <option value="BUPATI">Bupati (Penandatangan Utama TTE)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label for="addNipPejabat" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  NIP Pejabat (Opsional)
+                </label>
+                <input
+                  id="addNipPejabat"
+                  type="text"
+                  bind:value={addForm.nipPejabat}
+                  class="input-field font-mono"
+                  placeholder="NIP Pejabat jika ada (cth: 1978...)"
+                />
+              </div>
+            </div>
+          {/if}
+
           <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               type="button"
@@ -1074,6 +1210,63 @@
               {/each}
             </div>
           </div>
+
+          {#if editForm.roles?.includes('pejabat_ttd')}
+            <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200/80 space-y-3.5 transition-all">
+              <div class="flex items-center gap-2 text-indigo-900 font-bold text-xs uppercase tracking-wider">
+                <i class="ri-shield-user-line text-sm text-indigo-600"></i>
+                <span>Data Pejabat Penandatangan & TTE (BSrE BSSN)</span>
+              </div>
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                NIK KTP wajib valid 16 digit angka untuk verifikasi sertifikat elektronik TTE dokumen kontrak via BSrE BSSN.
+              </p>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label for="editNikPejabat" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    NIK KTP (16 Digit) <span class="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="editNikPejabat"
+                    type="text"
+                    bind:value={editForm.nik}
+                    maxlength="16"
+                    required
+                    class="input-field font-mono"
+                    placeholder="Contoh: 3201xxxxxxxxxxxx"
+                  />
+                </div>
+
+                <div>
+                  <label for="editJabatanPejabat" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Jabatan Penandatangan <span class="text-rose-500">*</span>
+                  </label>
+                  <select
+                    id="editJabatanPejabat"
+                    bind:value={editForm.jabatanPejabat}
+                    class="input-field font-medium"
+                  >
+                    <option value="KEPALA_BKPSDM">Kepala BKPSDM (Paraf / TTE)</option>
+                    <option value="SEKDA">Sekretaris Daerah (Paraf / TTE)</option>
+                    <option value="BUPATI">Bupati (Penandatangan Utama TTE)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label for="editNipPejabat" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  NIP Pejabat (Opsional)
+                </label>
+                <input
+                  id="editNipPejabat"
+                  type="text"
+                  bind:value={editForm.nipPejabat}
+                  class="input-field font-mono"
+                  placeholder="NIP Pejabat jika ada (cth: 1978...)"
+                />
+              </div>
+            </div>
+          {/if}
 
           <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
