@@ -5,7 +5,9 @@
 
   let listDokumen = $state([]);
   let pagination = $state({ page: 1, limit: 10, total: 0, totalPages: 1 });
-  let loading = $state(true);
+  let initialLoading = $state(true);
+  let tableLoading = $state(false);
+  let statsLoading = $state(false);
   let searchQuery = $state('');
   let filterStatus = $state('');
 
@@ -97,41 +99,62 @@
     }
   };
 
-  const loadData = async (page = 1) => {
-    loading = true;
+  // Hanya fetch statistik ringkasan KPI
+  const fetchStats = async () => {
     try {
-      const [resList, resStats] = await Promise.all([
-        tteApi.getMonitoring({
-          search: searchQuery,
-          statusTte: filterStatus,
-          page,
-          limit: pagination.limit || 10
-        }),
-        tteApi.getMonitoringStats()
-      ]);
+      const resStats = await tteApi.getMonitoringStats();
+      if (resStats && resStats.success) {
+        stats = resStats.data || stats;
+      }
+    } catch (err) {
+      console.error('Gagal memuat statistik monitoring TTE:', err);
+    }
+  };
+
+  // Hanya fetch daftar tabel dokumen (tanpa reload stats atau card)
+  const fetchList = async (page = 1) => {
+    tableLoading = true;
+    try {
+      const resList = await tteApi.getMonitoring({
+        search: searchQuery,
+        statusTte: filterStatus,
+        page,
+        limit: pagination.limit || 10
+      });
 
       if (resList && resList.success) {
         listDokumen = resList.data || [];
         pagination = resList.pagination || pagination;
       }
-
-      if (resStats && resStats.success) {
-        stats = resStats.data || stats;
-      }
     } catch (err) {
       addToast(err.message || 'Gagal memuat monitoring dokumen TTE', 'error');
     } finally {
-      loading = false;
+      tableLoading = false;
+      initialLoading = false;
+    }
+  };
+
+  // Segarkan seluruh data (baik stats maupun tabel)
+  const refreshAll = async () => {
+    statsLoading = true;
+    tableLoading = true;
+    try {
+      await Promise.all([
+        fetchStats(),
+        fetchList(pagination.page || 1)
+      ]);
+    } finally {
+      statsLoading = false;
     }
   };
 
   const handleSearch = () => {
-    loadData(1);
+    fetchList(1);
   };
 
   const handleFilterStatus = (status) => {
     filterStatus = status;
-    loadData(1);
+    fetchList(1);
   };
 
   const openPreview = (doc) => {
@@ -149,8 +172,10 @@
     showLogModal = true;
   };
 
-  onMount(() => {
-    loadData(1);
+  onMount(async () => {
+    initialLoading = true;
+    await Promise.all([fetchStats(), fetchList(1)]);
+    initialLoading = false;
   });
 </script>
 
@@ -177,10 +202,12 @@
 
     <div>
       <button
-        onclick={() => loadData(pagination.page)}
-        class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-xs transition"
+        type="button"
+        onclick={refreshAll}
+        disabled={tableLoading || statsLoading}
+        class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-xs transition disabled:opacity-50"
       >
-        <svg class="w-4 h-4 {loading ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 {statsLoading || tableLoading ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
         Segarkan Data
@@ -331,8 +358,15 @@
       </form>
     </div>
 
+    <!-- Progress Loading Bar (Aktif saat filter card diklik / mencari) -->
+    <div class="h-0.5 w-full bg-slate-100 overflow-hidden relative">
+      {#if tableLoading}
+        <div class="h-full bg-blue-600 w-1/3 animate-pulse"></div>
+      {/if}
+    </div>
+
     <!-- Table Monitoring -->
-    {#if loading}
+    {#if initialLoading}
       <div class="p-16 text-center text-slate-500">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-3"></div>
         <p class="text-sm">Memuat data monitoring TTE...</p>
@@ -350,7 +384,7 @@
         </p>
       </div>
     {:else}
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto transition-opacity duration-200 {tableLoading ? 'opacity-40 pointer-events-none' : 'opacity-100'}">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
             <tr>
@@ -525,16 +559,16 @@
           </div>
           <div class="flex gap-2">
             <button
-              disabled={pagination.page <= 1}
-              onclick={() => loadData(pagination.page - 1)}
-              class="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+              disabled={pagination.page <= 1 || tableLoading}
+              onclick={() => fetchList(pagination.page - 1)}
+              class="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition"
             >
               Sebelumnya
             </button>
             <button
-              disabled={pagination.page >= pagination.totalPages}
-              onclick={() => loadData(pagination.page + 1)}
-              class="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+              disabled={pagination.page >= pagination.totalPages || tableLoading}
+              onclick={() => fetchList(pagination.page + 1)}
+              class="px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition"
             >
               Berikutnya
             </button>
