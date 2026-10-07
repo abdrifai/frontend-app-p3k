@@ -27,6 +27,7 @@
   let previewUrl = $state('');
   let previewTitle = $state('');
   let selectedPreviewDoc = $state(null);
+  let regeneratingId = $state(null);
 
   // Modal Detail Log Audit TTE
   let showLogModal = $state(false);
@@ -220,6 +221,36 @@
       return;
     }
     showPreviewModal = true;
+  };
+
+  const handleRegeneratePdf = async (doc) => {
+    if (!doc || !doc.id) return;
+    regeneratingId = doc.id;
+    try {
+      const res = await tteApi.regeneratePdf(doc.id);
+      if (res && res.success) {
+        addToast(res.message || 'Berkas PDF berhasil digenerate ulang!', 'success');
+        // Perbarui URL dokumen di tabel secara reaktif
+        listDokumen = listDokumen.map((d) =>
+          d.id === doc.id
+            ? { ...d, pdfDraftUrl: res.data.pdfDraftUrl, generatedFileUrl: res.data.generatedFileUrl }
+            : d
+        );
+        // Jika modal preview sedang terbuka untuk dokumen ini, perbarui previewUrl
+        if (showPreviewModal && selectedPreviewDoc?.id === doc.id) {
+          previewUrl = res.data.pdfDraftUrl + '?t=' + Date.now();
+          selectedPreviewDoc = {
+            ...selectedPreviewDoc,
+            pdfDraftUrl: res.data.pdfDraftUrl,
+            generatedFileUrl: res.data.generatedFileUrl
+          };
+        }
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal meng-generate ulang berkas PDF', 'error');
+    } finally {
+      regeneratingId = null;
+    }
   };
 
   const openLogModal = (doc) => {
@@ -585,6 +616,19 @@
                       Log ({doc.logTandaTangan?.length || 0})
                     </button>
 
+                    <!-- Tombol Generate Ulang PDF -->
+                    <button
+                      type="button"
+                      disabled={regeneratingId === doc.id}
+                      onclick={() => handleRegeneratePdf(doc)}
+                      class="p-1.5 text-slate-500 hover:text-amber-600 rounded-lg hover:bg-amber-50 border border-slate-200 transition disabled:opacity-50"
+                      title="Generate Ulang Berkas PDF jika rusak atau terjadi error"
+                    >
+                      <svg class="w-4 h-4 {regeneratingId === doc.id ? 'animate-spin text-amber-600' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+
                     <!-- Tombol Download (Jika Signed atau Draft ada) -->
                     {#if doc.pdfSignedUrl || doc.pdfDraftUrl}
                       <a
@@ -646,6 +690,20 @@
           <h3 class="text-sm font-bold text-slate-900 truncate max-w-md">{previewTitle}</h3>
         </div>
         <div class="flex items-center gap-2">
+          {#if selectedPreviewDoc}
+            <button
+              type="button"
+              disabled={regeneratingId === selectedPreviewDoc.id}
+              onclick={() => handleRegeneratePdf(selectedPreviewDoc)}
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-700 transition flex items-center gap-1.5 disabled:opacity-50"
+              title="Generate ulang berkas PDF jika tampilan dokumen error atau rusak"
+            >
+              <svg class="w-3.5 h-3.5 {regeneratingId === selectedPreviewDoc.id ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {regeneratingId === selectedPreviewDoc.id ? 'Men-generate...' : 'Generate Ulang PDF'}
+            </button>
+          {/if}
           {#if selectedPreviewDoc?.generatedFileUrl}
             <a
               href={selectedPreviewDoc.generatedFileUrl}

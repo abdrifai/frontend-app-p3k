@@ -55,6 +55,10 @@ export const tteApi = {
     return await apiRequest('/api/v1/tte/monitoring/statistik', 'GET');
   },
 
+  async regeneratePdf(id) {
+    return await apiRequest(`/api/v1/tte/${id}/regenerate-pdf`, 'POST');
+  },
+
   // Konfigurasi Pejabat Penandatangan (Admin)
   async listPejabat() {
     return await apiRequest('/api/v1/pejabat-penandatangan', 'GET');
