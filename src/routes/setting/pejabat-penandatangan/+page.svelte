@@ -46,7 +46,15 @@
         listPejabat = resPejabat.data;
       }
       if (resUsers && resUsers.data) {
-        listUsers = Array.isArray(resUsers.data) ? resUsers.data : resUsers.data.users || [];
+        const allUsers = Array.isArray(resUsers.data) ? resUsers.data : resUsers.data.users || [];
+        // Hanya akun aktif ber-role pejabat_ttd yang boleh ditautkan sebagai pejabat penandatangan
+        listUsers = allUsers.filter((u) => {
+          if (u.isDeleted) return false;
+          const roles = Array.isArray(u.roles) && u.roles.length > 0
+            ? u.roles
+            : String(u.role || '').split(',');
+          return roles.map((r) => String(r).trim().toLowerCase()).includes('pejabat_ttd');
+        });
       }
     } catch (err) {
       errorMsg = err.message || 'Gagal memuat data pejabat penandatangan';
@@ -359,6 +367,12 @@
               <option value={u.id}>{u.namaLengkap || u.username} ({u.role}) - {u.email}</option>
             {/each}
           </select>
+          {#if listUsers.length === 0}
+            <p class="mt-1.5 text-xs text-amber-700">
+              Belum ada akun ber-role <strong>pejabat_ttd</strong>. Buat atau tambahkan role tersebut di menu
+              <a href="/manajemen-user" class="underline font-semibold">Manajemen User</a> terlebih dahulu.
+            </p>
+          {/if}
         </div>
 
         <div>
@@ -434,7 +448,7 @@
           </div>
           <div>
             <label for="urutan-input" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Urutan Alur (1-3) *
+              Urutan Alur (1-4) *
             </label>
             <input
               id="urutan-input"

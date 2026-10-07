@@ -27,6 +27,8 @@
         
         if (userRoles.includes('pegawai')) {
           goto("/portal");
+        } else if (userRoles.includes('pejabat_ttd') && !userRoles.includes('admin')) {
+          goto("/portal-pejabat");
         } else {
           goto("/");
         }

@@ -31,7 +31,9 @@
       : String($authStore.user?.role || '').toLowerCase().split(',').map(r => r.trim()).filter(Boolean)
   );
   const isPegawaiUser = $derived(userRoles.includes('pegawai'));
-  const isPortalRoute = $derived($page.url.pathname.startsWith('/portal'));
+  const isPejabatUser = $derived(userRoles.includes('pejabat_ttd') && !userRoles.includes('admin'));
+  const isPortalPejabatRoute = $derived($page.url.pathname.startsWith('/portal-pejabat'));
+  const isPortalPegawaiRoute = $derived($page.url.pathname.startsWith('/portal') && !isPortalPejabatRoute);
 
   // Global auth check for protected routes & menu permission loader
   $effect(() => {
@@ -43,11 +45,15 @@
       goto("/login");
     } else if ($authStore.isAuthenticated) {
       if (isPegawaiUser) {
-        if (!isPortalRoute && !isPublicPath) {
+        if (!isPortalPegawaiRoute && !isPublicPath) {
           goto("/portal");
         }
+      } else if (isPejabatUser) {
+        if (!isPortalPejabatRoute && !isPublicPath) {
+          goto("/portal-pejabat");
+        }
       } else {
-        if (isPortalRoute) {
+        if (isPortalPegawaiRoute) {
           goto("/");
         } else {
           loadMenuPermissions();
@@ -82,7 +88,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-slate-50 flex flex-col">
-  {#if !isPegawaiUser && !isPortalRoute}
+  {#if !isPegawaiUser && !isPejabatUser && !isPortalPegawaiRoute && !isPortalPejabatRoute}
     <Navbar />
   {/if}
 
@@ -90,25 +96,27 @@
     {@render children()}
   </main>
 
-  <footer class="bg-white border-t border-slate-200/60 mt-auto">
-    <div
-      class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2"
-    >
-      <div class="flex items-center gap-2">
-        <div
-          class="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0"
-        >
-          <img src="/logo.svg" alt="Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
+  {#if !isPortalPejabatRoute}
+    <footer class="bg-white border-t border-slate-200/60 mt-auto">
+      <div
+        class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2"
+      >
+        <div class="flex items-center gap-2">
+          <div
+            class="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0"
+          >
+            <img src="/logo.svg" alt="Kabupaten Tojo Una-Una" class="w-full h-full object-contain" />
+          </div>
+          <p class="text-sm text-slate-400">
+            &copy; {new Date().getFullYear()} SIPPPK BKPSDM Kabupaten Tojo Una-Una. All rights reserved.
+          </p>
         </div>
-        <p class="text-sm text-slate-400">
-          &copy; {new Date().getFullYear()} SIPPPK BKPSDM Kabupaten Tojo Una-Una. All rights reserved.
+        <p class="text-xs text-slate-300">
+          Sistem Informasi Pegawai Pemerintah dengan Perjanjian Kerja
         </p>
       </div>
-      <p class="text-xs text-slate-300">
-        Sistem Informasi Pegawai Pemerintah dengan Perjanjian Kerja
-      </p>
-    </div>
-  </footer>
+    </footer>
+  {/if}
 
   <Toast />
 </div>

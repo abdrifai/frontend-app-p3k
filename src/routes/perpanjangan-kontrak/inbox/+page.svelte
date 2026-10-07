@@ -353,6 +353,24 @@
     const y = date.getFullYear();
     return `${d} ${m} ${y}`;
   };
+
+  const formatGajiDisplay = (gajiVal) => {
+    if (!gajiVal || gajiVal === "0") return "Rp 0";
+    if (typeof gajiVal === "string" && gajiVal.includes("Rp.")) {
+      return gajiVal;
+    }
+    const numOnly = String(gajiVal).replace(/[^0-9]/g, "");
+    if (!numOnly || numOnly === "0") return "Rp 0";
+    const num = parseInt(numOnly, 10);
+    if (isNaN(num) || num === 0) return "Rp 0";
+    return `Rp.${new Intl.NumberFormat("id-ID").format(num)},-`;
+  };
+
+  const isGajiNol = (gajiVal) => {
+    if (!gajiVal || gajiVal === "0") return true;
+    const numOnly = String(gajiVal).replace(/[^0-9]/g, "");
+    return !numOnly || parseInt(numOnly, 10) === 0;
+  };
 </script>
 
 <svelte:head>
@@ -812,326 +830,263 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+    <div class="flex items-center justify-center min-h-screen px-4 py-6 sm:p-6">
       <button
         type="button"
-        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm w-full h-full border-none cursor-default"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm w-full h-full border-none cursor-default transition-opacity"
         on:click={closeDetail}
         aria-label="Tutup"
       ></button>
+
       <div
-        class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 z-10"
+        class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full z-10 overflow-hidden flex flex-col max-h-[90vh] border border-slate-100"
       >
-        <div
-          class="flex items-center justify-between pb-5 border-b border-slate-100 mb-5"
-        >
-          <h3 class="text-lg font-bold text-slate-800">Detail Usulan</h3>
+        <!-- Modal Header -->
+        <div class="px-6 py-4 flex items-center justify-between shrink-0 border-b border-slate-200 bg-white">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h3 class="text-base font-bold text-slate-800">Detail Usulan Perpanjangan Kontrak</h3>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border {statusColor(selectedRecord.status)}">
+                {statusLabel(selectedRecord.status)}
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Informasi data pegawai, masa kerja, dan kalkulasi usulan perpanjangan
+            </p>
+          </div>
           <button
             aria-label="Tutup Dialog"
             on:click={closeDetail}
-            class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              /></svg
-            >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
           </button>
         </div>
 
-        {#if selectedRecord.dataP3k?.statusPensiun === 'PENSIUN' && selectedRecord.status !== 'SELESAI'}
-          <div class="mb-5 bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3 text-red-800">
-            <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-            <div>
-              <h4 class="text-sm font-bold text-red-900">PERINGATAN: PEGAWAI TELAH PENSIUN</h4>
-              <p class="text-xs text-red-700 mt-1 leading-relaxed">
-                Pegawai ini telah berstatus <strong>PENSIUN</strong>. Usulan perpanjangan kontrak ini <strong>harus dihentikan / ditolak</strong> karena pegawai yang bersangkutan sudah tidak aktif.
-              </p>
-            </div>
-          </div>
-        {/if}
-
-        <dl class="grid grid-cols-2 gap-4">
-          <div
-            class="p-3 rounded-xl bg-slate-50 border border-slate-100 col-span-2"
-          >
-            <dt class="text-xs font-medium text-slate-400 uppercase">
-              Pegawai
-            </dt>
-            <dd class="mt-1 text-sm font-semibold text-slate-800">
-              {selectedRecord.dataP3k?.nama}
-            </dd>
-            <dd class="text-xs text-slate-500 font-mono">
-              {selectedRecord.dataP3k?.nipBaru}
-            </dd>
-            <dd class="mt-1 text-sm text-slate-700">
-              {selectedRecord.dataP3k?.jabatanNama || "-"}
-            </dd>
-          </div>
-          <div
-            class="p-3 rounded-xl bg-slate-50 border border-slate-100 col-span-2"
-          >
-            <dt class="text-xs font-medium text-slate-400 uppercase">
-              Unit Kerja
-            </dt>
-            <dd class="mt-1 text-sm text-slate-700">
-              {selectedRecord.dataP3k?.unorInduk?.nama ||
-                selectedRecord.dataP3k?.unorNama ||
-                "-"}
-            </dd>
-          </div>
-          <div class="p-3 rounded-xl bg-blue-50 border border-blue-100">
-            <dt class="text-xs font-medium text-blue-500 uppercase">
-              Tanggal Mulai
-            </dt>
-            <dd class="mt-1 text-sm font-semibold text-blue-700">
-              {formatDate(selectedRecord.tanggalMulai)}
-            </dd>
-          </div>
-          <div class="p-3 rounded-xl bg-blue-50 border border-blue-100">
-            <dt class="text-xs font-medium text-blue-500 uppercase">
-              Tanggal Selesai
-            </dt>
-            <dd class="mt-1 text-sm font-semibold text-blue-700">
-              {formatDate(selectedRecord.tanggalSelesai)}
-            </dd>
-          </div>
-          {#if selectedRecord.keterangan}
-            <div
-              class="p-3 rounded-xl bg-slate-50 border border-slate-100 col-span-2"
-            >
-              <dt class="text-xs font-medium text-slate-400 uppercase">
-                Keterangan
-              </dt>
-              <dd class="mt-1 text-sm text-slate-700">
-                {selectedRecord.keterangan}
-              </dd>
+        <!-- Scrollable Modal Body -->
+        <div class="p-6 overflow-y-auto space-y-5 bg-white">
+          <!-- Peringatan Pegawai Telah Pensiun -->
+          {#if selectedRecord.dataP3k?.statusPensiun === 'PENSIUN' && selectedRecord.status !== 'SELESAI'}
+            <div class="p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 text-red-800 text-xs">
+              <svg class="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <div>
+                <span class="font-bold text-red-900 block">PERINGATAN: PEGAWAI TELAH PENSIUN</span>
+                <p class="mt-0.5 text-red-700 leading-relaxed">
+                  Pegawai ini tercatat berstatus <strong>PENSIUN</strong>. Usulan perpanjangan kontrak ini disarankan untuk dihentikan atau ditolak.
+                </p>
+              </div>
             </div>
           {/if}
-          <div
-            class="p-3 rounded-xl bg-slate-50 border border-slate-100 col-span-2"
-          >
-            <dt class="text-xs font-medium text-slate-400 uppercase">Status</dt>
-            <dd class="mt-1">
-              <span
-                class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border {statusColor(
-                  selectedRecord.status,
-                )}">{statusLabel(selectedRecord.status)}</span
-              >
-            </dd>
-            {#if selectedRecord.alasanPenolakan}
-              <dd class="mt-1 text-xs text-red-500 italic">
-                Alasan: {selectedRecord.alasanPenolakan}
-              </dd>
-            {/if}
-          </div>
-        </dl>
 
-        <!-- Preview Section for PENDING -->
-        {#if selectedRecord.status === "PENDING"}
-          <div class="mt-6 border-t border-slate-100 pt-5">
-            <h4
-              class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"
-            >
-              <svg
-                class="w-4 h-4 text-indigo-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                ><path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                /><path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                /></svg
-              >
-              Preview Data Cetak
-            </h4>
-
-            {#if isLoadingPreview}
-              <div
-                class="flex items-center justify-center p-6 bg-slate-50 rounded-xl border border-slate-100"
-              >
-                <div class="flex items-center gap-3">
-                  <div
-                    class="w-5 h-5 border-[3px] border-indigo-500 border-t-transparent rounded-full animate-spin"
-                  ></div>
-                  <span class="text-sm text-slate-500 font-medium"
-                    >Memuat kalkulasi...</span
-                  >
-                </div>
-              </div>
-            {:else if previewData}
-              <div class="bg-slate-800 rounded-xl p-4 text-slate-300">
-                <dl class="space-y-3">
-                  <div
-                    class="flex justify-between items-center pb-2 border-b border-slate-700/50"
-                  >
-                    <dt class="text-xs font-medium text-slate-400">
-                      TMT Awal PPPK
-                    </dt>
-                    <dd class="text-sm font-semibold text-white">
-                      {formatDateIndoFull(previewData.tmtCpns)}
-                    </dd>
-                  </div>
-                  <div
-                    class="flex justify-between items-center pb-2 border-b border-slate-700/50"
-                  >
-                    <dt class="text-xs font-medium text-slate-400">
-                      Nomor Kontrak
-                    </dt>
-                    <dd class="text-sm font-semibold text-white">
-                      {#if previewData.nomorKontrak}
-                        {previewData.nomorKontrak}
-                      {:else}
-                        <span class="text-amber-400 italic">Belum diisi</span>
-                      {/if}
-                    </dd>
-                  </div>
-                  <div
-                    class="flex justify-between items-center pb-2 border-b border-slate-700/50"
-                  >
-                    <dt class="text-xs font-medium text-slate-400">
-                      Masa Kerja (Hitung)
-                    </dt>
-                    <dd class="text-sm font-semibold text-white">
-                      {previewData.mkTahun} Tahun {previewData.mkBulan} Bulan
-                    </dd>
-                  </div>
-                  <div
-                    class="flex justify-between items-center pb-2 border-b border-slate-700/50"
-                  >
-                    <dt class="text-xs font-medium text-slate-400">
-                      Gaji Pokok
-                    </dt>
-                    <dd
-                      class="text-sm font-semibold {previewData.gaji === '0'
-                        ? 'text-amber-400'
-                        : 'text-emerald-400'}"
-                    >
-                      Rp {previewData.gaji}
-                    </dd>
-                  </div>
-                  <div class="flex justify-between items-start pt-1">
-                    <dt
-                      class="text-xs font-medium text-slate-400 mt-0.5 whitespace-nowrap mr-4"
-                    >
-                      Terbilang
-                    </dt>
-                    <dd
-                      class="text-sm font-medium text-white italic text-right leading-tight"
-                    >
-                      {#if previewData.terbilang}
-                        {previewData.terbilang}
-                      {:else}
-                        <span class="text-amber-400"
-                          >Tabel gaji belum diatur</span
-                        >
-                      {/if}
-                    </dd>
-                  </div>
-                </dl>
-
-                {#if previewData.gaji === "0"}
-                  <div
-                    class="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex gap-3 text-amber-200 text-xs"
-                  >
-                    <svg
-                      class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      ><path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      /></svg
-                    >
-                    <p>
-                      Gaji untuk Golongan <strong
-                        >{previewData.golonganAkhirNama || "-"}</strong
-                      >
-                      dengan Masa Kerja
-                      <strong
-                        >{previewData.mkTahun} Tahun {previewData.mkBulan} Bulan</strong
-                      > belum diatur di referensi Tabel Gaji. Harap sesuaikan sebelum
-                      menyetujui jika ingin angka tercetak.
-                    </p>
-                  </div>
+          <!-- Grid 2 Kolom Bersih & Rapi -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+            <!-- Kolom 1: Data Pegawai & Kontrak -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-5 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <i class="ri-user-line text-blue-600"></i>
+                  Data Pegawai & Kontrak
+                </span>
+                {#if selectedRecord.kontrakKe}
+                  <span class="text-[11px] font-semibold text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded-md">
+                    Kontrak Ke-{selectedRecord.kontrakKe}
+                  </span>
                 {/if}
               </div>
-            {/if}
-          </div>
-        {/if}
 
-        {#if selectedRecord.finalFileUrl}
-          <div class="mt-4">
-            <a
-              href={`${API_BASE_URL}${selectedRecord.finalFileUrl}`}
-              target="_blank"
-              class="bg-red-600 hover:bg-red-700 text-white w-full text-sm gap-2 justify-center py-2.5 rounded-lg transition-colors flex items-center font-semibold"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                ></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-              Download PDF PK (Final)
-            </a>
-          </div>
-        {/if}
-
-        {#if selectedRecord.status === "PENDING"}
-          <div class="mt-6 border-t pt-5 border-slate-100">
-            {#if showApproveConfirm}
-              <div class="space-y-3">
-                <div
-                  class="p-3 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm"
-                >
-                  <p class="font-semibold mb-1">Konfirmasi Persetujuan</p>
-                  <p>
-                    Apakah Anda yakin menyetujui usulan ini? Sistem akan membuat
-                    dokumen kontrak secara otomatis untuk pegawai bersangkutan.
-                  </p>
+              <dl class="space-y-3 text-xs">
+                <div>
+                  <dt class="text-slate-400 font-medium">Nama Lengkap</dt>
+                  <dd class="text-sm font-bold text-slate-800 mt-0.5">
+                    {selectedRecord.dataP3k?.nama || "-"}
+                  </dd>
                 </div>
-                <div class="flex gap-2">
+
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <dt class="text-slate-400 font-medium">NIP</dt>
+                    <dd class="font-mono font-semibold text-slate-700 mt-0.5">
+                      {selectedRecord.dataP3k?.nipBaru || "-"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-400 font-medium">Nomor Kontrak</dt>
+                    <dd class="font-mono text-slate-700 mt-0.5">
+                      {selectedRecord.nomorKontrak || "-"}
+                    </dd>
+                  </div>
+                </div>
+
+                <div class="pt-1">
+                  <dt class="text-slate-400 font-medium">Jabatan</dt>
+                  <dd class="text-slate-700 font-medium mt-0.5">
+                    {selectedRecord.dataP3k?.jabatanNama || "-"}
+                  </dd>
+                </div>
+
+                <div class="pt-1">
+                  <dt class="text-slate-400 font-medium">Unit Kerja</dt>
+                  <dd class="text-slate-700 leading-relaxed mt-0.5">
+                    {selectedRecord.dataP3k?.unorInduk?.nama || selectedRecord.dataP3k?.unorNama || "-"}
+                  </dd>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200/70 grid grid-cols-2 gap-3">
+                  <div>
+                    <dt class="text-slate-400 font-medium">Tanggal Mulai</dt>
+                    <dd class="font-semibold text-slate-800 mt-0.5">
+                      {formatDate(selectedRecord.tanggalMulai)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-slate-400 font-medium">Tanggal Selesai</dt>
+                    <dd class="font-semibold text-slate-800 mt-0.5">
+                      {formatDate(selectedRecord.tanggalSelesai)}
+                    </dd>
+                  </div>
+                </div>
+
+                {#if selectedRecord.keterangan}
+                  <div class="pt-2 border-t border-slate-200/70">
+                    <dt class="text-slate-400 font-medium">Catatan Usulan</dt>
+                    <dd class="text-slate-600 italic mt-0.5 leading-relaxed">
+                      {selectedRecord.keterangan}
+                    </dd>
+                  </div>
+                {/if}
+
+                {#if selectedRecord.editedBy}
+                  <div class="pt-2 border-t border-slate-200/70 flex justify-between text-[11px]">
+                    <span class="text-slate-400">Pengusul:</span>
+                    <span class="text-slate-600 font-medium">{selectedRecord.editedBy?.namaLengkap || selectedRecord.editedBy?.username}</span>
+                  </div>
+                {/if}
+              </dl>
+            </div>
+
+            <!-- Kolom 2: Kalkulasi & Berkas -->
+            <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-5 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <i class="ri-calculator-line text-emerald-600"></i>
+                  {selectedRecord.status === "PENDING" ? "Kalkulasi Masa Kerja & Gaji" : "Status & Berkas"}
+                </span>
+                {#if selectedRecord.status === "PENDING"}
+                  <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md">
+                    Otomatis
+                  </span>
+                {/if}
+              </div>
+
+              {#if selectedRecord.status === "PENDING"}
+                {#if isLoadingPreview}
+                  <div class="py-8 flex items-center justify-center gap-2.5 text-xs text-slate-500">
+                    <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Memuat kalkulasi sistem...</span>
+                  </div>
+                {:else if previewData}
+                  <dl class="space-y-3 text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <dt class="text-slate-400 font-medium">TMT Awal PPPK</dt>
+                        <dd class="font-semibold text-slate-800 mt-0.5 truncate">
+                          {formatDateIndoFull(previewData.tmtCpns)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt class="text-slate-400 font-medium">Masa Kerja (Hitung)</dt>
+                        <dd class="font-semibold text-slate-800 mt-0.5">
+                          {previewData.mkTahun} Thn {previewData.mkBulan} Bln
+                        </dd>
+                      </div>
+                    </div>
+
+                    <!-- Gaji Pokok Bersih & Sederhana -->
+                    <div class="p-3.5 rounded-lg bg-white border border-slate-200">
+                      <div class="flex items-center justify-between">
+                        <span class="text-slate-500 font-medium">Gaji Pokok Baru</span>
+                        <span class="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                          Gol. {previewData.golonganAkhirNama || "-"}
+                        </span>
+                      </div>
+                      <p class="text-xl font-bold font-mono {isGajiNol(previewData.gaji) ? 'text-amber-600' : 'text-emerald-700'} mt-1">
+                        {formatGajiDisplay(previewData.gaji)}
+                      </p>
+                      {#if previewData.terbilang}
+                        <p class="text-[11px] text-slate-500 italic mt-0.5">
+                          Terbilang: {previewData.terbilang}
+                        </p>
+                      {/if}
+                    </div>
+
+                    {#if isGajiNol(previewData.gaji)}
+                      <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px]">
+                        Gaji untuk Golongan <strong>{previewData.golonganAkhirNama || "-"}</strong> (Masa Kerja {previewData.mkTahun} Thn) belum diatur di tabel referensi gaji.
+                      </div>
+                    {/if}
+                  </dl>
+                {/if}
+              {:else}
+                <dl class="space-y-3 text-xs">
+                  <div class="flex justify-between">
+                    <dt class="text-slate-400">Tanggal Diajukan</dt>
+                    <dd class="font-medium text-slate-700">{formatDate(selectedRecord.createdAt)}</dd>
+                  </div>
+                  {#if selectedRecord.statusSrikandi}
+                    <div class="flex justify-between pt-1 border-t border-slate-200/60">
+                      <dt class="text-slate-400">Tahap Srikandi</dt>
+                      <dd class="font-semibold text-purple-700">{srikandiStatusLabels[selectedRecord.statusSrikandi] || selectedRecord.statusSrikandi}</dd>
+                    </div>
+                  {/if}
+                  {#if selectedRecord.alasanPenolakan}
+                    <div class="pt-2 border-t border-slate-200/60">
+                      <dt class="text-red-500 font-bold mb-1">Alasan Penolakan:</dt>
+                      <dd class="p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 leading-relaxed">{selectedRecord.alasanPenolakan}</dd>
+                    </div>
+                  {/if}
+                </dl>
+              {/if}
+
+              <!-- Dokumen Berkas Kontrak -->
+              {#if selectedRecord.finalFileUrl}
+                <div class="pt-3 border-t border-slate-200">
+                  <a
+                    href={`${API_BASE_URL}${selectedRecord.finalFileUrl}`}
+                    target="_blank"
+                    class="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+                  >
+                    <i class="ri-file-pdf-2-line text-base"></i>
+                    Buka / Unduh Dokumen Kontrak (PDF)
+                  </a>
+                </div>
+              {/if}
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer / Aksi -->
+        <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 shrink-0">
+          {#if selectedRecord.status === "PENDING"}
+            {#if showApproveConfirm}
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                <span class="text-slate-600">
+                  Konfirmasi setujui usulan kontrak untuk pegawai ini?
+                </span>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                   <button
                     on:click={() => (showApproveConfirm = false)}
-                    class="btn-secondary flex-1 text-sm"
-                    disabled={isProcessing}>Batal</button
+                    class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white transition-colors"
+                    disabled={isProcessing}
                   >
+                    Batal
+                  </button>
                   <button
                     on:click={handleApprove}
-                    class="flex-1 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                    class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors disabled:opacity-50"
                     disabled={isProcessing}
                   >
                     {isProcessing ? "Memproses..." : "Ya, Setujui"}
@@ -1139,28 +1094,28 @@
                 </div>
               </div>
             {:else if showRejectForm}
-              <div class="space-y-3">
-                <label
-                  for="alasanPenolakanTextArea"
-                  class="block text-sm font-medium text-slate-700"
-                  >Alasan Penolakan *</label
-                >
+              <div class="space-y-2.5 text-xs">
+                <label for="alasanPenolakanTextArea" class="block font-semibold text-slate-700">
+                  Alasan Penolakan Usulan:
+                </label>
                 <textarea
                   id="alasanPenolakanTextArea"
                   bind:value={rejectReason}
-                  rows="3"
-                  class="input-field"
-                  placeholder="Tuliskan alasan penolakan..."
+                  rows="2"
+                  class="w-full p-2.5 border border-slate-300 rounded-lg text-xs outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none"
+                  placeholder="Tuliskan catatan atau alasan penolakan..."
                 ></textarea>
-                <div class="flex gap-2">
+                <div class="flex justify-end gap-2">
                   <button
                     on:click={() => (showRejectForm = false)}
-                    class="btn-secondary flex-1 text-sm"
-                    disabled={isProcessing}>Batal</button
+                    class="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-white transition-colors"
+                    disabled={isProcessing}
                   >
+                    Batal
+                  </button>
                   <button
                     on:click={handleReject}
-                    class="flex-1 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                    class="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors disabled:opacity-50"
                     disabled={isProcessing}
                   >
                     {isProcessing ? "Memproses..." : "Konfirmasi Tolak"}
@@ -1168,25 +1123,46 @@
                 </div>
               </div>
             {:else}
-              <div class="flex gap-3">
+              <div class="flex items-center justify-between gap-3 text-xs">
                 <button
-                  on:click={() => (showApproveConfirm = true)}
-                  class="flex-1 text-sm font-semibold text-white bg-emerald-500 hover:bg-emerald-600 py-2.5 rounded-lg transition-colors disabled:opacity-50"
-                  disabled={isProcessing}
+                  type="button"
+                  on:click={closeDetail}
+                  class="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 font-medium transition-colors"
                 >
-                  {isProcessing ? "Memproses..." : "✓ Setujui"}
+                  Tutup
                 </button>
-                <button
-                  on:click={() => (showRejectForm = true)}
-                  class="flex-1 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 py-2.5 rounded-lg transition-colors"
-                  disabled={isProcessing}
-                >
-                  ✕ Tolak
-                </button>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    on:click={() => (showRejectForm = true)}
+                    class="px-3.5 py-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 font-semibold transition-colors"
+                    disabled={isProcessing}
+                  >
+                    Tolak
+                  </button>
+                  <button
+                    type="button"
+                    on:click={() => (showApproveConfirm = true)}
+                    class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors shadow-xs disabled:opacity-50"
+                    disabled={isProcessing}
+                  >
+                    Setujui Usulan
+                  </button>
+                </div>
               </div>
             {/if}
-          </div>
-        {/if}
+          {:else}
+            <div class="flex items-center justify-end text-xs">
+              <button
+                type="button"
+                on:click={closeDetail}
+                class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
+          {/if}
+        </div>
       </div>
     </div>
   </div>

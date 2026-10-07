@@ -16,7 +16,7 @@
   );
   let isUserAdmin = $derived(userRoles.some(r => ['admin', 'admin_utama', 'superadmin'].includes(r)));
   let isUserPensiun = $derived(userRoles.some(r => ['pensiun', 'operator_pensiun'].includes(r)));
-  let isPejabatTte = $derived(userRoles.some(r => ['kepala_bkpsdm', 'sekda', 'bupati', 'admin', 'admin_utama', 'superadmin'].includes(r)));
+  let isPejabatTte = $derived(userRoles.some(r => ['pejabat_ttd', 'kepala_bkpsdm', 'sekda', 'bupati', 'admin', 'admin_utama', 'superadmin'].includes(r)));
 
   function canAccess(key) {
     if (!$authStore.isAuthenticated) return false;

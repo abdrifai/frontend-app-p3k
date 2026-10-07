@@ -46,6 +46,7 @@
     { id: "verifikator", label: "Verifikator Perbaikan (verifikator)", description: "Verifikasi & validasi usulan perbaikan data riwayat pegawai", color: "teal" },
     { id: "pegawai", label: "Pegawai Mandiri (pegawai)", description: "Akses portal mandiri pegawai untuk profil, usulan perbaikan, dan TTE", color: "emerald" },
     { id: "pensiun", label: "Operator Pensiun (pensiun)", description: "Pengajuan & Manajemen Pensiun Pegawai, Estimasi Pensiun", color: "rose" },
+    { id: "pejabat_ttd", label: "Pejabat Penandatangan (pejabat_ttd)", description: "Kepala BKPSDM, Sekda, atau Bupati — paraf/TTE kontrak kerja. Daftarkan juga di Setting > Pejabat Penandatangan", color: "indigo" },
     { id: "admin", label: "Administrator (admin)", description: "Akses penuh seluruh modul, manajemen user, dan pengaturan sistem", color: "purple" }
   ];
 
@@ -608,6 +609,10 @@
                         <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-teal-100 text-teal-800 border border-teal-200">
                           <i class="ri-checkbox-circle-line text-[11px]"></i> Verifikator
                         </span>
+                      {:else if r === 'pejabat_ttd'}
+                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          <i class="ri-quill-pen-line text-[11px]"></i> Pejabat TTD
+                        </span>
                       {:else if r === 'pensiun' || r === 'operator_pensiun'}
                         <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-800 border border-rose-200">
                           <i class="ri-user-unfollow-line text-[11px]"></i> Pensiun
@@ -787,20 +792,20 @@
       ></button>
 
       <div
-        class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden"
+        class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl z-10 overflow-hidden"
       >
         <div
-          class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500"
+          class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500"
         ></div>
 
-        <div class="flex items-center justify-between px-6 pt-6 pb-4">
+        <div class="flex items-center justify-between px-6 sm:px-8 pt-7 pb-4 border-b border-slate-100">
           <div>
-            <h3 class="text-lg font-bold text-slate-800">Tambah User</h3>
-            <p class="text-sm text-slate-400">Buat akun pengguna baru</p>
+            <h3 class="text-xl font-bold text-slate-800">Tambah User Baru</h3>
+            <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Lengkapi informasi akun dan peran pengguna sistem</p>
           </div>
           <button
             on:click={closeAddModal}
-            class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             aria-label="Tutup modal"
           >
             <svg
@@ -819,113 +824,121 @@
           </button>
         </div>
 
-        <form on:submit={handleAdd} class="px-6 pb-6 space-y-4">
-          <div>
-            <label
-              for="addUsername"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Username <span class="text-red-500">*</span></label
-            >
-            <input
-              id="addUsername"
-              type="text"
-              bind:value={addForm.username}
-              required
-              class="input-field"
-              placeholder="Username"
-            />
+        <form on:submit={handleAdd} class="px-6 sm:px-8 py-6 space-y-5 max-h-[80vh] overflow-y-auto">
+          <!-- Grid 2 Kolom untuk Identitas Akun -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="addUsername"
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >Username <span class="text-rose-500">*</span></label
+              >
+              <input
+                id="addUsername"
+                type="text"
+                bind:value={addForm.username}
+                required
+                class="input-field"
+                placeholder="Username akun (cth: john_doe / NIP)"
+              />
+            </div>
+            <div>
+              <label
+                for="addNamaLengkap"
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >Nama Lengkap <span class="text-rose-500">*</span></label
+              >
+              <input
+                id="addNamaLengkap"
+                type="text"
+                bind:value={addForm.namaLengkap}
+                required
+                class="input-field"
+                placeholder="Nama lengkap beserta gelar"
+              />
+            </div>
           </div>
-          <div>
-            <label
-              for="addNamaLengkap"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Nama Lengkap <span class="text-red-500">*</span></label
-            >
-            <input
-              id="addNamaLengkap"
-              type="text"
-              bind:value={addForm.namaLengkap}
-              required
-              class="input-field"
-              placeholder="Nama lengkap"
-            />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="addEmail"
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >Email <span class="text-rose-500">*</span></label
+              >
+              <input
+                id="addEmail"
+                type="email"
+                bind:value={addForm.email}
+                required
+                class="input-field"
+                placeholder="Alamat email aktif"
+              />
+            </div>
+            <div>
+              <label
+                for="addPassword"
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >Password <span class="text-rose-500">*</span></label
+              >
+              <input
+                id="addPassword"
+                type="password"
+                bind:value={addForm.password}
+                required
+                minlength="6"
+                class="input-field"
+                placeholder="Minimal 6 karakter"
+              />
+            </div>
           </div>
-          <div>
-            <label
-              for="addEmail"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Email <span class="text-red-500">*</span></label
-            >
-            <input
-              id="addEmail"
-              type="email"
-              bind:value={addForm.email}
-              required
-              class="input-field"
-              placeholder="Email valid"
-            />
-          </div>
-          <div>
-            <label
-              for="addPassword"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Password <span class="text-red-500">*</span></label
-            >
-            <input
-              id="addPassword"
-              type="password"
-              bind:value={addForm.password}
-              required
-              minlength="6"
-              class="input-field"
-              placeholder="Minimal 6 karakter"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Pilih Role Pengguna <span class="text-red-500">*</span>
-              <span class="text-xs font-normal text-slate-400 block">Dapat memilih lebih dari satu role</span>
-            </label>
-            <div class="space-y-2">
+
+          <div class="pt-2">
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Pilih Role Pengguna <span class="text-rose-500">*</span>
+              </label>
+              <span class="text-xs text-slate-400">Dapat memilih lebih dari satu role</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {#each AVAILABLE_ROLES as roleItem}
                 {@const isSelected = addForm.roles?.includes(roleItem.id)}
                 <button
                   type="button"
                   on:click={() => toggleRole('add', roleItem.id)}
-                  class="w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between {isSelected ? 'border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'}"
+                  class="w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 {isSelected ? 'border-indigo-500 bg-indigo-50/70 ring-2 ring-indigo-500/20' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'}"
                 >
-                  <div class="flex items-center gap-3">
-                    <div class="w-5 h-5 rounded flex items-center justify-center border transition-colors {isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'}">
-                      {#if isSelected}
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                      {/if}
-                    </div>
-                    <div>
-                      <p class="text-sm font-semibold text-slate-800">{roleItem.label}</p>
-                      <p class="text-xs text-slate-500">{roleItem.description}</p>
-                    </div>
+                  <div class="w-5 h-5 rounded-lg flex items-center justify-center border transition-colors mt-0.5 shrink-0 {isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white'}">
+                    {#if isSelected}
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                    {/if}
+                  </div>
+                  <div>
+                    <p class="text-xs sm:text-sm font-bold text-slate-800 leading-snug">{roleItem.label}</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{roleItem.description}</p>
                   </div>
                 </button>
               {/each}
             </div>
           </div>
-          <div class="flex gap-3 pt-2">
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               type="button"
               on:click={closeAddModal}
-              class="btn-secondary flex-1">Batal</button
+              class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">Batal</button
             >
             <button
               type="submit"
               disabled={isAdding}
-              class="btn-primary flex-1"
+              class="btn-primary px-6 py-2.5 shadow-md flex items-center gap-2"
             >
               {#if isAdding}
                 <div
-                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"
+                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
                 ></div>
               {/if}
-              Tambah
+              Tambah User
             </button>
           </div>
         </form>
@@ -950,20 +963,22 @@
       ></button>
 
       <div
-        class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden"
+        class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl z-10 overflow-hidden"
       >
         <div
-          class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500"
+          class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
         ></div>
 
-        <div class="flex items-center justify-between px-6 pt-6 pb-4">
+        <div class="flex items-center justify-between px-6 sm:px-8 pt-7 pb-4 border-b border-slate-100">
           <div>
-            <h3 class="text-lg font-bold text-slate-800">Edit User</h3>
-            <p class="text-sm text-slate-400">{editUser.username}</p>
+            <h3 class="text-xl font-bold text-slate-800">Edit User</h3>
+            <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+              Perbarui profil dan role akses untuk <strong>@{editUser.username}</strong>
+            </p>
           </div>
           <button
             on:click={closeEditModal}
-            class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            class="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             aria-label="Tutup modal"
           >
             <svg
@@ -982,41 +997,44 @@
           </button>
         </div>
 
-        <form on:submit={handleUpdate} class="px-6 pb-6 space-y-4">
-          <div>
-            <label
-              for="editNamaLengkap"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Nama Lengkap</label
-            >
-            <input
-              id="editNamaLengkap"
-              type="text"
-              bind:value={editForm.namaLengkap}
-              class="input-field"
-              placeholder="Nama lengkap"
-            />
+        <form on:submit={handleUpdate} class="px-6 sm:px-8 py-6 space-y-5 max-h-[80vh] overflow-y-auto">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="editNamaLengkap"
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >Nama Lengkap</label
+              >
+              <input
+                id="editNamaLengkap"
+                type="text"
+                bind:value={editForm.namaLengkap}
+                class="input-field"
+                placeholder="Nama lengkap"
+              />
+            </div>
+            <div>
+              <label
+                for="editEmail"
+                class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >Email</label
+              >
+              <input
+                id="editEmail"
+                type="email"
+                bind:value={editForm.email}
+                class="input-field"
+                placeholder="Email valid"
+              />
+            </div>
           </div>
-          <div>
-            <label
-              for="editEmail"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Email</label
-            >
-            <input
-              id="editEmail"
-              type="email"
-              bind:value={editForm.email}
-              class="input-field"
-              placeholder="Email"
-            />
-          </div>
+
           <div>
             <label
               for="editPassword"
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-              >Password Baru <span class="text-slate-400 font-normal"
-                >(kosongkan jika tidak diubah)</span
+              class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+              >Password Baru <span class="text-slate-400 font-normal lowercase"
+                >(kosongkan jika tidak ingin mengubah password)</span
               ></label
             >
             <input
@@ -1024,54 +1042,56 @@
               type="password"
               bind:value={editForm.password}
               class="input-field"
-              placeholder="Password baru"
+              placeholder="Masukkan password baru"
             />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Pilih Role Pengguna <span class="text-red-500">*</span>
-              <span class="text-xs font-normal text-slate-400 block">Dapat memilih lebih dari satu role</span>
-            </label>
-            <div class="space-y-2">
+
+          <div class="pt-2">
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Pilih Role Pengguna <span class="text-rose-500">*</span>
+              </label>
+              <span class="text-xs text-slate-400">Dapat memilih lebih dari satu role</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {#each AVAILABLE_ROLES as roleItem}
                 {@const isSelected = editForm.roles?.includes(roleItem.id)}
                 <button
                   type="button"
                   on:click={() => toggleRole('edit', roleItem.id)}
-                  class="w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between {isSelected ? 'border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white'}"
+                  class="w-full text-left p-3 rounded-xl border transition-all flex items-start gap-3 {isSelected ? 'border-blue-500 bg-blue-50/70 ring-2 ring-blue-500/20' : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'}"
                 >
-                  <div class="flex items-center gap-3">
-                    <div class="w-5 h-5 rounded flex items-center justify-center border transition-colors {isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'}">
-                      {#if isSelected}
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                      {/if}
-                    </div>
-                    <div>
-                      <p class="text-sm font-semibold text-slate-800">{roleItem.label}</p>
-                      <p class="text-xs text-slate-500">{roleItem.description}</p>
-                    </div>
+                  <div class="w-5 h-5 rounded-lg flex items-center justify-center border transition-colors mt-0.5 shrink-0 {isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 bg-white'}">
+                    {#if isSelected}
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                    {/if}
+                  </div>
+                  <div>
+                    <p class="text-xs sm:text-sm font-bold text-slate-800 leading-snug">{roleItem.label}</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{roleItem.description}</p>
                   </div>
                 </button>
               {/each}
             </div>
           </div>
-          <div class="flex gap-3 pt-2">
+
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               type="button"
               on:click={closeEditModal}
-              class="btn-secondary flex-1">Batal</button
+              class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">Batal</button
             >
             <button
               type="submit"
               disabled={isSubmitting}
-              class="btn-primary flex-1"
+              class="btn-primary px-6 py-2.5 shadow-md flex items-center gap-2"
             >
               {#if isSubmitting}
                 <div
-                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"
+                  class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
                 ></div>
               {/if}
-              Simpan
+              Simpan Perubahan
             </button>
           </div>
         </form>

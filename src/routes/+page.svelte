@@ -56,6 +56,32 @@
         </div>
       </div>
 
+      <!-- Quick Banner Khusus Pejabat Penandatangan (Kaban, Sekda, Bupati) -->
+      {#if String($authStore.user?.role || '').includes('pejabat_ttd') || (Array.isArray($authStore.user?.roles) && $authStore.user.roles.includes('pejabat_ttd'))}
+        <div class="card p-6 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white shadow-xl relative overflow-hidden border border-indigo-700/50">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative z-10">
+            <div class="space-y-1.5">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
+                <i class="ri-quill-pen-line"></i> Portal Otoritas Pejabat Penandatangan
+              </div>
+              <h2 class="text-xl font-bold tracking-tight text-white">Antrian TTE & Paraf Kontrak Kerja PPPK</h2>
+              <p class="text-xs sm:text-sm text-indigo-200 max-w-xl">
+                Buka portal verifikasi dan penandatanganan elektronik untuk memeriksa draft kontrak kerja PPPK dan membubuhkan Paraf / TTE menggunakan passphrase sertifikat BSrE Anda.
+              </p>
+            </div>
+            <a
+              href="/tte-kontrak"
+              class="px-5 py-3 rounded-xl bg-white text-indigo-900 font-bold text-sm hover:bg-indigo-50 transition-all shadow-md shrink-0 inline-flex items-center gap-2"
+            >
+              Buka Portal TTE
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      {/if}
+
       <!-- Data Summary Metrics -->
       {#if !loading && stats?.summary}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

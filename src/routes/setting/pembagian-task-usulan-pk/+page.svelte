@@ -106,7 +106,23 @@
     try {
       const result = await apiRequest("/api/users?limit=all");
       if (result.success) {
-        users = result.data.filter((u) => !u.isDeleted);
+        users = result.data.filter((u) => {
+          if (u.isDeleted) return false;
+          const roles = Array.isArray(u.roles) && u.roles.length > 0
+            ? u.roles.map((r) => String(r).toLowerCase().trim())
+            : String(u.role || "")
+                .toLowerCase()
+                .split(",")
+                .map((r) => r.trim())
+                .filter(Boolean);
+
+          // Jangan tampilkan role pegawai dan pejabat penanda tangan (pejabat_ttd)
+          if (roles.includes("pegawai")) return false;
+          if (roles.includes("pejabat_ttd")) return false;
+
+          return true;
+        });
+
         // Initialize selected users logic
         selectedUsersForAuto = users.map((u) => ({
           id: u.id,
