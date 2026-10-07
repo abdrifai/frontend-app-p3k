@@ -69,8 +69,21 @@
       step: 0,
       badge: 'bg-rose-50 text-rose-700 border-rose-200',
       dot: 'bg-rose-500'
+    },
+    DITOLAK_PENANDATANGAN: {
+      label: 'Ditolak Penandatangan',
+      step: 0,
+      badge: 'bg-rose-50 text-rose-700 border-rose-200',
+      dot: 'bg-rose-500'
     }
   };
+
+  // Modal Kirim Ulang / Resubmit Dokumen yang Ditolak
+  let showResubmitModal = $state(false);
+  let resubmitDoc = $state(null);
+  let resubmitTargetStatus = $state('MENUNGGU_PARAF_KABAN');
+  let resubmitCatatan = $state('');
+  let isResubmitting = $state(false);
 
   const formatTanggal = (dateStr) => {
     if (!dateStr) return '-';
@@ -256,6 +269,62 @@
   const openLogModal = (doc) => {
     selectedDokumen = doc;
     showLogModal = true;
+  };
+
+  const openResubmitModal = (doc) => {
+    resubmitDoc = doc;
+    resubmitCatatan = '';
+
+    // Deteksi penolak terakhir dari riwayat log audit tanda tangan
+    const lastRejectLog = (doc.logTandaTangan || [])
+      .slice()
+      .reverse()
+      .find((l) => l.status === 'DITOLAK');
+
+    if (lastRejectLog && lastRejectLog.tahap) {
+      if (lastRejectLog.tahap.includes('SEKDA')) {
+        resubmitTargetStatus = 'MENUNGGU_PARAF_SEKDA';
+      } else if (lastRejectLog.tahap.includes('BUPATI')) {
+        resubmitTargetStatus = 'MENUNGGU_TTE_BUPATI';
+      } else {
+        resubmitTargetStatus = 'MENUNGGU_PARAF_KABAN';
+      }
+    } else {
+      resubmitTargetStatus = 'MENUNGGU_PARAF_KABAN';
+    }
+
+    showResubmitModal = true;
+  };
+
+  const handleResubmit = async () => {
+    if (!resubmitDoc || !resubmitDoc.id) return;
+    isResubmitting = true;
+    try {
+      const res = await tteApi.resubmitDokumen(resubmitDoc.id, {
+        targetStatus: resubmitTargetStatus,
+        catatan: resubmitCatatan.trim()
+      });
+      if (res && res.success) {
+        addToast(res.message || 'Dokumen berhasil diajukan ulang ke antrean!', 'success');
+        showResubmitModal = false;
+        // Perbarui data secara reaktif pada tabel
+        listDokumen = listDokumen.map((d) =>
+          d.id === resubmitDoc.id
+            ? {
+                ...d,
+                statusTte: res.data.statusTte,
+                catatanTte: null,
+                logTandaTangan: res.data.logTandaTangan || d.logTandaTangan
+              }
+            : d
+        );
+        fetchStats();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal mengajukan ulang dokumen ke penandatangan', 'error');
+    } finally {
+      isResubmitting = false;
+    }
   };
 
   onMount(async () => {
@@ -629,6 +698,21 @@
                       </svg>
                     </button>
 
+                    <!-- Tombol Kirim Ulang ke Penandatangan (Khusus status ditolak) -->
+                    {#if doc.statusTte === 'DITOLAK_PENANDATANGAN' || doc.statusTte === 'DITOLAK'}
+                      <button
+                        type="button"
+                        onclick={() => openResubmitModal(doc)}
+                        class="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 transition flex items-center gap-1 shadow-xs"
+                        title="Ajukan Kembali / Kirim Ulang Dokumen ke Pejabat Penandatangan"
+                      >
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        Kirim Ulang
+                      </button>
+                    {/if}
+
                     <!-- Tombol Download (Jika Signed atau Draft ada) -->
                     {#if doc.pdfSignedUrl || doc.pdfDraftUrl}
                       <a
@@ -811,6 +895,157 @@
           class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
         >
           Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Modal Kirim Ulang Dokumen TTE (Resubmit) -->
+{#if showResubmitModal && resubmitDoc}
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl text-slate-900">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Kirim Ulang Dokumen TTE</h3>
+            <p class="text-[11px] text-slate-500">Ajukan kembali dokumen yang telah diperbaiki ke antrean pejabat</p>
+          </div>
+        </div>
+        <button
+          onclick={() => (showResubmitModal = false)}
+          class="text-slate-400 hover:text-slate-700 rounded-lg p-1"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4 text-xs">
+        <!-- Info Dokumen -->
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Pegawai:</span>
+            <span class="font-bold text-slate-800">{resubmitDoc.dataP3k?.nama}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">NIP:</span>
+            <span class="font-mono text-slate-700">{resubmitDoc.dataP3k?.nipBaru}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">No. Kontrak:</span>
+            <span class="font-semibold text-slate-800">{resubmitDoc.nomorKontrak || '-'}</span>
+          </div>
+        </div>
+
+        <!-- Alasan Penolakan Terakhir jika ada -->
+        {#if resubmitDoc.catatanTte}
+          <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl">
+            <div class="font-bold text-rose-800 mb-1 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Catatan Penolakan Sebelumnya:
+            </div>
+            <p class="text-rose-700 italic">"{resubmitDoc.catatanTte}"</p>
+          </div>
+        {/if}
+
+        <!-- Pilihan Tujuan Antrean Penandatangan -->
+        <div>
+          <span class="block font-bold text-slate-700 mb-1.5">
+            Tujuan Antrean Penandatangan <span class="text-rose-500">*</span>
+          </span>
+          <div class="space-y-2">
+            <label class="flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition {resubmitTargetStatus === 'MENUNGGU_PARAF_SEKDA' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:bg-slate-50'}">
+              <input
+                type="radio"
+                name="targetStatus"
+                value="MENUNGGU_PARAF_SEKDA"
+                bind:group={resubmitTargetStatus}
+                class="mt-0.5 text-emerald-600"
+              />
+              <div>
+                <div class="font-semibold text-slate-800">Kirim Langsung ke Sekda (Tahap 2)</div>
+                <div class="text-[11px] text-slate-500">Gunakan jika penolakan berasal dari Sekda dan paraf Kaban sebelumnya tetap valid.</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition {resubmitTargetStatus === 'MENUNGGU_PARAF_KABAN' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:bg-slate-50'}">
+              <input
+                type="radio"
+                name="targetStatus"
+                value="MENUNGGU_PARAF_KABAN"
+                bind:group={resubmitTargetStatus}
+                class="mt-0.5 text-emerald-600"
+              />
+              <div>
+                <div class="font-semibold text-slate-800">Kirim Ulang dari Awal — Kepala BKPSDM (Tahap 1)</div>
+                <div class="text-[11px] text-slate-500">Gunakan jika penolakan berasal dari Kepala BKPSDM atau perbaikan merombak substansi draft.</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition {resubmitTargetStatus === 'MENUNGGU_TTE_BUPATI' ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200 hover:bg-slate-50'}">
+              <input
+                type="radio"
+                name="targetStatus"
+                value="MENUNGGU_TTE_BUPATI"
+                bind:group={resubmitTargetStatus}
+                class="mt-0.5 text-emerald-600"
+              />
+              <div>
+                <div class="font-semibold text-slate-800">Kirim Langsung ke Bupati (Tahap 4)</div>
+                <div class="text-[11px] text-slate-500">Gunakan jika penolakan berasal dari Bupati dan semua paraf sebelumnya tetap sah.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Catatan Revisi Operator -->
+        <div>
+          <label for="resubmit-catatan-input" class="block font-bold text-slate-700 mb-1">
+            Catatan Perbaikan Operator (Opsional)
+          </label>
+          <textarea
+            id="resubmit-catatan-input"
+            bind:value={resubmitCatatan}
+            rows="2"
+            placeholder="Contoh: Klausul dan nomor kontrak telah diperbaiki dan berkas di-generate ulang..."
+            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-2.5">
+        <button
+          type="button"
+          disabled={isResubmitting}
+          onclick={() => (showResubmitModal = false)}
+          class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+        >
+          Batal
+        </button>
+        <button
+          type="button"
+          disabled={isResubmitting}
+          onclick={handleResubmit}
+          class="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+        >
+          {#if isResubmitting}
+            <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Mengirim...</span>
+          {:else}
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            <span>Kirim ke Antrean Pejabat</span>
+          {/if}
         </button>
       </div>
     </div>
