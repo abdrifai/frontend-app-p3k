@@ -39,7 +39,7 @@
     try {
       const [resPejabat, resUsers] = await Promise.all([
         tteApi.listPejabat(),
-        apiRequest('/api/v1/users', 'GET')
+        apiRequest('/api/users?limit=all', 'GET')
       ]);
 
       if (resPejabat && resPejabat.data) {
