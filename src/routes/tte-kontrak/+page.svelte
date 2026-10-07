@@ -99,6 +99,54 @@
     }
   };
 
+  // Hitung masa kontrak akurat dari TMT Awal s/d TMT Akhir
+  const hitungMasaKontrak = (tglMulai, tglSelesai) => {
+    if (!tglMulai || !tglSelesai) return '-';
+    try {
+      const parse = (str) => {
+        if (!str) return null;
+        if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+          const [y, m, d] = str.split('T')[0].split('-').map(Number);
+          return new Date(y, m - 1, d);
+        }
+        if (/^\d{2}-\d{2}-\d{4}/.test(str)) {
+          const [d, m, y] = str.split('-').map(Number);
+          return new Date(y, m - 1, d);
+        }
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? null : d;
+      };
+
+      const start = parse(tglMulai);
+      const end = parse(tglSelesai);
+      if (!start || !end || end < start) return '-';
+
+      // Masa kontrak dihitung inklusif hari terakhir (+1 hari)
+      // Contoh: 01-01-2024 s/d 31-12-2024 = 1 tahun penuh
+      const endInclusive = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1);
+
+      let years = endInclusive.getFullYear() - start.getFullYear();
+      let months = endInclusive.getMonth() - start.getMonth();
+      let days = endInclusive.getDate() - start.getDate();
+
+      if (days < 0) {
+        months--;
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      const parts = [];
+      if (years > 0) parts.push(`${years} Tahun`);
+      if (months > 0) parts.push(`${months} Bulan`);
+
+      return parts.length > 0 ? parts.join(' ') : '1 Bulan';
+    } catch {
+      return '-';
+    }
+  };
+
   // Hanya fetch statistik ringkasan KPI
   const fetchStats = async () => {
     try {
@@ -421,7 +469,7 @@
                     {doc.nomorKontrak || "-"}
                   </div>
                   <div class="text-slate-600 mt-0.5">
-                    Masa: <span class="font-bold text-slate-800">{doc.durasiTahun || 5} Tahun</span>
+                    Masa: <span class="font-bold text-slate-800">{hitungMasaKontrak(doc.tanggalMulai, doc.tanggalSelesai)}</span>
                   </div>
                   <div class="text-slate-400 text-[10px] mt-0.5">
                     TMT: {formatTanggal(doc.tanggalMulai)} s/d {formatTanggal(doc.tanggalSelesai)}

@@ -49,6 +49,51 @@
     }
   };
 
+  const hitungMasaKontrak = (tglMulai, tglSelesai) => {
+    if (!tglMulai || !tglSelesai) return '-';
+    try {
+      const parse = (str) => {
+        if (!str) return null;
+        if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+          const [y, m, d] = str.split('T')[0].split('-').map(Number);
+          return new Date(y, m - 1, d);
+        }
+        if (/^\d{2}-\d{2}-\d{4}/.test(str)) {
+          const [d, m, y] = str.split('-').map(Number);
+          return new Date(y, m - 1, d);
+        }
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? null : d;
+      };
+
+      const start = parse(tglMulai);
+      const end = parse(tglSelesai);
+      if (!start || !end || end < start) return '-';
+
+      const endInclusive = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1);
+
+      let years = endInclusive.getFullYear() - start.getFullYear();
+      let months = endInclusive.getMonth() - start.getMonth();
+      let days = endInclusive.getDate() - start.getDate();
+
+      if (days < 0) {
+        months--;
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      const parts = [];
+      if (years > 0) parts.push(`${years} Tahun`);
+      if (months > 0) parts.push(`${months} Bulan`);
+
+      return parts.length > 0 ? parts.join(' ') : '1 Bulan';
+    } catch {
+      return '-';
+    }
+  };
+
   const getJabatanLabel = (jabatan) => {
     switch (jabatan) {
       case "BUPATI":
@@ -418,10 +463,10 @@
                   <!-- Detail Kontrak -->
                   <td class="py-4 px-6">
                     <div class="text-slate-700">
-                      Masa Kontrak: <span class="font-bold text-slate-900">{doc.durasiTahun || 5} Tahun</span>
+                      Masa Kontrak: <span class="font-bold text-slate-900">{hitungMasaKontrak(doc.tanggalMulai || doc.tmtMulai, doc.tanggalSelesai || doc.tmtSelesai)}</span>
                     </div>
                     <div class="text-slate-500 text-[11px] mt-0.5">
-                      TMT: {formatTanggal(doc.tmtMulai)} s/d {formatTanggal(doc.tmtSelesai)}
+                      TMT: {formatTanggal(doc.tanggalMulai || doc.tmtMulai)} s/d {formatTanggal(doc.tanggalSelesai || doc.tmtSelesai)}
                     </div>
                     <div class="text-slate-500 text-[11px] mt-0.5">
                       Kontrak Ke: <span class="text-amber-700 font-bold">{doc.kontrakKe || 1}</span>
