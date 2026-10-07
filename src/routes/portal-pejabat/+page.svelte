@@ -637,7 +637,7 @@
           </button>
         </div>
         <p class="text-[11px] text-slate-500 leading-relaxed">
-          Peringatan Yuridis: Pembubuhan passphrase ini bernilai hukum sah setara tanda tangan basah berdasarkan UU No. 11/2008 & PP No. 71/2019.
+          Peringatan Yuridis: Pembubuhan passphrase ini bernilai hukum sah setara tanda tangan basah berdasarkan UU No. 1/2023 jo UU No. 1/2026 & PP No. 71/2019.
         </p>
       </div>
 
