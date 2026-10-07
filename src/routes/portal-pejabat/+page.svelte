@@ -216,6 +216,11 @@
       addToast("Berkas PDF belum tersedia untuk dipratinjau", "warning");
       return;
     }
+    if (previewPdfUrl.toLowerCase().endsWith('.docx')) {
+      addToast("Berkas masih berformat Word (.docx) dan belum dikonversi ke PDF.", "warning");
+      window.open(previewPdfUrl, '_blank');
+      return;
+    }
     isPreviewModalOpen = true;
   };
 
