@@ -26,6 +26,7 @@
   let showPreviewModal = $state(false);
   let previewUrl = $state('');
   let previewTitle = $state('');
+  let selectedPreviewDoc = $state(null);
 
   // Modal Detail Log Audit TTE
   let showLogModal = $state(false);
@@ -206,6 +207,7 @@
   };
 
   const openPreview = (doc) => {
+    selectedPreviewDoc = doc;
     previewUrl = doc.pdfSignedUrl || doc.pdfDraftUrl || '';
     previewTitle = `Dokumen Kontrak — ${doc.dataP3k?.nama || doc.nomorKontrak}`;
     if (!previewUrl) {
@@ -644,6 +646,19 @@
           <h3 class="text-sm font-bold text-slate-900 truncate max-w-md">{previewTitle}</h3>
         </div>
         <div class="flex items-center gap-2">
+          {#if selectedPreviewDoc?.generatedFileUrl}
+            <a
+              href={selectedPreviewDoc.generatedFileUrl}
+              download
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 transition flex items-center gap-1.5"
+              title="Unduh berkas Word (.docx) hasil generate template lengkap"
+            >
+              <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Unduh Word (.docx)
+            </a>
+          {/if}
           <a
             href={previewUrl}
             target="_blank"
