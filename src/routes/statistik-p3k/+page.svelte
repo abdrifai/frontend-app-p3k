@@ -29,6 +29,7 @@
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
+  $: isGenderTab = activeStatTab === "pendidikan" || activeStatTab === "golongan";
 
   function getActiveStatData(tab, s) {
     if (!s) return [];
@@ -379,21 +380,43 @@
       </div>
 
       <div class="p-5 sm:p-6">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-sm font-semibold text-slate-700">
-            Distribusi berdasarkan {statTabs.find((t) => t.id === activeStatTab)
-              ?.label}
-          </h3>
-          {#if !statsLoading && activeStatData.length > 0}
-            <span
-              class="text-xs font-medium px-2.5 py-1 rounded-full {getBadgeColor(
-                activeStatTab,
-              )}"
-            >
-              {activeStatData.length}
-              {statTabs.find((t) => t.id === activeStatTab)?.label}
-            </span>
-          {/if}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-700">
+              Distribusi berdasarkan {statTabs.find((t) => t.id === activeStatTab)
+                ?.label}
+            </h3>
+            {#if isGenderTab}
+              <p class="text-xs text-slate-500 mt-0.5">
+                Rincian komposisi jenis kelamin (Laki-laki & Perempuan) untuk setiap kelompok.
+              </p>
+            {/if}
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            {#if isGenderTab}
+              <div class="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60 text-xs">
+                <span class="inline-flex items-center gap-1 font-medium text-indigo-700">
+                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                  Laki-laki
+                </span>
+                <span class="text-slate-300">|</span>
+                <span class="inline-flex items-center gap-1 font-medium text-rose-600">
+                  <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                  Perempuan
+                </span>
+              </div>
+            {/if}
+            {#if !statsLoading && activeStatData.length > 0}
+              <span
+                class="text-xs font-medium px-2.5 py-1 rounded-full {getBadgeColor(
+                  activeStatTab,
+                )}"
+              >
+                {activeStatData.length}
+                {statTabs.find((t) => t.id === activeStatTab)?.label}
+              </span>
+            {/if}
+          </div>
         </div>
 
         {#if statsLoading}
@@ -451,43 +474,137 @@
                         : activeStatTab === "jenisJabatan"
                           ? `/data-p3k?jenisJabatan=${encodeURIComponent(item.label)}`
                           : null}
-              <svelte:element
-                this={href ? "a" : "div"}
-                {href}
-                class="group block {href
-                  ? 'cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors'
-                  : ''}"
-                title={href ? `Lihat data pegawai untuk ${item.label}` : null}
-              >
-                <div class="flex items-center justify-between mb-1.5">
-                  <span
-                    class="text-sm text-slate-600 truncate max-w-[65%] group-hover:text-slate-800 transition-colors"
+              {@const hrefLaki =
+                activeStatTab === "pendidikan"
+                  ? `/data-p3k?pendidikan=${encodeURIComponent(item.label)}&jenisKelamin=L`
+                  : activeStatTab === "golongan"
+                    ? `/data-p3k?golongan=${encodeURIComponent(item.label)}&jenisKelamin=L`
+                    : null}
+              {@const hrefPerempuan =
+                activeStatTab === "pendidikan"
+                  ? `/data-p3k?pendidikan=${encodeURIComponent(item.label)}&jenisKelamin=P`
+                  : activeStatTab === "golongan"
+                    ? `/data-p3k?golongan=${encodeURIComponent(item.label)}&jenisKelamin=P`
+                    : null}
+
+              {#if isGenderTab}
+                <!-- Card Container with Gender Breakdown -->
+                <div class="group p-3 rounded-xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-xs transition-all">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="text-slate-400 font-mono text-xs flex-shrink-0"
+                        >{String(absoluteIdx + 1).padStart(2, "0")}</span
+                      >
+                      <a
+                        href={href || "#"}
+                        class="text-sm font-semibold text-slate-700 hover:text-blue-600 truncate transition-colors"
+                        title="Lihat data {item.label}"
+                      >
+                        {item.label}
+                      </a>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                      <span class="text-xs text-slate-400">{totalPct}%</span>
+                      <a
+                        href={href || "#"}
+                        class="text-sm font-bold text-slate-800 hover:text-blue-600 transition-colors"
+                        title="Lihat semua data {item.label}"
+                      >
+                        {item.count.toLocaleString("id-ID")} <span class="text-xs font-normal text-slate-400">pegawai</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  <!-- Stacked Dual Bar: Width proportional to maxCount, inner split by gender -->
+                  <div
+                    class="w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-2"
+                    title="{item.label}: Total {item.count} pegawai (Laki-laki: {item.laki} [{item.persenLaki}%], Perempuan: {item.perempuan} [{item.persenPerempuan}%])"
                   >
-                    <span class="text-slate-400 font-mono text-xs mr-1.5"
-                      >{String(absoluteIdx + 1).padStart(2, "0")}</span
+                    <div
+                      class="h-full rounded-full overflow-hidden flex transition-all duration-700 ease-out"
+                      style="width: {pct}%"
                     >
-                    {item.label}
-                  </span>
-                  <div class="flex items-center gap-2 flex-shrink-0">
-                    <span class="text-xs text-slate-400">{totalPct}%</span>
-                    <span class="text-sm font-bold text-slate-700"
-                      >{item.count.toLocaleString("id-ID")}</span
+                      <div
+                        class="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:brightness-110 transition-all"
+                        style="width: {item.persenLaki}%"
+                      ></div>
+                      <div
+                        class="h-full bg-gradient-to-r from-rose-400 to-pink-500 hover:brightness-110 transition-all"
+                        style="width: {item.persenPerempuan}%"
+                      ></div>
+                    </div>
+                  </div>
+
+                  <!-- Gender Badges with Interactive Filter Links -->
+                  <div class="flex items-center justify-between text-xs pt-0.5">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <a
+                        href={hrefLaki || "#"}
+                        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors font-medium border border-indigo-200/50"
+                        title="Lihat data Laki-laki untuk {item.label}"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                        <span>Laki-laki: <strong>{item.laki?.toLocaleString("id-ID") ?? 0}</strong></span>
+                        <span class="text-indigo-400">({item.persenLaki ?? 0}%)</span>
+                      </a>
+                      <a
+                        href={hrefPerempuan || "#"}
+                        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors font-medium border border-rose-200/50"
+                        title="Lihat data Perempuan untuk {item.label}"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                        <span>Perempuan: <strong>{item.perempuan?.toLocaleString("id-ID") ?? 0}</strong></span>
+                        <span class="text-rose-400">({item.persenPerempuan ?? 0}%)</span>
+                      </a>
+                    </div>
+                    <a
+                      href={href || "#"}
+                      class="text-[11px] text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center gap-0.5"
                     >
+                      Filter semua →
+                    </a>
                   </div>
                 </div>
-                <div
-                  class="w-full h-2.5 {getBarBg(
-                    activeStatTab,
-                  )} rounded-full overflow-hidden"
+              {:else}
+                <!-- Standard Single Bar for other tabs -->
+                <svelte:element
+                  this={href ? "a" : "div"}
+                  {href}
+                  class="group block {href
+                    ? 'cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors'
+                    : ''}"
+                  title={href ? `Lihat data pegawai untuk ${item.label}` : null}
                 >
+                  <div class="flex items-center justify-between mb-1.5">
+                    <span
+                      class="text-sm text-slate-600 truncate max-w-[65%] group-hover:text-slate-800 transition-colors"
+                    >
+                      <span class="text-slate-400 font-mono text-xs mr-1.5"
+                        >{String(absoluteIdx + 1).padStart(2, "0")}</span
+                      >
+                      {item.label}
+                    </span>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                      <span class="text-xs text-slate-400">{totalPct}%</span>
+                      <span class="text-sm font-bold text-slate-700"
+                        >{item.count.toLocaleString("id-ID")}</span
+                      >
+                    </div>
+                  </div>
                   <div
-                    class="h-full rounded-full transition-all duration-700 ease-out {getBarColor(
+                    class="w-full h-2.5 {getBarBg(
                       activeStatTab,
-                    )}"
-                    style="width: {pct}%"
-                  ></div>
-                </div>
-              </svelte:element>
+                    )} rounded-full overflow-hidden"
+                  >
+                    <div
+                      class="h-full rounded-full transition-all duration-700 ease-out {getBarColor(
+                        activeStatTab,
+                      )}"
+                      style="width: {pct}%"
+                    ></div>
+                  </div>
+                </svelte:element>
+              {/if}
             {/each}
           </div>
 
@@ -590,6 +707,7 @@
           {:else}
             <div class="space-y-2">
               {#each tabData.slice(0, 5) as item}
+                {@const isTabWithGender = tab.id === "pendidikan" || tab.id === "golongan"}
                 {@const itemHref =
                   tab.id === "pengangkatan"
                     ? `/data-p3k?tmtCpns=${encodeURIComponent(item.filterValue || item.label)}`
@@ -604,22 +722,39 @@
                           : tab.id === "jenisJabatan"
                             ? `/data-p3k?jenisJabatan=${encodeURIComponent(item.label)}`
                             : null}
-                <a
-                  href={itemHref || "#"}
-                  class="flex items-center justify-between group {itemHref
-                    ? 'hover:bg-slate-50 -mx-1 px-1 rounded transition-colors'
+                <div
+                  class="group {itemHref
+                    ? 'hover:bg-slate-50 -mx-1 p-1.5 rounded-lg transition-colors'
                     : ''}"
                 >
-                  <span
-                    class="text-xs text-slate-600 truncate max-w-[70%] {itemHref
-                      ? 'group-hover:text-blue-600'
-                      : ''}"
-                    title={item.label}>{item.label}</span
+                  <a
+                    href={itemHref || "#"}
+                    class="flex items-center justify-between"
                   >
-                  <span class="text-xs font-bold text-slate-700 flex-shrink-0"
-                    >{item.count.toLocaleString("id-ID")}</span
-                  >
-                </a>
+                    <span
+                      class="text-xs font-medium text-slate-600 truncate max-w-[70%] {itemHref
+                        ? 'group-hover:text-blue-600'
+                        : ''}"
+                      title={item.label}>{item.label}</span
+                    >
+                    <span class="text-xs font-bold text-slate-700 flex-shrink-0"
+                      >{item.count.toLocaleString("id-ID")}</span
+                    >
+                  </a>
+                  {#if isTabWithGender && item.laki !== undefined}
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-indigo-600 font-medium">L: {item.laki?.toLocaleString("id-ID")}</span>
+                        <span class="text-slate-300">·</span>
+                        <span class="text-rose-500 font-medium">P: {item.perempuan?.toLocaleString("id-ID")}</span>
+                      </div>
+                      <div class="w-12 h-1.5 bg-slate-100 rounded-full overflow-hidden flex">
+                        <div class="h-full bg-indigo-500" style="width: {item.persenLaki}%"></div>
+                        <div class="h-full bg-rose-400" style="width: {item.persenPerempuan}%"></div>
+                      </div>
+                    </div>
+                  {/if}
+                </div>
               {/each}
               {#if tabData.length > 5}
                 <button

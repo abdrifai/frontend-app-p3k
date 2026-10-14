@@ -16,6 +16,7 @@
   let filterPendidikan = "";
   let filterGolongan = "";
   let filterJenisJabatan = "";
+  let filterJenisKelamin = "";
   let showFilters = false;
   let meta = {
     page: 1,
@@ -66,14 +67,16 @@
     filterTmtCpns ||
     filterPendidikan ||
     filterGolongan ||
-    filterJenisJabatan;
+    filterJenisJabatan ||
+    filterJenisKelamin;
 
   $: hasUrlParams =
     $page.url.searchParams.has("tmtCpns") ||
     $page.url.searchParams.has("unitKerja") ||
     $page.url.searchParams.has("pendidikan") ||
     $page.url.searchParams.has("golongan") ||
-    $page.url.searchParams.has("jenisJabatan");
+    $page.url.searchParams.has("jenisJabatan") ||
+    $page.url.searchParams.has("jenisKelamin");
 
   const calculateAge = (birthDateStr) => {
     if (!birthDateStr) return "-";
@@ -450,6 +453,12 @@
       showFilters = true;
     }
 
+    const jenisKelaminQuery = $page.url.searchParams.get("jenisKelamin");
+    if (jenisKelaminQuery) {
+      filterJenisKelamin = jenisKelaminQuery;
+      showFilters = true;
+    }
+
     fetchData();
   });
 
@@ -467,6 +476,7 @@
       if (filterPendidikan) queryParams.append("pendidikan", filterPendidikan);
       if (filterGolongan) queryParams.append("golongan", filterGolongan);
       if (filterJenisJabatan) queryParams.append("jenisJabatan", filterJenisJabatan);
+      if (filterJenisKelamin) queryParams.append("jenisKelamin", filterJenisKelamin);
 
       const result = await apiRequest(`/api/v1/data-p3k?${queryParams.toString()}`, "GET");
       if (result.success) {
@@ -497,6 +507,7 @@
       if (filterPendidikan) queryParams.append("pendidikan", filterPendidikan);
       if (filterGolongan) queryParams.append("golongan", filterGolongan);
       if (filterJenisJabatan) queryParams.append("jenisJabatan", filterJenisJabatan);
+      if (filterJenisKelamin) queryParams.append("jenisKelamin", filterJenisKelamin);
 
       const result = await apiRequest(`/api/v1/data-p3k?${queryParams.toString()}`, "GET");
       if (result.success) {
@@ -546,6 +557,7 @@
     filterPendidikan = "";
     filterGolongan = "";
     filterJenisJabatan = "";
+    filterJenisKelamin = "";
     // remove from url if present
     if (hasUrlParams) {
       const newUrl = new URL($page.url);
@@ -554,6 +566,7 @@
       newUrl.searchParams.delete("pendidikan");
       newUrl.searchParams.delete("golongan");
       newUrl.searchParams.delete("jenisJabatan");
+      newUrl.searchParams.delete("jenisKelamin");
       goto(newUrl.toString(), { replaceState: true, keepFocus: true });
     }
     meta.page = 1;
@@ -790,6 +803,22 @@
             placeholder="Filter Jenis Jabatan..."
             class="input-field"
           />
+        </div>
+        <div>
+          <label
+            for="jenisKelamin"
+            class="block text-xs font-medium text-slate-500 mb-1.5"
+            >Jenis Kelamin</label
+          >
+          <select
+            id="jenisKelamin"
+            bind:value={filterJenisKelamin}
+            class="input-field"
+          >
+            <option value="">Semua Gender</option>
+            <option value="L">Laki-laki (L)</option>
+            <option value="P">Perempuan (P)</option>
+          </select>
         </div>
 
         <div class="flex items-end gap-2">
