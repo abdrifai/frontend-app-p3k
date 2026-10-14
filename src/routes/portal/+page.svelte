@@ -213,22 +213,36 @@
       <div class="space-y-6">
         <!-- Status Usulan Perpanjangan Kontrak -->
         {#if perpanjangan}
+          {@const isSelesaiFinal = perpanjangan.status === 'SELESAI' && (!perpanjangan.statusTte || perpanjangan.statusTte === 'TTE_SELESAI')}
+          {@const tteLabel = {
+            MENUNGGU_PARAF_KABAN: 'Menunggu Paraf Kaban',
+            MENUNGGU_PARAF_SEKDA: 'Menunggu Paraf Sekda',
+            MENUNGGU_TTE_PEGAWAI: 'Menunggu TTE Pegawai',
+            MENUNGGU_TTE_BUPATI: 'Menunggu TTE Bupati',
+            TTE_SELESAI: 'TTE Selesai',
+            DITOLAK_PENANDATANGAN: 'Perbaikan Draft'
+          }[perpanjangan.statusTte] || perpanjangan.status}
+
           <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping"></span>
+                <span class="w-2.5 h-2.5 rounded-full {isSelesaiFinal ? 'bg-emerald-500' : 'bg-blue-600 animate-ping'}"></span>
                 Usulan Perpanjangan
               </h3>
-              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                {perpanjangan.status}
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {isSelesaiFinal ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}">
+                {isSelesaiFinal ? 'SELESAI' : tteLabel}
               </span>
             </div>
 
             <p class="text-xs text-slate-600 leading-relaxed">
-              Usulan perpanjangan kontrak untuk masa <strong>{perpanjangan.tanggalMulai} s/d {perpanjangan.tanggalSelesai}</strong> sedang diproses.
+              {#if isSelesaiFinal}
+                Perpanjangan kontrak masa <strong>{perpanjangan.tanggalMulai} s/d {perpanjangan.tanggalSelesai}</strong> telah rampung dan disahkan secara elektronik.
+              {:else}
+                Usulan perpanjangan kontrak untuk masa <strong>{perpanjangan.tanggalMulai} s/d {perpanjangan.tanggalSelesai}</strong> sedang diproses ({tteLabel}).
+              {/if}
             </p>
 
-            <div class="space-y-2 pt-2">
+            <div class="space-y-2 pt-1">
               <div class="flex items-center gap-2.5 text-xs">
                 <div class="w-6 h-6 rounded-full {['APPROVED', 'UPLOAD_SRIKANDI', 'SELESAI'].includes(perpanjangan.status) ? 'bg-emerald-500 text-white' : 'bg-blue-600 text-white'} flex items-center justify-center font-bold text-[10px]">
                   1
@@ -236,18 +250,34 @@
                 <span class="font-medium text-slate-700">Verifikasi Usulan BKPSDM</span>
               </div>
               <div class="flex items-center gap-2.5 text-xs">
-                <div class="w-6 h-6 rounded-full {['UPLOAD_SRIKANDI', 'SELESAI'].includes(perpanjangan.status) ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'} flex items-center justify-center font-bold text-[10px]">
+                <div class="w-6 h-6 rounded-full {perpanjangan.generatedFileUrl || ['UPLOAD_SRIKANDI', 'SELESAI'].includes(perpanjangan.status) ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'} flex items-center justify-center font-bold text-[10px]">
                   2
                 </div>
-                <span class="font-medium text-slate-700">Draft Dokumen Kontrak</span>
+                <span class="font-medium text-slate-700">Draf Dokumen Kontrak</span>
               </div>
               <div class="flex items-center gap-2.5 text-xs">
-                <div class="w-6 h-6 rounded-full {perpanjangan.status === 'SELESAI' ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'} flex items-center justify-center font-bold text-[10px]">
+                <div class="w-6 h-6 rounded-full {isSelesaiFinal ? 'bg-emerald-500 text-white' : (perpanjangan.statusTte ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-500')} flex items-center justify-center font-bold text-[10px]">
                   3
                 </div>
-                <span class="font-medium text-slate-700">Tanda Tangan & Selesai</span>
+                <span class="font-medium text-slate-700">
+                  {isSelesaiFinal ? 'Tanda Tangan & Selesai' : (perpanjangan.statusTte ? `Proses TTE (${tteLabel})` : 'Tanda Tangan & Selesai')}
+                </span>
               </div>
             </div>
+
+            {#if perpanjangan.statusTte === 'MENUNGGU_TTE_PEGAWAI'}
+              <div class="pt-2">
+                <a
+                  href="/portal/tanda-tangan"
+                  class="flex items-center justify-center gap-2 w-full py-2 px-3 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Tanda Tangani Dokumen Kontrak
+                </a>
+              </div>
+            {/if}
           </div>
         {/if}
 

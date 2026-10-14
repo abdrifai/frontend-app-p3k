@@ -147,6 +147,7 @@
 
   const isLaporanActive = () =>
     isActive("/laporan/perpanjangan-pk") ||
+    isActive("/laporan/statistik-perpanjangan") ||
     isActive("/laporan/per-unit-kerja") ||
     isActive("/laporan/rekap-jabatan") ||
     isActive("/estimasi-pensiun") ||
@@ -1054,6 +1055,28 @@
                         <div>
                           <p class="font-medium leading-tight">Perpanjangan PK</p>
                           <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Daftar kontrak yang sudah selesai</p>
+                        </div>
+                      </a>
+                    {/if}
+                    {#if canAccess('laporan-statistik-perpanjangan')}
+                      <a
+                        href="/laporan/statistik-perpanjangan"
+                        class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
+                          '/laporan/statistik-perpanjangan',
+                        )
+                          ? 'text-blue-700 bg-blue-50 font-medium'
+                          : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                        onclick={() => (laporanMenuOpen = false)}
+                      >
+                        <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                          <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="font-medium leading-tight">Statistik Perpanjangan PK</p>
+                          <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Rekap angkatan & pemberhentian</p>
                         </div>
                       </a>
                     {/if}
@@ -2382,6 +2405,32 @@
                         >
                       </div>
                       Perpanjangan PK
+                    </a>
+                  {/if}
+                  {#if canAccess('laporan-statistik-perpanjangan')}
+                    <a
+                      href="/laporan/statistik-perpanjangan"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                        '/laporan/statistik-perpanjangan',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-indigo-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                        </svg>
+                      </div>
+                      Statistik Perpanjangan PK
                     </a>
                   {/if}
                   {#if canAccess('laporan-unit-kerja')}

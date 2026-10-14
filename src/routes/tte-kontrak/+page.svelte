@@ -85,6 +85,12 @@
   let resubmitCatatan = $state('');
   let isResubmitting = $state(false);
 
+  // Modal Batalkan & Reset Dokumen TTE
+  let showResetModal = $state(false);
+  let resetDoc = $state(null);
+  let alasanPembatalan = $state('');
+  let isResetting = $state(false);
+
   const formatTanggal = (dateStr) => {
     if (!dateStr) return '-';
     try {
@@ -324,6 +330,33 @@
       addToast(err.message || 'Gagal mengajukan ulang dokumen ke penandatangan', 'error');
     } finally {
       isResubmitting = false;
+    }
+  };
+
+  const openResetModal = (doc) => {
+    resetDoc = doc;
+    alasanPembatalan = '';
+    showResetModal = true;
+  };
+
+  const handleReset = async () => {
+    if (!resetDoc || !resetDoc.id) return;
+    if (!alasanPembatalan.trim() || alasanPembatalan.trim().length < 10) {
+      addToast('Alasan pembatalan wajib diisi minimal 10 karakter untuk rekam jejak audit', 'warning');
+      return;
+    }
+    isResetting = true;
+    try {
+      const res = await tteApi.resetContractTte(resetDoc.id, alasanPembatalan.trim());
+      if (res && res.success) {
+        addToast(res.message || 'Dokumen kontrak berhasil dibatalkan dan alur TTE di-reset!', 'success');
+        showResetModal = false;
+        await Promise.all([fetchStats(), fetchList(pagination.page)]);
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal membatalkan dokumen kontrak', 'error');
+    } finally {
+      isResetting = false;
     }
   };
 
@@ -713,6 +746,20 @@
                       </button>
                     {/if}
 
+                    <!-- Tombol Batalkan Dokumen & Reset TTE -->
+                    <button
+                      type="button"
+                      disabled={isResetting}
+                      onclick={() => openResetModal(doc)}
+                      class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition flex items-center gap-1 shadow-xs"
+                      title="Batalkan Dokumen & Reset TTE (jika terdapat kesalahan data kontrak)"
+                    >
+                      <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Reset TTE
+                    </button>
+
                     <!-- Tombol Download (Jika Signed atau Draft ada) -->
                     {#if doc.pdfSignedUrl || doc.pdfDraftUrl}
                       <a
@@ -1045,6 +1092,127 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
             <span>Kirim ke Antrean Pejabat</span>
+          {/if}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Modal Batalkan Dokumen & Reset TTE -->
+{#if showResetModal && resetDoc}
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-rose-200 w-full max-w-lg p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+    >
+      <div class="flex items-center justify-between pb-3 border-b border-rose-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800">Batalkan & Reset Dokumen Kontrak</h3>
+            <p class="text-xs text-rose-600 font-medium">Pembatalan sah tanda tangan & restart alur TTE</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled={isResetting}
+          onclick={() => (showResetModal = false)}
+          class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <!-- Peringatan Pembatalan -->
+        <div class="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1">
+          <p class="font-bold flex items-center gap-1.5 text-rose-900">
+            <span>⚠️</span> Konsekuensi Pembatalan & Reset:
+          </p>
+          <ul class="list-disc pl-4 space-y-0.5 text-[11px] text-rose-700">
+            <li>Seluruh tanda tangan (Bupati, Pegawai) dan paraf (Kaban, Sekda) yang ada akan <strong>dibatalkan secara resmi</strong>.</li>
+            <li>Dokumen PDF akan <strong>di-generate ulang menjadi draf bersih</strong> tanpa stempel tanda tangan lama.</li>
+            <li>Alur TTE akan <strong>diulang kembali dari Tahap 1 (Paraf Kepala BKPSDM)</strong>.</li>
+            <li>Alasan pembatalan akan <strong>dicatat permanen pada jejak audit (Audit Trail)</strong>.</li>
+          </ul>
+        </div>
+
+        <!-- Info Pegawai & Dokumen -->
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1.5">
+          <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60">
+            <span class="text-slate-500">Nama Pegawai:</span>
+            <span class="font-bold text-slate-800">{resetDoc.dataP3k?.nama || '-'}</span>
+          </div>
+          <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60">
+            <span class="text-slate-500">NIP Pegawai:</span>
+            <span class="font-mono text-slate-700">{resetDoc.dataP3k?.nipBaru || '-'}</span>
+          </div>
+          <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60">
+            <span class="text-slate-500">Nomor Kontrak:</span>
+            <span class="font-semibold text-slate-800">{resetDoc.nomorKontrak || 'DRAFT'}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500">Status Saat Ini:</span>
+            <span class="font-bold text-slate-700">
+              {statusConfig[resetDoc.statusTte]?.label || resetDoc.statusTte}
+            </span>
+          </div>
+        </div>
+
+        <!-- Form Alasan Pembatalan Wajib -->
+        <div>
+          <label for="reset-alasan-input" class="block font-bold text-slate-700 text-xs mb-1">
+            Alasan Pembatalan & Reset <span class="text-rose-500">*</span>
+          </label>
+          <textarea
+            id="reset-alasan-input"
+            bind:value={alasanPembatalan}
+            rows="3"
+            placeholder="Tuliskan alasan mengapa dokumen ini dibatalkan dan perlu ditandatangani ulang (contoh: Koreksi penulisan unit kerja, masa kontrak, atau kesalahan gaji pokok)..."
+            class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+          ></textarea>
+          <div class="flex justify-between items-center mt-1 text-[11px] text-slate-400">
+            <span>Minimal 10 karakter</span>
+            <span class={alasanPembatalan.trim().length >= 10 ? 'text-emerald-600 font-semibold' : 'text-slate-400'}>
+              {alasanPembatalan.trim().length}/10
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-2.5">
+        <button
+          type="button"
+          disabled={isResetting}
+          onclick={() => (showResetModal = false)}
+          class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+        >
+          Batal
+        </button>
+        <button
+          type="button"
+          disabled={isResetting || alasanPembatalan.trim().length < 10}
+          onclick={handleReset}
+          class="px-4 py-2 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-700 text-white transition flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+        >
+          {#if isResetting}
+            <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Membatalkan & Reset...</span>
+          {:else}
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Ya, Batalkan & Reset</span>
           {/if}
         </button>
       </div>

@@ -63,6 +63,10 @@ export const tteApi = {
     return await apiRequest(`/api/v1/tte/${id}/resubmit`, 'POST', data);
   },
 
+  async resetContractTte(id, alasanPembatalan) {
+    return await apiRequest(`/api/v1/tte/${id}/reset`, 'POST', { alasanPembatalan });
+  },
+
   // Konfigurasi Pejabat Penandatangan (Admin)
   async listPejabat() {
     return await apiRequest('/api/v1/pejabat-penandatangan', 'GET');

@@ -74,6 +74,10 @@ export const portalApi = {
     return await apiRequest('/api/v1/portal/tte', 'GET');
   },
 
+  async getRiwayatTte() {
+    return await apiRequest('/api/v1/portal/tte/riwayat', 'GET');
+  },
+
   async signDokumenTte(id, passphrase) {
     return await apiRequest(`/api/v1/portal/tte/${id}/sign`, 'POST', { passphrase });
   }

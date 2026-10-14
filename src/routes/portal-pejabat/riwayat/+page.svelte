@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
   import { tteApi } from "$lib/tteApi";
   import { addToast } from "$lib/toastStore";
 
@@ -71,6 +72,10 @@
   };
 
   onMount(() => {
+    const urlStatus = $page.url.searchParams.get("status");
+    if (urlStatus) {
+      statusFilter = urlStatus.toUpperCase();
+    }
     loadRiwayat();
   });
 </script>
@@ -102,9 +107,10 @@
         onchange={handleFilter}
         class="px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-300 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
       >
-        <option value="">Semua Status</option>
-        <option value="SUCCESS">Berhasil Ditandatangani</option>
-        <option value="FAILED">Ditolak / Dikembalikan</option>
+        <option value="">Semua Riwayat</option>
+        <option value="SUKSES">Berhasil Diparaf / Ditandatangani</option>
+        <option value="DITOLAK">Ditolak / Dikembalikan</option>
+        <option value="SELESAI">Selesai Lingkup Pemkab</option>
       </select>
 
       <form onsubmit={(e) => { e.preventDefault(); handleFilter(); }} class="flex items-center gap-2">
@@ -192,12 +198,12 @@
 
                 <!-- Status Hasil -->
                 <td class="py-4 px-6">
-                  {#if item.status === 'SUCCESS'}
+                  {#if item.status === 'SUCCESS' || item.status === 'SUKSES'}
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
-                      Berhasil Diproses
+                      {item.usulan?.statusTte === 'TTE_SELESAI' ? 'Selesai TTE Final' : 'Berhasil Diproses'}
                     </span>
                   {:else}
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
@@ -206,9 +212,9 @@
                       </svg>
                       Ditolak / Koreksi
                     </span>
-                    {#if item.catatan}
+                    {#if item.catatan || item.pesan}
                       <p class="text-[10px] text-rose-600 mt-1 italic max-w-xs">
-                        "{item.catatan}"
+                        "{item.catatan || item.pesan}"
                       </p>
                     {/if}
                   {/if}

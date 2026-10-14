@@ -33,13 +33,14 @@
   const isPegawaiUser = $derived(userRoles.includes('pegawai'));
   const isPejabatUser = $derived(userRoles.includes('pejabat_ttd') && !userRoles.includes('admin'));
   const isPortalPejabatRoute = $derived($page.url.pathname.startsWith('/portal-pejabat'));
-  const isPortalPegawaiRoute = $derived($page.url.pathname.startsWith('/portal') && !isPortalPejabatRoute);
+  const isPortalVerifikasiRoute = $derived($page.url.pathname.startsWith('/portal/verifikasi'));
+  const isPortalPegawaiRoute = $derived($page.url.pathname.startsWith('/portal') && !isPortalPejabatRoute && !isPortalVerifikasiRoute);
 
   // Global auth check for protected routes & menu permission loader
   $effect(() => {
     const path = $page.url.pathname;
     const publicPaths = ["/login", "/register", "/", "/forgot-password", "/forget-password", "/reset-password", "/aktivasi-akun"];
-    const isPublicPath = publicPaths.some(p => path === p || path === p + "/");
+    const isPublicPath = publicPaths.some(p => path === p || path === p + "/") || path.startsWith('/portal/verifikasi');
 
     if (!$authStore.isAuthenticated && !isPublicPath) {
       goto("/login");
@@ -88,7 +89,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-slate-50 flex flex-col">
-  {#if !isPegawaiUser && !isPejabatUser && !isPortalPegawaiRoute && !isPortalPejabatRoute}
+  {#if !isPegawaiUser && !isPejabatUser && !isPortalPegawaiRoute && !isPortalPejabatRoute && !isPortalVerifikasiRoute}
     <Navbar />
   {/if}
 

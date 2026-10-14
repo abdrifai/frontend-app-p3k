@@ -49,6 +49,27 @@
     }
   };
 
+  // Tab Aktif: ANTRIAN | SUKSES | DITOLAK | SELESAI
+  let activeTab = $state("ANTRIAN");
+
+  const formatTanggalWaktu = (dateStr) => {
+    if (!dateStr) return "-";
+    try {
+      const d = new Date(dateStr);
+      return (
+        d.toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }) + " WIB"
+      );
+    } catch {
+      return dateStr;
+    }
+  };
+
   const hitungMasaKontrak = (tglMulai, tglSelesai) => {
     if (!tglMulai || !tglSelesai) return '-';
     try {
@@ -107,19 +128,81 @@
     }
   };
 
+  // Normalisasi data baris tabel untuk antrian maupun riwayat
+  const getDocItem = (item) => {
+    if (activeTab === "ANTRIAN") {
+      return {
+        id: item.id,
+        usulanId: item.id,
+        nama: item.dataP3k?.nama || "-",
+        nip: item.dataP3k?.nipBaru || item.dataP3k?.nipLama || "-",
+        nomorKontrak: item.nomorKontrak || "-",
+        jabatan: item.dataP3k?.jabatanNama || "-",
+        unor: item.dataP3k?.unorNama || "-",
+        golongan: item.golongan || item.dataP3k?.golAkhirNama || "-",
+        tglMulai: item.tanggalMulai || item.tmtMulai,
+        tglSelesai: item.tanggalSelesai || item.tmtSelesai,
+        kontrakKe: item.kontrakKe || 1,
+        statusTte: item.statusTte,
+        tahap: item.statusTte?.replaceAll("_", " "),
+        waktu: item.updatedAt || item.createdAt,
+        catatan: item.catatanTte || null,
+        pdfUrl: item.pdfSignedUrl || item.pdfDraftUrl || item.generatedFileUrl,
+        raw: item
+      };
+    }
+    const u = item.usulan || {};
+    return {
+      id: item.id,
+      usulanId: u.id || item.id,
+      nama: u.dataP3k?.nama || item.dataP3k?.nama || "-",
+      nip: u.dataP3k?.nipBaru || item.dataP3k?.nipBaru || "-",
+      nomorKontrak: u.nomorKontrak || item.nomorKontrak || "-",
+      jabatan: u.dataP3k?.jabatanNama || item.dataP3k?.jabatanNama || "-",
+      unor: u.dataP3k?.unorNama || item.dataP3k?.unorNama || "-",
+      golongan: u.golongan || u.dataP3k?.golAkhirNama || "-",
+      tglMulai: u.tanggalMulai,
+      tglSelesai: u.tanggalSelesai,
+      kontrakKe: u.kontrakKe || 1,
+      statusTte: u.statusTte || item.statusTte,
+      tahap: item.tahap?.replaceAll("_", " ") || (u.statusTte?.replaceAll("_", " ") || "-"),
+      waktu: item.createdAt || u.updatedAt,
+      catatan: item.catatan || item.pesan || null,
+      status: item.status,
+      idDokumenBsre: item.idDokumenBsre,
+      pdfUrl: item.signedFileUrl || u.pdfSignedUrl || u.pdfDraftUrl || "",
+      raw: item
+    };
+  };
+
   const loadData = async () => {
     loading = true;
     notRegisteredError = false;
     try {
-      const [antrianRes, statsRes] = await Promise.all([
-        tteApi.getAntrian({ search: searchQuery, page: pagination.page, limit: pagination.limit }),
-        tteApi.getStatistik()
-      ]);
+      const statsPromise = tteApi.getStatistik();
 
-      if (antrianRes.success) {
-        antrianList = antrianRes.data || [];
-        pejabatInfo = antrianRes.pejabat;
-        pagination = antrianRes.pagination || pagination;
+      let listPromise;
+      if (activeTab === "ANTRIAN") {
+        listPromise = tteApi.getAntrian({
+          search: searchQuery,
+          page: pagination.page,
+          limit: pagination.limit
+        });
+      } else {
+        listPromise = tteApi.getRiwayat({
+          status: activeTab,
+          search: searchQuery,
+          page: pagination.page,
+          limit: pagination.limit
+        });
+      }
+
+      const [listRes, statsRes] = await Promise.all([listPromise, statsPromise]);
+
+      if (listRes.success) {
+        antrianList = listRes.data || [];
+        pejabatInfo = listRes.pejabat || pejabatInfo;
+        pagination = listRes.pagination || pagination;
       }
 
       if (statsRes.success) {
@@ -133,11 +216,19 @@
       if (msg.toLowerCase().includes("tidak terdaftar sebagai pejabat penandatangan aktif")) {
         notRegisteredError = true;
       } else {
-        addToast(msg || "Gagal memuat data antrian TTE", "error");
+        addToast(msg || "Gagal memuat data dokumen", "error");
       }
     } finally {
       loading = false;
     }
+  };
+
+  const setTab = (tab) => {
+    if (activeTab === tab) return;
+    activeTab = tab;
+    searchQuery = "";
+    pagination.page = 1;
+    loadData();
   };
 
   const handleSearch = () => {
@@ -209,9 +300,12 @@
   };
 
   // Preview PDF
-  const openPreview = (doc) => {
-    previewPdfUrl = doc.pdfSignedUrl || doc.pdfDraftUrl || "";
-    previewJudul = `Dokumen Kontrak — ${doc.dataP3k?.nama || doc.nomorKontrak}`;
+  const openPreview = (doc, customNama) => {
+    const raw = doc?.raw || doc;
+    const u = raw.usulan || raw;
+    previewPdfUrl = raw.signedFileUrl || raw.pdfSignedUrl || raw.pdfDraftUrl || u.pdfSignedUrl || u.pdfDraftUrl || doc.pdfUrl || "";
+    const label = customNama || doc?.nama || raw.dataP3k?.nama || u.dataP3k?.nama || raw.nomorKontrak || u.nomorKontrak || "Kontrak";
+    previewJudul = `Dokumen Kontrak — ${label}`;
     if (!previewPdfUrl) {
       addToast("Berkas PDF belum tersedia untuk dipratinjau", "warning");
       return;
@@ -311,10 +405,17 @@
       </div>
     </div>
 
-    <!-- 4 Kartu Statistik (Light Clean) -->
+    <!-- 4 Kartu Statistik & Filter Interaktif -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      <!-- Menunggu -->
-      <div class="bg-white border-2 border-amber-300/80 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+      <!-- Card 1: Menunggu Tindakan Anda -->
+      <button
+        type="button"
+        onclick={() => setTab("ANTRIAN")}
+        class="text-left w-full rounded-2xl p-5 shadow-sm transition-all duration-200 cursor-pointer relative overflow-hidden group
+          {activeTab === 'ANTRIAN'
+            ? 'bg-amber-50/50 border-2 border-amber-500 ring-4 ring-amber-400/20 shadow-md scale-[1.01]'
+            : 'bg-white border border-slate-200/90 hover:border-amber-300 hover:shadow-md hover:scale-[1.01]'}"
+      >
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">Menunggu Tindakan Anda</span>
           <span class="w-2.5 h-2.5 rounded-full bg-amber-500 {stats.antrianCount > 0 ? 'animate-ping' : ''}"></span>
@@ -323,94 +424,186 @@
           {stats.antrianCount}
         </div>
         <p class="text-xs text-slate-500 mt-1">Dokumen kontrak siap diparaf / ditandatangani</p>
-      </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold">
+          <span class={activeTab === 'ANTRIAN' ? 'text-amber-800 font-bold' : 'text-slate-400 group-hover:text-amber-700'}>
+            {activeTab === 'ANTRIAN' ? '● Sedang Ditampilkan' : 'Klik untuk melihat antrian →'}
+          </span>
+          <span class="text-amber-600 font-mono text-xs">↗</span>
+        </div>
+      </button>
 
-      <!-- Telah Diproses -->
-      <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm">
+      <!-- Card 2: Telah Anda Proses -->
+      <button
+        type="button"
+        onclick={() => setTab("SUKSES")}
+        class="text-left w-full rounded-2xl p-5 shadow-sm transition-all duration-200 cursor-pointer relative overflow-hidden group
+          {activeTab === 'SUKSES'
+            ? 'bg-emerald-50/50 border-2 border-emerald-500 ring-4 ring-emerald-400/20 shadow-md scale-[1.01]'
+            : 'bg-white border border-slate-200/90 hover:border-emerald-300 hover:shadow-md hover:scale-[1.01]'}"
+      >
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Telah Anda Proses</span>
-          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
+          <div class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
         </div>
         <div class="text-3xl font-extrabold text-slate-900 mt-2">
           {stats.riwayatSuksesCount}
         </div>
         <p class="text-xs text-slate-500 mt-1">Dokumen berhasil diparaf / ditandatangani</p>
-      </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold">
+          <span class={activeTab === 'SUKSES' ? 'text-emerald-800 font-bold' : 'text-slate-400 group-hover:text-emerald-700'}>
+            {activeTab === 'SUKSES' ? '● Sedang Ditampilkan' : 'Klik untuk melihat daftar →'}
+          </span>
+          <span class="text-emerald-600 font-mono text-xs">↗</span>
+        </div>
+      </button>
 
-      <!-- Ditolak -->
-      <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm">
+      <!-- Card 3: Ditolak / Dikembalikan -->
+      <button
+        type="button"
+        onclick={() => setTab("DITOLAK")}
+        class="text-left w-full rounded-2xl p-5 shadow-sm transition-all duration-200 cursor-pointer relative overflow-hidden group
+          {activeTab === 'DITOLAK'
+            ? 'bg-rose-50/50 border-2 border-rose-500 ring-4 ring-rose-400/20 shadow-md scale-[1.01]'
+            : 'bg-white border border-slate-200/90 hover:border-rose-300 hover:shadow-md hover:scale-[1.01]'}"
+      >
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-rose-700 uppercase tracking-wider">Ditolak / Dikembalikan</span>
-          <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <div class="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
         </div>
         <div class="text-3xl font-extrabold text-slate-900 mt-2">
           {stats.riwayatTolakCount}
         </div>
         <p class="text-xs text-slate-500 mt-1">Dokumen dikembalikan dengan catatan revisi</p>
-      </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold">
+          <span class={activeTab === 'DITOLAK' ? 'text-rose-800 font-bold' : 'text-slate-400 group-hover:text-rose-700'}>
+            {activeTab === 'DITOLAK' ? '● Sedang Ditampilkan' : 'Klik untuk melihat daftar →'}
+          </span>
+          <span class="text-rose-600 font-mono text-xs">↗</span>
+        </div>
+      </button>
 
-      <!-- Selesai Lingkup Pemkab -->
-      <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm">
+      <!-- Card 4: Selesai Lingkup Pemkab -->
+      <button
+        type="button"
+        onclick={() => setTab("SELESAI")}
+        class="text-left w-full rounded-2xl p-5 shadow-sm transition-all duration-200 cursor-pointer relative overflow-hidden group
+          {activeTab === 'SELESAI'
+            ? 'bg-blue-50/50 border-2 border-blue-500 ring-4 ring-blue-400/20 shadow-md scale-[1.01]'
+            : 'bg-white border border-slate-200/90 hover:border-blue-300 hover:shadow-md hover:scale-[1.01]'}"
+      >
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Selesai Lingkup Pemkab</span>
-          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-          </svg>
+          <div class="w-6 h-6 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </div>
         <div class="text-3xl font-extrabold text-slate-900 mt-2">
           {stats.totalSelesaiPemda}
         </div>
         <p class="text-xs text-slate-500 mt-1">Total kontrak rampung final TTE Bupati</p>
-      </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] font-semibold">
+          <span class={activeTab === 'SELESAI' ? 'text-blue-800 font-bold' : 'text-slate-400 group-hover:text-blue-700'}>
+            {activeTab === 'SELESAI' ? '● Sedang Ditampilkan' : 'Klik untuk melihat daftar →'}
+          </span>
+          <span class="text-blue-600 font-mono text-xs">↗</span>
+        </div>
+      </button>
     </div>
 
-    <!-- Section Daftar Antrian Dokumen (Light Table) -->
+    <!-- Section Daftar Dokumen (Tabel Dinamis Sesuai Tab) -->
     <div class="bg-white border border-slate-200/90 rounded-2xl shadow-sm overflow-hidden">
       <!-- Header & Filter Search -->
       <div class="p-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <div class="flex items-center gap-2 mb-1">
+            {#if activeTab !== 'ANTRIAN'}
+              <button
+                type="button"
+                onclick={() => setTab('ANTRIAN')}
+                class="text-xs font-semibold text-blue-700 hover:underline flex items-center gap-1"
+              >
+                ← Kembali ke Antrian
+              </button>
+              <span class="text-slate-300">•</span>
+            {/if}
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded
+              {activeTab === 'ANTRIAN' ? 'bg-amber-100 text-amber-800' :
+               activeTab === 'SUKSES' ? 'bg-emerald-100 text-emerald-800' :
+               activeTab === 'DITOLAK' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800'}">
+              {activeTab === 'ANTRIAN' ? 'Antrian Menunggu Tindakan' :
+               activeTab === 'SUKSES' ? 'Telah Anda Proses' :
+               activeTab === 'DITOLAK' ? 'Ditolak / Dikembalikan' : 'Rampung Lingkup Pemkab'}
+            </span>
+          </div>
+
           <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span>Antrian Dokumen Kontrak PPPK</span>
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-              {antrianList.length} Berkas
+            <span>
+              {activeTab === 'ANTRIAN' ? 'Antrian Dokumen Kontrak PPPK' :
+               activeTab === 'SUKSES' ? 'Daftar Dokumen yang Telah Anda Proses' :
+               activeTab === 'DITOLAK' ? 'Daftar Dokumen yang Ditolak / Dikembalikan' : 'Daftar Kontrak Rampung Final TTE Bupati'}
+            </span>
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              {pagination.total} Berkas
             </span>
           </h3>
-          <p class="text-xs text-slate-500 mt-1">
-            Dokumen yang memerlukan perhatian dan otorisasi elektronik resmi dari Anda
+          <p class="text-xs text-slate-500 mt-0.5">
+            {activeTab === 'ANTRIAN' ? 'Dokumen yang memerlukan perhatian dan otorisasi elektronik resmi dari Anda' :
+             activeTab === 'SUKSES' ? 'Rekam jejak seluruh dokumen yang berhasil Anda bubuhkan paraf atau tanda tangan elektronik' :
+             activeTab === 'DITOLAK' ? 'Dokumen yang Anda kembalikan ke verifikator/staf dengan catatan revisi' :
+             'Semua dokumen kontrak PPPK di lingkup Pemerintah Kabupaten yang telah sah ditandatangani final oleh Bupati'}
           </p>
         </div>
 
-        <!-- Pencarian -->
-        <form onsubmit={(e) => { e.preventDefault(); handleSearch(); }} class="flex items-center gap-2">
-          <div class="relative">
-            <input
-              type="text"
-              bind:value={searchQuery}
-              placeholder="Cari nama, NIP, no kontrak..."
-              class="w-64 sm:w-80 px-3.5 py-2 pl-9 text-xs rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
-            />
-            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <button
-            type="submit"
-            class="px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition shadow-sm"
-          >
-            Cari
-          </button>
-        </form>
+        <div class="flex items-center gap-3">
+          {#if activeTab !== 'ANTRIAN'}
+            <a
+              href="/portal-pejabat/riwayat?status={activeTab}"
+              class="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 transition flex items-center gap-1.5 shadow-xs"
+              title="Buka tampilan riwayat lengkap"
+            >
+              <span>Halaman Riwayat Penuh</span>
+              <span class="text-xs">↗</span>
+            </a>
+          {/if}
+
+          <!-- Form Pencarian -->
+          <form onsubmit={(e) => { e.preventDefault(); handleSearch(); }} class="flex items-center gap-2">
+            <div class="relative">
+              <input
+                type="text"
+                bind:value={searchQuery}
+                placeholder="Cari nama, NIP, no kontrak..."
+                class="w-56 sm:w-72 px-3.5 py-2 pl-9 text-xs rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500"
+              />
+              <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <button
+              type="submit"
+              class="px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition shadow-sm"
+            >
+              Cari
+            </button>
+          </form>
+        </div>
       </div>
 
       <!-- Table / List Content -->
       {#if loading}
         <div class="p-16 text-center text-slate-500">
           <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-3"></div>
-          <p class="text-sm">Memuat dokumen antrian...</p>
+          <p class="text-sm">Memuat data dokumen...</p>
         </div>
       {:else if antrianList.length === 0}
         <div class="p-16 text-center">
@@ -419,10 +612,25 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h4 class="text-base font-bold text-slate-800 mb-1">Tidak Ada Antrian Dokumen</h4>
+          <h4 class="text-base font-bold text-slate-800 mb-1">
+            {activeTab === 'ANTRIAN' ? 'Tidak Ada Antrian Dokumen' :
+             activeTab === 'SUKSES' ? 'Belum Ada Dokumen Diproses' :
+             activeTab === 'DITOLAK' ? 'Tidak Ada Dokumen Ditolak' : 'Belum Ada Kontrak Selesai'}
+          </h4>
           <p class="text-xs text-slate-500 max-w-sm mx-auto">
-            Semua dokumen kontrak untuk tahap kewenangan Anda saat ini telah selesai diproses.
+            {activeTab === 'ANTRIAN' ? 'Semua dokumen kontrak untuk tahap kewenangan Anda saat ini telah selesai diproses.' :
+             activeTab === 'SUKSES' ? 'Belum ada catatan dokumen yang berhasil Anda paraf atau tandatangani.' :
+             activeTab === 'DITOLAK' ? 'Belum ada dokumen yang dikembalikan dengan catatan revisi.' :
+             'Belum ada dokumen kontrak yang menyelesaikan alur pengesahan final TTE Bupati.'}
           </p>
+          {#if activeTab !== 'ANTRIAN'}
+            <button
+              onclick={() => setTab('ANTRIAN')}
+              class="mt-4 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition"
+            >
+              Lihat Antrian Menunggu Tindakan
+            </button>
+          {/if}
         </div>
       {:else}
         <div class="overflow-x-auto">
@@ -432,61 +640,109 @@
                 <th class="py-3.5 px-6">Identitas Pegawai PPPK</th>
                 <th class="py-3.5 px-6">Jabatan & Unit Kerja</th>
                 <th class="py-3.5 px-6">Detail Kontrak</th>
-                <th class="py-3.5 px-6">Status Alur TTE</th>
-                <th class="py-3.5 px-6 text-right">Aksi Eksekutif</th>
+                <th class="py-3.5 px-6">
+                  {activeTab === 'ANTRIAN' ? 'Status Alur TTE' :
+                   activeTab === 'SUKSES' ? 'Waktu & Hasil Proses' :
+                   activeTab === 'DITOLAK' ? 'Waktu & Catatan Penolakan' : 'Status Pengesahan'}
+                </th>
+                <th class="py-3.5 px-6 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              {#each antrianList as doc}
+              {#each antrianList as item}
+                {@const doc = getDocItem(item)}
                 <tr class="hover:bg-blue-50/30 transition">
                   <!-- Identitas Pegawai -->
                   <td class="py-4 px-6">
                     <div class="font-bold text-slate-900 text-sm">
-                      {doc.dataP3k?.nama || "-"}
+                      {doc.nama}
                     </div>
                     <div class="text-slate-500 font-mono text-[11px] mt-0.5">
-                      NIP: {doc.dataP3k?.nipBaru || doc.dataP3k?.nipLama || "-"}
+                      NIP: {doc.nip}
                     </div>
                     <div class="text-[11px] text-slate-500 mt-0.5">
-                      No. Kontrak: <span class="text-blue-700 font-medium font-mono">{doc.nomorKontrak || "-"}</span>
+                      No. Kontrak: <span class="text-blue-700 font-medium font-mono">{doc.nomorKontrak}</span>
                     </div>
                   </td>
 
                   <!-- Jabatan & Unit Kerja -->
                   <td class="py-4 px-6">
                     <div class="text-slate-800 font-medium">
-                      {doc.dataP3k?.jabatanNama || "-"}
+                      {doc.jabatan}
                     </div>
                     <div class="text-slate-500 mt-0.5">
-                      {doc.dataP3k?.unorNama || "-"}
+                      {doc.unor}
                     </div>
                     <div class="text-[11px] text-slate-500 mt-0.5">
-                      Golongan: <span class="text-slate-700 font-bold">{doc.golongan || doc.dataP3k?.golAkhirNama || "-"}</span>
+                      Golongan: <span class="text-slate-700 font-bold">{doc.golongan}</span>
                     </div>
                   </td>
 
                   <!-- Detail Kontrak -->
                   <td class="py-4 px-6">
                     <div class="text-slate-700">
-                      Masa Kontrak: <span class="font-bold text-slate-900">{hitungMasaKontrak(doc.tanggalMulai || doc.tmtMulai, doc.tanggalSelesai || doc.tmtSelesai)}</span>
+                      Masa: <span class="font-bold text-slate-900">{hitungMasaKontrak(doc.tglMulai, doc.tglSelesai)}</span>
                     </div>
                     <div class="text-slate-500 text-[11px] mt-0.5">
-                      TMT: {formatTanggal(doc.tanggalMulai || doc.tmtMulai)} s/d {formatTanggal(doc.tanggalSelesai || doc.tmtSelesai)}
+                      TMT: {formatTanggal(doc.tglMulai)} s/d {formatTanggal(doc.tglSelesai)}
                     </div>
                     <div class="text-slate-500 text-[11px] mt-0.5">
-                      Kontrak Ke: <span class="text-amber-700 font-bold">{doc.kontrakKe || 1}</span>
+                      Kontrak Ke: <span class="text-amber-700 font-bold">{doc.kontrakKe}</span>
                     </div>
                   </td>
 
-                  <!-- Status Alur TTE -->
+                  <!-- Kolom Status Berdasarkan Tab -->
                   <td class="py-4 px-6">
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
-                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                      Menunggu Tindakan Anda
-                    </div>
-                    <div class="text-[10px] text-slate-500 mt-1">
-                      Tahap: {doc.statusTte?.replaceAll("_", " ")}
-                    </div>
+                    {#if activeTab === 'ANTRIAN'}
+                      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        Menunggu Tindakan Anda
+                      </div>
+                      <div class="text-[10px] text-slate-500 mt-1">
+                        Tahap: {doc.tahap}
+                      </div>
+                    {:else if activeTab === 'SUKSES'}
+                      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Berhasil Diproses
+                      </div>
+                      <div class="text-[11px] text-slate-600 font-medium mt-1">
+                        {formatTanggalWaktu(doc.waktu)}
+                      </div>
+                      {#if doc.idDokumenBsre}
+                        <div class="text-[10px] font-mono text-emerald-700 mt-0.5">
+                          ID: {doc.idDokumenBsre}
+                        </div>
+                      {/if}
+                    {:else if activeTab === 'DITOLAK'}
+                      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-300">
+                        <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Ditolak / Dikembalikan
+                      </div>
+                      <div class="text-[10px] text-slate-500 mt-1">
+                        Waktu: {formatTanggalWaktu(doc.waktu)}
+                      </div>
+                      {#if doc.catatan}
+                        <div class="text-[11px] text-rose-700 bg-rose-50/70 p-2 rounded-lg border border-rose-200 mt-1.5 max-w-xs italic">
+                          "{doc.catatan}"
+                        </div>
+                      {/if}
+                    {:else if activeTab === 'SELESAI'}
+                      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                        Sah BSrE BSSN (Final)
+                      </div>
+                      <div class="text-[11px] text-slate-600 font-medium mt-1">
+                        Selesai: {formatTanggalWaktu(doc.waktu)}
+                      </div>
+                      <div class="text-[10px] text-slate-400 mt-0.5">
+                        Kekuatan hukum tetap
+                      </div>
+                    {/if}
                   </td>
 
                   <!-- Aksi -->
@@ -494,9 +750,10 @@
                     <div class="flex items-center justify-end gap-2">
                       <!-- Tombol Preview PDF -->
                       <button
-                        onclick={() => openPreview(doc)}
-                        class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition"
-                        title="Lihat Berkas Dokumen"
+                        type="button"
+                        onclick={() => openPreview(doc.raw, doc.nama)}
+                        class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition shadow-xs"
+                        title="Lihat Berkas Dokumen PDF"
                       >
                         <svg class="w-4 h-4 inline-block -mt-0.5 mr-1 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -505,22 +762,38 @@
                         Pratinjau
                       </button>
 
-                      <!-- Tombol Tolak -->
-                      <button
-                        onclick={() => openTolakModal(doc)}
-                        class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition"
-                        title="Kembalikan Dokumen"
-                      >
-                        Kembalikan
-                      </button>
+                      {#if activeTab === 'ANTRIAN'}
+                        <!-- Tombol Tolak -->
+                        <button
+                          type="button"
+                          onclick={() => openTolakModal(doc.raw)}
+                          class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition"
+                          title="Kembalikan Dokumen"
+                        >
+                          Kembalikan
+                        </button>
 
-                      <!-- Tombol Sign / Paraf -->
-                      <button
-                        onclick={() => openSignModal(doc)}
-                        class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition active:scale-95"
-                      >
-                        {pejabatInfo?.jenis === 'TTE' ? 'Tandatangani (TTE)' : 'Bubuhkan Paraf'}
-                      </button>
+                        <!-- Tombol Sign / Paraf -->
+                        <button
+                          type="button"
+                          onclick={() => openSignModal(doc.raw)}
+                          class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition active:scale-95"
+                        >
+                          {pejabatInfo?.jenis === 'TTE' ? 'Tandatangani (TTE)' : 'Bubuhkan Paraf'}
+                        </button>
+                      {:else if activeTab === 'SUKSES' || activeTab === 'SELESAI'}
+                        <!-- Tautan Verifikasi Publik -->
+                        <a
+                          href="/portal/verifikasi/{doc.usulanId}"
+                          target="_blank"
+                          rel="noreferrer"
+                          class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition flex items-center gap-1 shadow-xs"
+                          title="Buka Halaman Verifikasi Publik TTE"
+                        >
+                          <span>Verifikasi</span>
+                          <span class="text-xs">↗</span>
+                        </a>
+                      {/if}
                     </div>
                   </td>
                 </tr>
