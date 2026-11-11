@@ -87,6 +87,14 @@
       return;
     }
 
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlSearch = urlParams.get('search');
+      if (urlSearch) searchQuery = urlSearch;
+      const urlUnor = urlParams.get('unorNama');
+      if (urlUnor) selectedUnor = urlUnor;
+    }
+
     await Promise.all([
       fetchData(1),
       fetchFilters(),
@@ -353,6 +361,17 @@
         <span class="w-2 h-2 rounded-full bg-blue-500"></span>
         Data Utama: <span class="font-bold text-blue-900">{masterPagination.total.toLocaleString()}</span>
       </div>
+
+      <a
+        href="/statistik-p3k?tipe=paruh-waktu"
+        class="px-3 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs hover:border-violet-300"
+        title="Lihat statistik PPPK Paruh Waktu"
+      >
+        <svg class="w-3.5 h-3.5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        Statistik Paruh Waktu
+      </a>
 
       {#if pagination.total > 0}
         <button

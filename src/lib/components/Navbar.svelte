@@ -105,6 +105,7 @@
     isActive("/data-p3k") ||
     isActive("/masalah-pegawai") ||
     isActive("/statistik-p3k") ||
+    isActive("/statistik-p3k-paruh-waktu") ||
     isActive("/manajemen-pemberhentian") ||
     isActive("/perbedaan-data") ||
     isActive("/data-p3k/mapping-unor") ||
@@ -323,7 +324,7 @@
 
         {#if $authStore.isAuthenticated}
           <!-- Dropdown: Data P3K Utama -->
-          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pemberhentian', 'perbedaan-data', 'verifikasi-perbaikan'])}
+          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'statistik-p3k-paruh-waktu', 'manajemen-pemberhentian', 'perbedaan-data', 'verifikasi-perbaikan'])}
             <div
               class="relative shrink-0"
               role="group"
@@ -416,12 +417,12 @@
                         </div>
                       </a>
                     {/if}
-                    {#if canAccess('statistik-p3k')}
+                    {#if canAccessAny(['statistik-p3k', 'statistik-p3k-paruh-waktu'])}
                       <a
                         href="/statistik-p3k"
                         class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive(
                           '/statistik-p3k',
-                        )
+                        ) || isActive('/statistik-p3k-paruh-waktu')
                           ? 'text-blue-700 bg-blue-50 font-medium'
                           : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
                         onclick={() => (utamaMenuOpen = false)}
@@ -443,11 +444,11 @@
                           >
                         </div>
                         <div>
-                          <p class="font-medium leading-tight">Statistik</p>
+                          <p class="font-medium leading-tight">Statistik P3K</p>
                           <p
                             class="text-[10px] text-slate-400 leading-tight mt-0.5"
                           >
-                            Ringkasan & grafik data
+                            Penuh Waktu & Paruh Waktu
                           </p>
                         </div>
                       </a>
@@ -1784,7 +1785,7 @@
 
         {#if $authStore.isAuthenticated}
           <!-- Mobile: Data P3K Utama Group -->
-          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'manajemen-pemberhentian', 'perbedaan-data', 'mapping-unor', 'verifikasi-perbaikan'])}
+          {#if canAccess('data-utama') && canAccessAny(['profil-pegawai', 'data-p3k', 'statistik-p3k', 'statistik-p3k-paruh-waktu', 'manajemen-pemberhentian', 'perbedaan-data', 'mapping-unor', 'verifikasi-perbaikan'])}
             <div class="pt-1">
               <button
                 type="button"
@@ -1858,13 +1859,13 @@
                       Profil Pegawai
                     </a>
                   {/if}
-                  {#if canAccess('statistik-p3k')}
+                  {#if canAccessAny(['statistik-p3k', 'statistik-p3k-paruh-waktu'])}
                     <a
                       href="/statistik-p3k"
                       onclick={closeMobile}
                       class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
                         '/statistik-p3k',
-                      )
+                      ) || isActive('/statistik-p3k-paruh-waktu')
                         ? 'text-blue-700 bg-blue-50 font-semibold'
                         : 'text-slate-600 hover:bg-slate-50'}"
                     >
@@ -1884,7 +1885,7 @@
                           /></svg
                         >
                       </div>
-                      Statistik
+                      Statistik P3K
                     </a>
                   {/if}
                   {#if canAccess('manajemen-pemberhentian')}

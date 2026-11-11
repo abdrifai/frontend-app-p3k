@@ -290,11 +290,11 @@
 
         <a
           href="/statistik-p3k"
-          class="card group p-6 hover:shadow-md hover:border-amber-200 transition-all duration-300"
+          class="card group p-6 hover:shadow-md hover:border-blue-200 transition-all duration-300"
         >
           <div class="flex items-start gap-4">
             <div
-              class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:shadow-lg group-hover:shadow-amber-500/30 transition-shadow"
+              class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/20 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-shadow"
             >
               <svg
                 class="w-6 h-6 text-white"
@@ -310,18 +310,23 @@
               >
             </div>
             <div>
-              <h3
-                class="font-semibold text-slate-800 group-hover:text-amber-700 transition-colors"
-              >
-                Statistik & Laporan
-              </h3>
+              <div class="flex items-center gap-2">
+                <h3
+                  class="font-semibold text-slate-800 group-hover:text-blue-700 transition-colors"
+                >
+                  Statistik PPPK
+                </h3>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/50">
+                  Penuh & Paruh
+                </span>
+              </div>
               <p class="mt-1 text-sm text-slate-500">
-                Lihat ringkasan statistik dan distribusi data.
+                Analisis demografi, sebaran formasi, usia, dan statistik terpadu pegawai Penuh Waktu dan Paruh Waktu.
               </p>
             </div>
           </div>
           <div
-            class="mt-4 flex items-center text-sm font-medium text-amber-600 group-hover:text-amber-700"
+            class="mt-4 flex items-center text-sm font-medium text-blue-600 group-hover:text-blue-700"
           >
             Buka halaman
             <svg

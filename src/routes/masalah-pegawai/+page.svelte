@@ -195,7 +195,7 @@
 
     isSearchingPegawai = true;
     try {
-      const res = await apiRequest(`/api/v1/data-p3k?search=${encodeURIComponent(query)}&limit=8`);
+      const res = await apiRequest(`/api/v1/data-p3k?search=${encodeURIComponent(query)}&statusPensiun=AKTIF&limit=8`);
       pegawaiSearchResults = res.data?.data || res.data || [];
       showPegawaiDropdown = pegawaiSearchResults.length > 0;
     } catch (e) {
@@ -214,6 +214,10 @@
   }
 
   function selectPegawai(p) {
+    if (p.statusPensiun === 'PENSIUN') {
+      addToast('Pegawai sudah pensiun atau diberhentikan, tidak dapat ditambahkan dalam catatan masalah', 'error');
+      return;
+    }
     selectedPegawai = p;
     formPegawaiId = p.id;
     pegawaiSearchInput = `${p.nama} (${p.nipBaru})`;
@@ -332,6 +336,10 @@
 
     if (!formPegawaiId) {
       addToast('Silakan pilih pegawai terlebih dahulu', 'error');
+      return;
+    }
+    if (selectedPegawai && selectedPegawai.statusPensiun === 'PENSIUN') {
+      addToast('Pegawai sudah pensiun atau diberhentikan, tidak dapat ditambahkan dalam catatan masalah', 'error');
       return;
     }
     if (!formKategoriId) {
@@ -877,8 +885,15 @@
                   </div>
                 </td>
                 <td class="px-4 py-3.5">
-                  <div class="font-medium text-slate-800 leading-tight">
-                    {item.dataP3k?.nama || '-'}
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-medium text-slate-800 leading-tight">
+                      {item.dataP3k?.nama || '-'}
+                    </span>
+                    {#if item.dataP3k?.statusPensiun === 'PENSIUN'}
+                      <span class="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-red-50 text-red-700 border border-red-200">
+                        Pensiun/Diberhentikan
+                      </span>
+                    {/if}
                   </div>
                   <div class="text-xs text-slate-400 font-mono mt-0.5">
                     {item.dataP3k?.nipBaru || '-'}
@@ -1038,9 +1053,12 @@
       <form onsubmit={handleSaveMasalah} class="flex-1 overflow-y-auto p-6 space-y-5">
         <!-- 1. Pegawai Selector (Autocomplete & Detail Terpilih) -->
         <div class="relative">
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Pegawai Bersangkutan <span class="text-red-500">*</span>
-          </label>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Pegawai Bersangkutan <span class="text-red-500">*</span>
+            </label>
+            <span class="text-[11px] text-slate-400">Hanya pegawai berstatus aktif</span>
+          </div>
 
           {#if selectedPegawai}
             <!-- Card Detail Pegawai Terpilih -->
@@ -1055,6 +1073,11 @@
                     <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-800 font-mono">
                       NIP: {selectedPegawai.nipBaru}
                     </span>
+                    {#if selectedPegawai.statusPensiun === 'PENSIUN'}
+                      <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-100 text-red-700">
+                        Pensiun / Diberhentikan
+                      </span>
+                    {/if}
                   </div>
                   <p class="text-xs text-slate-700 mt-1">
                     <span class="font-semibold text-slate-500">Jabatan:</span> {selectedPegawai.jabatanNama || '-'}
@@ -1081,6 +1104,15 @@
                 <span class="text-xs text-slate-400 italic shrink-0 self-start sm:self-center">Pegawai terkunci saat edit</span>
               {/if}
             </div>
+
+            {#if selectedPegawai.statusPensiun === 'PENSIUN'}
+              <div class="mt-2.5 p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
+                <svg class="w-4 h-4 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <span>Pegawai ini sudah berstatus <strong>Pensiun / Diberhentikan</strong> dan tidak dapat ditambahkan catatan masalah baru.</span>
+              </div>
+            {/if}
           {:else}
             <!-- Input Pencarian Pegawai -->
             <div class="relative">
@@ -1106,21 +1138,32 @@
             {#if showPegawaiDropdown && pegawaiSearchResults.length > 0}
               <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto z-50 divide-y divide-slate-100">
                 {#each pegawaiSearchResults as p}
+                  {@const isPensiun = p.statusPensiun === 'PENSIUN'}
                   <button
                     type="button"
-                    class="w-full text-left p-3 hover:bg-blue-50/80 transition-colors flex items-center justify-between group"
+                    class="w-full text-left p-3 transition-colors flex items-center justify-between group {isPensiun ? 'opacity-60 bg-slate-50 cursor-not-allowed' : 'hover:bg-blue-50/80'}"
                     onclick={() => selectPegawai(p)}
+                    disabled={isPensiun}
                   >
                     <div>
-                      <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600">{p.nama}</p>
+                      <div class="flex items-center gap-2">
+                        <p class="text-sm font-bold text-slate-800 {isPensiun ? '' : 'group-hover:text-blue-600'}">{p.nama}</p>
+                        {#if isPensiun}
+                          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-red-100 text-red-700">Pensiun / Diberhentikan</span>
+                        {/if}
+                      </div>
                       <p class="text-xs text-slate-500 font-mono mt-0.5">NIP: {p.nipBaru}</p>
                       <p class="text-xs text-slate-600 mt-1">
                         {p.jabatanNama || '-'} &bull; <span class="text-slate-500">{p.unorNama || '-'}</span>
                       </p>
                     </div>
-                    <span class="text-xs text-blue-600 font-semibold group-hover:translate-x-0.5 transition-transform">
-                      Pilih &rarr;
-                    </span>
+                    {#if isPensiun}
+                      <span class="text-xs text-red-500 font-semibold">Tidak Tersedia</span>
+                    {:else}
+                      <span class="text-xs text-blue-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+                        Pilih &rarr;
+                      </span>
+                    {/if}
                   </button>
                 {/each}
               </div>
@@ -1326,8 +1369,8 @@
           </button>
           <button
             type="submit"
-            class="px-5 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-xs flex items-center gap-2"
-            disabled={isSaving}
+            class="px-5 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-xs flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSaving || (!isEditMode && selectedPegawai?.statusPensiun === 'PENSIUN')}
           >
             {#if isSaving}
               <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
@@ -1395,7 +1438,14 @@
         <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Pegawai Terkait</p>
-            <p class="text-sm font-bold text-slate-800 mt-0.5">{selectedMasalah.dataP3k?.nama}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <p class="text-sm font-bold text-slate-800">{selectedMasalah.dataP3k?.nama}</p>
+              {#if selectedMasalah.dataP3k?.statusPensiun === 'PENSIUN'}
+                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-red-100 text-red-700 border border-red-200">
+                  Pensiun / Diberhentikan
+                </span>
+              {/if}
+            </div>
             <p class="text-xs text-slate-500 font-mono">NIP: {selectedMasalah.dataP3k?.nipBaru} &bull; Golongan: {selectedMasalah.dataP3k?.golAkhirNama || '-'}</p>
             <p class="text-xs text-slate-600 mt-0.5">{selectedMasalah.dataP3k?.jabatanNama} — {selectedMasalah.dataP3k?.unorNama}</p>
           </div>
