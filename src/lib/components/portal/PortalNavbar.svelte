@@ -11,6 +11,14 @@
   }
 
   const currentPath = $derived($page.url.pathname);
+  const userRoles = $derived(
+    Array.isArray($authStore.user?.roles) && $authStore.user.roles.length > 0
+      ? $authStore.user.roles.map(r => String(r).toLowerCase().trim())
+      : String($authStore.user?.role || '').toLowerCase().split(',').map(r => r.trim()).filter(Boolean)
+  );
+  const isOperatorOrAdmin = $derived(
+    userRoles.some(r => ['admin', 'admin_utama', 'superadmin', 'user', 'verifikator', 'pensiun', 'pejabat_ttd'].includes(r))
+  );
 
   const navItems = [
     {
@@ -99,6 +107,19 @@
 
       <!-- User Profile & Action -->
       <div class="flex items-center gap-3">
+        {#if isOperatorOrAdmin}
+          <a
+            href="/"
+            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 shadow-2xs transition-all hover:scale-105"
+            title="Kembali ke Dashboard Operator / Admin"
+          >
+            <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span>Dashboard Admin</span>
+          </a>
+        {/if}
+
         <div class="relative">
           <button
             type="button"
@@ -132,6 +153,18 @@
                   {$authStore.user?.email || "-"}
                 </p>
               </div>
+              {#if isOperatorOrAdmin}
+                <a
+                  href="/"
+                  onclick={() => (isUserDropdownOpen = false)}
+                  class="flex items-center gap-2 px-4 py-2.5 text-xs text-blue-700 font-semibold hover:bg-blue-50 transition-colors border-b border-slate-100"
+                >
+                  <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  Dashboard Operator / Admin
+                </a>
+              {/if}
               <a
                 href="/portal/profil"
                 onclick={() => (isUserDropdownOpen = false)}
@@ -189,5 +222,17 @@
         {item.label}
       </a>
     {/each}
+    {#if isOperatorOrAdmin}
+      <a
+        href="/"
+        class="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-[10px] font-semibold text-blue-600 hover:text-blue-800 transition-all"
+        title="Dashboard Admin"
+      >
+        <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Admin
+      </a>
+    {/if}
   </div>
 </div>

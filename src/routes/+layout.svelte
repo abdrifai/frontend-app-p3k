@@ -30,8 +30,16 @@
       ? $authStore.user.roles.map(r => String(r).toLowerCase().trim())
       : String($authStore.user?.role || '').toLowerCase().split(',').map(r => r.trim()).filter(Boolean)
   );
-  const isPegawaiUser = $derived(userRoles.includes('pegawai'));
-  const isPejabatUser = $derived(userRoles.includes('pejabat_ttd') && !userRoles.includes('admin'));
+
+  const STAFF_ROLES = ['admin', 'admin_utama', 'superadmin', 'user', 'verifikator', 'pensiun', 'pejabat_ttd'];
+  const hasStaffRole = $derived(userRoles.some(r => STAFF_ROLES.includes(r)));
+
+  // Pegawai murni yang hanya memiliki akses portal mandiri (bukan admin/operator)
+  const isPegawaiOnlyUser = $derived(userRoles.includes('pegawai') && !hasStaffRole);
+
+  // Pejabat murni yang hanya memiliki akses portal pejabat (bukan admin/operator umum)
+  const isPejabatOnlyUser = $derived(userRoles.includes('pejabat_ttd') && !userRoles.includes('admin') && !userRoles.includes('user'));
+
   const isPortalPejabatRoute = $derived($page.url.pathname.startsWith('/portal-pejabat'));
   const isPortalVerifikasiRoute = $derived($page.url.pathname.startsWith('/portal/verifikasi'));
   const isPortalPegawaiRoute = $derived($page.url.pathname.startsWith('/portal') && !isPortalPejabatRoute && !isPortalVerifikasiRoute);
@@ -45,17 +53,26 @@
     if (!$authStore.isAuthenticated && !isPublicPath) {
       goto("/login");
     } else if ($authStore.isAuthenticated) {
-      if (isPegawaiUser) {
+      if (isPegawaiOnlyUser) {
         if (!isPortalPegawaiRoute && !isPublicPath) {
           goto("/portal");
         }
-      } else if (isPejabatUser) {
+      } else if (isPejabatOnlyUser) {
         if (!isPortalPejabatRoute && !isPublicPath) {
           goto("/portal-pejabat");
         }
       } else {
+        // User memiliki role staf (operator / admin / multi-role)
         if (isPortalPegawaiRoute) {
-          goto("/");
+          // Jika staf membuka portal pegawai, pastikan akun memiliki role 'pegawai'
+          if (!userRoles.includes('pegawai')) {
+            goto("/");
+          }
+        } else if (isPortalPejabatRoute) {
+          // Jika staf membuka portal pejabat, pastikan punya role 'pejabat_ttd' atau 'admin'
+          if (!userRoles.includes('pejabat_ttd') && !userRoles.includes('admin')) {
+            goto("/");
+          }
         } else {
           loadMenuPermissions();
         }
@@ -89,7 +106,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-slate-50 flex flex-col">
-  {#if !isPegawaiUser && !isPejabatUser && !isPortalPegawaiRoute && !isPortalPejabatRoute && !isPortalVerifikasiRoute}
+  {#if !isPegawaiOnlyUser && !isPejabatOnlyUser && !isPortalPegawaiRoute && !isPortalPejabatRoute && !isPortalVerifikasiRoute}
     <Navbar />
   {/if}
 

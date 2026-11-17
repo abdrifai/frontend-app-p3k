@@ -16,6 +16,7 @@
   let filterPendidikan = "";
   let filterGolongan = "";
   let filterJenisJabatan = "";
+  let filterJabatanNama = "";
   let filterJenisKelamin = "";
   let showFilters = false;
   let meta = {
@@ -68,6 +69,7 @@
     filterPendidikan ||
     filterGolongan ||
     filterJenisJabatan ||
+    filterJabatanNama ||
     filterJenisKelamin;
 
   $: hasUrlParams =
@@ -76,6 +78,7 @@
     $page.url.searchParams.has("pendidikan") ||
     $page.url.searchParams.has("golongan") ||
     $page.url.searchParams.has("jenisJabatan") ||
+    $page.url.searchParams.has("jabatanNama") ||
     $page.url.searchParams.has("jenisKelamin");
 
   const calculateAge = (birthDateStr) => {
@@ -453,6 +456,12 @@
       showFilters = true;
     }
 
+    const jabatanNamaQuery = $page.url.searchParams.get("jabatanNama");
+    if (jabatanNamaQuery) {
+      filterJabatanNama = jabatanNamaQuery;
+      showFilters = true;
+    }
+
     const jenisKelaminQuery = $page.url.searchParams.get("jenisKelamin");
     if (jenisKelaminQuery) {
       filterJenisKelamin = jenisKelaminQuery;
@@ -476,6 +485,7 @@
       if (filterPendidikan) queryParams.append("pendidikan", filterPendidikan);
       if (filterGolongan) queryParams.append("golongan", filterGolongan);
       if (filterJenisJabatan) queryParams.append("jenisJabatan", filterJenisJabatan);
+      if (filterJabatanNama) queryParams.append("jabatanNama", filterJabatanNama);
       if (filterJenisKelamin) queryParams.append("jenisKelamin", filterJenisKelamin);
 
       const result = await apiRequest(`/api/v1/data-p3k?${queryParams.toString()}`, "GET");
@@ -507,6 +517,7 @@
       if (filterPendidikan) queryParams.append("pendidikan", filterPendidikan);
       if (filterGolongan) queryParams.append("golongan", filterGolongan);
       if (filterJenisJabatan) queryParams.append("jenisJabatan", filterJenisJabatan);
+      if (filterJabatanNama) queryParams.append("jabatanNama", filterJabatanNama);
       if (filterJenisKelamin) queryParams.append("jenisKelamin", filterJenisKelamin);
 
       const result = await apiRequest(`/api/v1/data-p3k?${queryParams.toString()}`, "GET");
@@ -557,6 +568,7 @@
     filterPendidikan = "";
     filterGolongan = "";
     filterJenisJabatan = "";
+    filterJabatanNama = "";
     filterJenisKelamin = "";
     // remove from url if present
     if (hasUrlParams) {
@@ -566,6 +578,7 @@
       newUrl.searchParams.delete("pendidikan");
       newUrl.searchParams.delete("golongan");
       newUrl.searchParams.delete("jenisJabatan");
+      newUrl.searchParams.delete("jabatanNama");
       newUrl.searchParams.delete("jenisKelamin");
       goto(newUrl.toString(), { replaceState: true, keepFocus: true });
     }
@@ -801,6 +814,20 @@
             type="text"
             bind:value={filterJenisJabatan}
             placeholder="Filter Jenis Jabatan..."
+            class="input-field"
+          />
+        </div>
+        <div>
+          <label
+            for="jabatanNama"
+            class="block text-xs font-medium text-slate-500 mb-1.5"
+            >Nama Jabatan</label
+          >
+          <input
+            id="jabatanNama"
+            type="text"
+            bind:value={filterJabatanNama}
+            placeholder="Filter Nama Jabatan..."
             class="input-field"
           />
         </div>

@@ -20,7 +20,11 @@
     roles: ["user"],
     nik: "",
     jabatanPejabat: "KEPALA_BKPSDM",
-    nipPejabat: ""
+    nipPejabat: "",
+    dataP3kId: null,
+    dataP3kParuhWaktuId: null,
+    jenisPegawaiPortal: "PENUH_WAKTU",
+    pegawaiP3k: null
   };
   let isSubmitting = false;
 
@@ -34,9 +38,19 @@
     roles: ["user"],
     nik: "",
     jabatanPejabat: "KEPALA_BKPSDM",
-    nipPejabat: ""
+    nipPejabat: "",
+    dataP3kId: null,
+    dataP3kParuhWaktuId: null,
+    jenisPegawaiPortal: "PENUH_WAKTU",
+    pegawaiP3k: null
   };
   let isAdding = false;
+
+  // State pencarian PPPK untuk tautan akun pegawai
+  let p3kSearchQuery = "";
+  let p3kSearchResults = [];
+  let isSearchingP3k = false;
+  let p3kSearchTimeout = null;
 
   // Delete modal state
   let showDeleteModal = false;
@@ -188,9 +202,107 @@
     fetchUsers(1);
   };
 
+  // Helper pencarian pegawai PPPK
+  const handleP3kSearchInput = (query, target = 'edit') => {
+    p3kSearchQuery = query;
+    if (p3kSearchTimeout) clearTimeout(p3kSearchTimeout);
+    
+    if (!query || query.trim().length < 2) {
+      p3kSearchResults = [];
+      isSearchingP3k = false;
+      return;
+    }
+
+    p3kSearchTimeout = setTimeout(async () => {
+      isSearchingP3k = true;
+      try {
+        const jenis = target === 'add' ? addForm.jenisPegawaiPortal : editForm.jenisPegawaiPortal;
+        let endpoint = `/api/v1/data-p3k?search=${encodeURIComponent(query.trim())}&limit=8&statusPensiun=AKTIF`;
+        if (jenis === 'PARUH_WAKTU') {
+          endpoint = `/api/v1/p3k-paruh-waktu?search=${encodeURIComponent(query.trim())}&limit=8`;
+        }
+        const res = await apiRequest(endpoint, 'GET');
+        if (res && res.success) {
+          p3kSearchResults = res.data || [];
+        } else {
+          p3kSearchResults = [];
+        }
+      } catch (err) {
+        console.error("Error searching P3K:", err);
+        p3kSearchResults = [];
+      } finally {
+        isSearchingP3k = false;
+      }
+    }, 350);
+  };
+
+  const selectP3kPegawai = (pegawai, target = 'edit') => {
+    const isParuhWaktu = (target === 'add' ? addForm.jenisPegawaiPortal : editForm.jenisPegawaiPortal) === 'PARUH_WAKTU';
+    const cleanPegawai = {
+      id: pegawai.id,
+      nipBaru: pegawai.nipBaru || pegawai.nip || "",
+      nama: pegawai.nama || "",
+      gelarDepan: pegawai.gelarDepan || "",
+      gelarBelakang: pegawai.gelarBelakang || "",
+      jabatanNama: pegawai.jabatanNama || pegawai.jabatan || "",
+      unorNama: pegawai.unorNama || pegawai.unitKerja || ""
+    };
+
+    if (target === 'add') {
+      addForm.dataP3kId = isParuhWaktu ? null : pegawai.id;
+      addForm.dataP3kParuhWaktuId = isParuhWaktu ? pegawai.id : null;
+      addForm.pegawaiP3k = cleanPegawai;
+      if (!addForm.namaLengkap) {
+        addForm.namaLengkap = [cleanPegawai.gelarDepan, cleanPegawai.nama, cleanPegawai.gelarBelakang].filter(Boolean).join(" ");
+      }
+    } else {
+      editForm.dataP3kId = isParuhWaktu ? null : pegawai.id;
+      editForm.dataP3kParuhWaktuId = isParuhWaktu ? pegawai.id : null;
+      editForm.pegawaiP3k = cleanPegawai;
+    }
+    p3kSearchQuery = "";
+    p3kSearchResults = [];
+  };
+
+  const removeP3kPegawai = (target = 'edit') => {
+    if (target === 'add') {
+      addForm.dataP3kId = null;
+      addForm.dataP3kParuhWaktuId = null;
+      addForm.pegawaiP3k = null;
+    } else {
+      editForm.dataP3kId = null;
+      editForm.dataP3kParuhWaktuId = null;
+      editForm.pegawaiP3k = null;
+    }
+    p3kSearchQuery = "";
+    p3kSearchResults = [];
+  };
+
+  const changeJenisPegawai = (jenis, target = 'edit') => {
+    if (target === 'add') {
+      if (addForm.jenisPegawaiPortal !== jenis) {
+        addForm.jenisPegawaiPortal = jenis;
+        addForm.dataP3kId = null;
+        addForm.dataP3kParuhWaktuId = null;
+        addForm.pegawaiP3k = null;
+      }
+    } else {
+      if (editForm.jenisPegawaiPortal !== jenis) {
+        editForm.jenisPegawaiPortal = jenis;
+        editForm.dataP3kId = null;
+        editForm.dataP3kParuhWaktuId = null;
+        editForm.pegawaiP3k = null;
+      }
+    }
+    p3kSearchQuery = "";
+    p3kSearchResults = [];
+  };
+
   const openEditModal = (user) => {
     editUser = user;
     const userRoles = getUserRoles(user);
+    p3kSearchQuery = "";
+    p3kSearchResults = [];
     editForm = {
       namaLengkap: user.namaLengkap || "",
       email: user.email || "",
@@ -198,7 +310,11 @@
       roles: userRoles,
       nik: user.pejabatPenandatangan?.nik || user.nik || "",
       jabatanPejabat: user.pejabatPenandatangan?.jabatan || user.jabatanPejabat || "KEPALA_BKPSDM",
-      nipPejabat: user.pejabatPenandatangan?.nip || user.nipPejabat || ""
+      nipPejabat: user.pejabatPenandatangan?.nip || user.nipPejabat || "",
+      dataP3kId: user.dataP3kId || null,
+      dataP3kParuhWaktuId: user.dataP3kParuhWaktuId || null,
+      jenisPegawaiPortal: user.dataP3kParuhWaktuId ? "PARUH_WAKTU" : (user.jenisPegawaiPortal || "PENUH_WAKTU"),
+      pegawaiP3k: user.pegawaiP3k || user.dataP3k || user.dataP3kParuhWaktu || null
     };
     showEditModal = true;
   };
@@ -206,9 +322,13 @@
   const closeEditModal = () => {
     showEditModal = false;
     editUser = null;
+    p3kSearchQuery = "";
+    p3kSearchResults = [];
   };
 
   const openAddModal = () => {
+    p3kSearchQuery = "";
+    p3kSearchResults = [];
     addForm = {
       username: "",
       namaLengkap: "",
@@ -217,13 +337,19 @@
       roles: ["user"],
       nik: "",
       jabatanPejabat: "KEPALA_BKPSDM",
-      nipPejabat: ""
+      nipPejabat: "",
+      dataP3kId: null,
+      dataP3kParuhWaktuId: null,
+      jenisPegawaiPortal: "PENUH_WAKTU",
+      pegawaiP3k: null
     };
     showAddModal = true;
   };
 
   const closeAddModal = () => {
     showAddModal = false;
+    p3kSearchQuery = "";
+    p3kSearchResults = [];
   };
 
   const handleAdd = async (e) => {
@@ -260,6 +386,12 @@
         payload.nik = addForm.nik.trim();
         payload.jabatanPejabat = addForm.jabatanPejabat || "KEPALA_BKPSDM";
         if (addForm.nipPejabat) payload.nipPejabat = addForm.nipPejabat.trim();
+      }
+
+      if (addForm.roles.includes("pegawai")) {
+        payload.dataP3kId = addForm.dataP3kId || null;
+        payload.dataP3kParuhWaktuId = addForm.dataP3kParuhWaktuId || null;
+        payload.jenisPegawaiPortal = addForm.dataP3kId ? "PENUH_WAKTU" : (addForm.dataP3kParuhWaktuId ? "PARUH_WAKTU" : null);
       }
 
       const result = await apiRequest("/api/users/register", "POST", payload);
@@ -407,6 +539,16 @@
         payload.nik = editForm.nik.trim();
         payload.jabatanPejabat = editForm.jabatanPejabat || "KEPALA_BKPSDM";
         payload.nipPejabat = editForm.nipPejabat ? editForm.nipPejabat.trim() : null;
+      }
+
+      if (editForm.roles.includes("pegawai")) {
+        payload.dataP3kId = editForm.dataP3kId || null;
+        payload.dataP3kParuhWaktuId = editForm.dataP3kParuhWaktuId || null;
+        payload.jenisPegawaiPortal = editForm.dataP3kId ? "PENUH_WAKTU" : (editForm.dataP3kParuhWaktuId ? "PARUH_WAKTU" : null);
+      } else {
+        payload.dataP3kId = null;
+        payload.dataP3kParuhWaktuId = null;
+        payload.jenisPegawaiPortal = null;
       }
 
       const result = await apiRequest(`/api/users/${editUser.id}`, "PUT", payload);
@@ -675,8 +817,18 @@
                           <i class="ri-shield-keyhole-line text-[11px]"></i> Admin
                         </span>
                       {:else if r === 'pegawai'}
-                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        {@const p3kInfo = user.pegawaiP3k || user.dataP3k || user.dataP3kParuhWaktu}
+                        <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200" title={p3kInfo ? `${p3kInfo.nama || ''} (${p3kInfo.jabatanNama || p3kInfo.jabatan || '-'})` : "Belum ditautkan ke data P3K"}>
                           <i class="ri-user-smile-line text-[11px]"></i> Pegawai Mandiri
+                          {#if p3kInfo?.nipBaru || p3kInfo?.nip}
+                            <span class="font-mono text-[10px] bg-emerald-200/90 text-emerald-950 px-1.5 py-0.2 rounded font-bold">
+                              {p3kInfo.nipBaru || p3kInfo.nip}
+                            </span>
+                          {:else}
+                            <span class="text-[9px] bg-amber-100 text-amber-800 border border-amber-300 px-1 py-0.2 rounded font-medium">
+                              Belum Tertaut
+                            </span>
+                          {/if}
                         </span>
                       {:else if r === 'verifikator'}
                         <span class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-teal-100 text-teal-800 border border-teal-200">
@@ -1058,6 +1210,120 @@
             </div>
           {/if}
 
+          {#if addForm.roles?.includes('pegawai')}
+            <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/80 space-y-3.5 transition-all">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2 text-emerald-900 font-bold text-xs uppercase tracking-wider">
+                  <i class="ri-user-smile-line text-sm text-emerald-600"></i>
+                  <span>Tautkan Data Pegawai PPPK (Portal Mandiri & TTE)</span>
+                </div>
+                <div class="inline-flex p-0.5 rounded-lg bg-emerald-100/80 border border-emerald-200 text-xs self-start sm:self-auto">
+                  <button
+                    type="button"
+                    on:click={() => changeJenisPegawai('PENUH_WAKTU', 'add')}
+                    class="px-2.5 py-1 rounded-md font-semibold transition-all {addForm.jenisPegawaiPortal === 'PENUH_WAKTU' ? 'bg-white text-emerald-800 shadow-sm' : 'text-emerald-700 hover:text-emerald-900'}"
+                  >
+                    PPPK Penuh Waktu
+                  </button>
+                  <button
+                    type="button"
+                    on:click={() => changeJenisPegawai('PARUH_WAKTU', 'add')}
+                    class="px-2.5 py-1 rounded-md font-semibold transition-all {addForm.jenisPegawaiPortal === 'PARUH_WAKTU' ? 'bg-white text-emerald-800 shadow-sm' : 'text-emerald-700 hover:text-emerald-900'}"
+                  >
+                    PPPK Paruh Waktu
+                  </button>
+                </div>
+              </div>
+
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Tautkan akun ini ke master data PPPK agar user (baik operator maupun pegawai mandiri) dapat login ke Portal Mandiri Pegawai untuk memverifikasi profil dan menandatangani Perjanjian Kerja (TTE PK).
+              </p>
+
+              {#if addForm.pegawaiP3k}
+                <div class="p-3.5 rounded-xl bg-white border border-emerald-300 shadow-sm flex items-start justify-between gap-3">
+                  <div class="space-y-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                        {addForm.pegawaiP3k.nipBaru}
+                      </span>
+                      <span class="text-xs font-bold text-slate-800 truncate">
+                        {[addForm.pegawaiP3k.gelarDepan, addForm.pegawaiP3k.nama, addForm.pegawaiP3k.gelarBelakang].filter(Boolean).join(" ")}
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-slate-600 flex items-center gap-1.5">
+                      <i class="ri-briefcase-line text-emerald-600"></i>
+                      <span>{addForm.pegawaiP3k.jabatanNama || "-"}</span>
+                    </p>
+                    <p class="text-[11px] text-slate-500 flex items-center gap-1.5">
+                      <i class="ri-building-line text-emerald-600"></i>
+                      <span class="truncate">{addForm.pegawaiP3k.unorNama || "-"}</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    on:click={() => removeP3kPegawai('add')}
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors shrink-0 flex items-center gap-1"
+                    title="Lepas tautan data PPPK"
+                  >
+                    <i class="ri-close-line text-sm"></i>
+                    <span>Lepas</span>
+                  </button>
+                </div>
+              {:else}
+                <div class="relative">
+                  <div class="relative">
+                    <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input
+                      type="text"
+                      bind:value={p3kSearchQuery}
+                      on:input={(e) => handleP3kSearchInput(e.target.value, 'add')}
+                      placeholder={`Ketik NIP atau Nama ${addForm.jenisPegawaiPortal === 'PARUH_WAKTU' ? 'PPPK Paruh Waktu' : 'PPPK'}...`}
+                      class="input-field pl-9 pr-8 text-xs bg-white"
+                    />
+                    {#if isSearchingP3k}
+                      <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div class="w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    {/if}
+                  </div>
+
+                  {#if p3kSearchResults.length > 0}
+                    <div class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border border-slate-200 max-h-56 overflow-y-auto z-20 divide-y divide-slate-100">
+                      {#each p3kSearchResults as p}
+                        <button
+                          type="button"
+                          on:click={() => selectP3kPegawai(p, 'add')}
+                          class="w-full text-left p-2.5 hover:bg-emerald-50/70 transition-colors flex items-start justify-between gap-2"
+                        >
+                          <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                              <span class="font-mono text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                                {p.nipBaru || p.nip}
+                              </span>
+                              <span class="text-xs font-bold text-slate-800 truncate">
+                                {[p.gelarDepan, p.nama, p.gelarBelakang].filter(Boolean).join(" ")}
+                              </span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                              {p.jabatanNama || p.jabatan || "-"} • {p.unorNama || p.unitKerja || "-"}
+                            </p>
+                          </div>
+                          <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded shrink-0">
+                            Pilih
+                          </span>
+                        </button>
+                      {/each}
+                    </div>
+                  {:else if p3kSearchQuery.trim().length >= 2 && !isSearchingP3k}
+                    <div class="mt-1.5 p-2.5 text-center bg-white rounded-xl border border-slate-200 text-xs text-slate-400">
+                      Tidak ada pegawai PPPK yang cocok dengan "{p3kSearchQuery}".
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+          {/if}
+
           <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               type="button"
@@ -1265,6 +1531,120 @@
                   placeholder="NIP Pejabat jika ada (cth: 1978...)"
                 />
               </div>
+            </div>
+          {/if}
+
+          {#if editForm.roles?.includes('pegawai')}
+            <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/80 space-y-3.5 transition-all">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2 text-emerald-900 font-bold text-xs uppercase tracking-wider">
+                  <i class="ri-user-smile-line text-sm text-emerald-600"></i>
+                  <span>Tautkan Data Pegawai PPPK (Portal Mandiri & TTE)</span>
+                </div>
+                <div class="inline-flex p-0.5 rounded-lg bg-emerald-100/80 border border-emerald-200 text-xs self-start sm:self-auto">
+                  <button
+                    type="button"
+                    on:click={() => changeJenisPegawai('PENUH_WAKTU', 'edit')}
+                    class="px-2.5 py-1 rounded-md font-semibold transition-all {editForm.jenisPegawaiPortal === 'PENUH_WAKTU' ? 'bg-white text-emerald-800 shadow-sm' : 'text-emerald-700 hover:text-emerald-900'}"
+                  >
+                    PPPK Penuh Waktu
+                  </button>
+                  <button
+                    type="button"
+                    on:click={() => changeJenisPegawai('PARUH_WAKTU', 'edit')}
+                    class="px-2.5 py-1 rounded-md font-semibold transition-all {editForm.jenisPegawaiPortal === 'PARUH_WAKTU' ? 'bg-white text-emerald-800 shadow-sm' : 'text-emerald-700 hover:text-emerald-900'}"
+                  >
+                    PPPK Paruh Waktu
+                  </button>
+                </div>
+              </div>
+
+              <p class="text-[11px] text-slate-600 leading-relaxed">
+                Tautkan akun ini ke master data PPPK agar user (baik operator maupun pegawai mandiri) dapat login ke Portal Mandiri Pegawai untuk memverifikasi profil dan menandatangani Perjanjian Kerja (TTE PK).
+              </p>
+
+              {#if editForm.pegawaiP3k}
+                <div class="p-3.5 rounded-xl bg-white border border-emerald-300 shadow-sm flex items-start justify-between gap-3">
+                  <div class="space-y-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                        {editForm.pegawaiP3k.nipBaru}
+                      </span>
+                      <span class="text-xs font-bold text-slate-800 truncate">
+                        {[editForm.pegawaiP3k.gelarDepan, editForm.pegawaiP3k.nama, editForm.pegawaiP3k.gelarBelakang].filter(Boolean).join(" ")}
+                      </span>
+                    </div>
+                    <p class="text-[11px] text-slate-600 flex items-center gap-1.5">
+                      <i class="ri-briefcase-line text-emerald-600"></i>
+                      <span>{editForm.pegawaiP3k.jabatanNama || "-"}</span>
+                    </p>
+                    <p class="text-[11px] text-slate-500 flex items-center gap-1.5">
+                      <i class="ri-building-line text-emerald-600"></i>
+                      <span class="truncate">{editForm.pegawaiP3k.unorNama || "-"}</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    on:click={() => removeP3kPegawai('edit')}
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors shrink-0 flex items-center gap-1"
+                    title="Lepas tautan data PPPK"
+                  >
+                    <i class="ri-close-line text-sm"></i>
+                    <span>Lepas</span>
+                  </button>
+                </div>
+              {:else}
+                <div class="relative">
+                  <div class="relative">
+                    <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input
+                      type="text"
+                      bind:value={p3kSearchQuery}
+                      on:input={(e) => handleP3kSearchInput(e.target.value, 'edit')}
+                      placeholder={`Ketik NIP atau Nama ${editForm.jenisPegawaiPortal === 'PARUH_WAKTU' ? 'PPPK Paruh Waktu' : 'PPPK'}...`}
+                      class="input-field pl-9 pr-8 text-xs bg-white"
+                    />
+                    {#if isSearchingP3k}
+                      <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div class="w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    {/if}
+                  </div>
+
+                  {#if p3kSearchResults.length > 0}
+                    <div class="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border border-slate-200 max-h-56 overflow-y-auto z-20 divide-y divide-slate-100">
+                      {#each p3kSearchResults as p}
+                        <button
+                          type="button"
+                          on:click={() => selectP3kPegawai(p, 'edit')}
+                          class="w-full text-left p-2.5 hover:bg-emerald-50/70 transition-colors flex items-start justify-between gap-2"
+                        >
+                          <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                              <span class="font-mono text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                                {p.nipBaru || p.nip}
+                              </span>
+                              <span class="text-xs font-bold text-slate-800 truncate">
+                                {[p.gelarDepan, p.nama, p.gelarBelakang].filter(Boolean).join(" ")}
+                              </span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                              {p.jabatanNama || p.jabatan || "-"} • {p.unorNama || p.unitKerja || "-"}
+                            </p>
+                          </div>
+                          <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded shrink-0">
+                            Pilih
+                          </span>
+                        </button>
+                      {/each}
+                    </div>
+                  {:else if p3kSearchQuery.trim().length >= 2 && !isSearchingP3k}
+                    <div class="mt-1.5 p-2.5 text-center bg-white rounded-xl border border-slate-200 text-xs text-slate-400">
+                      Tidak ada pegawai PPPK yang cocok dengan "{p3kSearchQuery}".
+                    </div>
+                  {/if}
+                </div>
+              {/if}
             </div>
           {/if}
 

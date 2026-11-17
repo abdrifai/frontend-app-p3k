@@ -25,7 +25,9 @@
           ? data.data.user.roles.map(r => String(r).toLowerCase().trim())
           : String(data.data.user?.role || '').toLowerCase().split(',').map(r => r.trim()).filter(Boolean);
         
-        if (userRoles.includes('pegawai')) {
+        const isOperatorOrAdmin = userRoles.some(r => ['admin', 'admin_utama', 'superadmin', 'user', 'verifikator', 'pensiun'].includes(r));
+
+        if (userRoles.includes('pegawai') && !isOperatorOrAdmin) {
           goto("/portal");
         } else if (userRoles.includes('pejabat_ttd') && !userRoles.includes('admin')) {
           goto("/portal-pejabat");
@@ -71,7 +73,7 @@
           <label
             for="username"
             class="block text-sm font-medium text-slate-700 mb-1.5"
-            >Username</label
+            >Username atau Email</label
           >
           <input
             id="username"
@@ -81,7 +83,7 @@
             bind:value={username}
             required
             class="input-field"
-            placeholder="Masukkan username"
+            placeholder="Masukkan username atau email"
           />
         </div>
         <div>

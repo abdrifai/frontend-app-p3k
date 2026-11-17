@@ -8,10 +8,49 @@
   let activeStatTab = "pendidikan";
   let currentPage = 1;
   const itemsPerPage = 10;
+  let selectedJenisJabatan = "ALL";
+  let searchJabatanQuery = "";
+  let expandedJenisJabatan = {};
 
   $: {
-    if (activeStatTab) currentPage = 1;
+    if (activeStatTab) {
+      currentPage = 1;
+      searchJabatanQuery = "";
+    }
   }
+
+  function toggleJenisJabatan(nama) {
+    expandedJenisJabatan[nama] = !isExpanded(nama);
+    expandedJenisJabatan = { ...expandedJenisJabatan };
+  }
+
+  function isExpanded(nama) {
+    return expandedJenisJabatan[nama] !== false; // default true
+  }
+
+  $: totalJabatanAll = (stats?.byJabatan || []).reduce(
+    (sum, g) => sum + (g.jabatanList ? g.jabatanList.length : 0),
+    0
+  );
+
+  $: displayedJabatanGroups = (stats?.byJabatan || [])
+    .filter(
+      (g) =>
+        selectedJenisJabatan === "ALL" || g.jenisJabatan === selectedJenisJabatan
+    )
+    .map((g) => {
+      const q = searchJabatanQuery.toLowerCase().trim();
+      const filteredList = q
+        ? (g.jabatanList || []).filter((j) =>
+            (j.label || "").toLowerCase().includes(q)
+          )
+        : g.jabatanList || [];
+      return {
+        ...g,
+        filteredList
+      };
+    })
+    .filter((g) => g.filteredList.length > 0);
 
   const statTabs = [
     { id: "pendidikan", label: "Pendidikan", color: "blue" },
@@ -19,6 +58,7 @@
     { id: "golongan", label: "Golongan", color: "violet" },
     { id: "pengangkatan", label: "Perangkatan (TMT)", color: "amber" },
     { id: "jenisJabatan", label: "Jenis Jabatan", color: "rose" },
+    { id: "jabatan", label: "Jabatan", color: "teal" },
   ];
 
   $: activeStatData = getActiveStatData(activeStatTab, stats);
@@ -27,7 +67,11 @@
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
-  $: isGenderTab = activeStatTab === "pendidikan" || activeStatTab === "golongan";
+  $: isGenderTab =
+    activeStatTab === "pendidikan" ||
+    activeStatTab === "golongan" ||
+    activeStatTab === "jenisJabatan" ||
+    activeStatTab === "jabatan";
 
   function getActiveStatData(tab, s) {
     if (!s) return [];
@@ -42,6 +86,8 @@
         return s.byPengangkatan || [];
       case "jenisJabatan":
         return s.byJenisJabatan || [];
+      case "jabatan":
+        return s.byJabatan || [];
       default:
         return [];
     }
@@ -64,6 +110,8 @@
         return "bg-amber-500";
       case "jenisJabatan":
         return "bg-rose-500";
+      case "jabatan":
+        return "bg-teal-500";
       default:
         return "bg-blue-500";
     }
@@ -81,6 +129,8 @@
         return "bg-amber-50";
       case "jenisJabatan":
         return "bg-rose-50";
+      case "jabatan":
+        return "bg-teal-50";
       default:
         return "bg-blue-50";
     }
@@ -98,6 +148,8 @@
         return "text-amber-600 bg-amber-50";
       case "jenisJabatan":
         return "text-rose-600 bg-rose-50";
+      case "jabatan":
+        return "text-teal-600 bg-teal-50";
       default:
         return "text-blue-600 bg-blue-50";
     }
@@ -348,7 +400,11 @@
               Distribusi berdasarkan {statTabs.find((t) => t.id === activeStatTab)
                 ?.label}
             </h3>
-            {#if isGenderTab}
+            {#if activeStatTab === 'jabatan'}
+              <p class="text-xs text-slate-500 mt-0.5">
+                Rincian jabatan yang dikelompokkan per Jenis Jabatan dan dipisahkan per jenis kelamin (Laki-laki & Perempuan).
+              </p>
+            {:else if isGenderTab}
               <p class="text-xs text-slate-500 mt-0.5">
                 Rincian komposisi jenis kelamin (Laki-laki & Perempuan) untuk setiap kelompok.
               </p>
@@ -374,8 +430,9 @@
                   activeStatTab,
                 )}"
               >
-                {activeStatData.length}
-                {statTabs.find((t) => t.id === activeStatTab)?.label}
+                {activeStatTab === 'jabatan'
+                  ? `${totalJabatanAll} Jabatan (${activeStatData.length} Jenis)`
+                  : `${activeStatData.length} ${statTabs.find((t) => t.id === activeStatTab)?.label}`}
               </span>
             {/if}
           </div>
@@ -413,6 +470,241 @@
             </div>
             <p class="text-sm text-slate-400">Tidak ada data distribusi.</p>
           </div>
+        {:else if activeStatTab === 'jabatan'}
+          <!-- Sub-filters: Jenis Jabatan Pills & Search Input -->
+          <div class="space-y-3 mb-6 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+            <!-- Search Input -->
+            <div class="relative">
+              <input
+                type="text"
+                bind:value={searchJabatanQuery}
+                placeholder="Cari nama jabatan..."
+                class="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs"
+              />
+              <svg
+                class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              {#if searchJabatanQuery}
+                <button
+                  type="button"
+                  on:click={() => (searchJabatanQuery = "")}
+                  class="absolute right-3 top-2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                >
+                  ✕
+                </button>
+              {/if}
+            </div>
+
+            <!-- Jenis Jabatan Filter Pills -->
+            <div class="flex items-center gap-1.5 flex-wrap pt-1">
+              <span class="text-[11px] font-semibold text-slate-500 mr-1">Filter Jenis:</span>
+              <button
+                type="button"
+                on:click={() => (selectedJenisJabatan = "ALL")}
+                class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {selectedJenisJabatan === 'ALL'
+                  ? 'bg-teal-600 text-white shadow-xs font-semibold'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'}"
+              >
+                Semua Jenis ({totalJabatanAll})
+              </button>
+              {#each stats?.byJabatan || [] as g}
+                <button
+                  type="button"
+                  on:click={() => (selectedJenisJabatan = g.jenisJabatan)}
+                  class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {selectedJenisJabatan === g.jenisJabatan
+                    ? 'bg-teal-600 text-white shadow-xs font-semibold'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'}"
+                >
+                  {g.jenisJabatan} ({g.totalJabatan || g.jabatanList?.length || 0})
+                </button>
+              {/each}
+            </div>
+          </div>
+
+          <!-- Grouped Cards -->
+          {#if displayedJabatanGroups.length === 0}
+            <div class="py-12 text-center">
+              <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-2 text-slate-400">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p class="text-sm font-semibold text-slate-600">Tidak ada jabatan yang sesuai</p>
+              <p class="text-xs text-slate-400 mt-0.5">Coba ubah kata kunci pencarian atau ganti filter jenis jabatan.</p>
+            </div>
+          {:else}
+            <div class="space-y-5">
+              {#each displayedJabatanGroups as g, groupIdx}
+                {@const maxGroupCount = Math.max(...g.filteredList.map((j) => j.count), 1)}
+                {@const expanded = isExpanded(g.jenisJabatan)}
+
+                <div class="rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden transition-all">
+                  <!-- Group Header -->
+                  <div
+                    class="p-4 bg-gradient-to-r from-slate-50/90 to-teal-50/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b {expanded ? 'border-slate-200/80' : 'border-transparent'}"
+                  >
+                    <button
+                      type="button"
+                      on:click={() => toggleJenisJabatan(g.jenisJabatan)}
+                      class="flex items-center gap-2.5 text-left group cursor-pointer flex-1"
+                    >
+                      <div class="w-8 h-8 rounded-xl bg-teal-500/10 text-teal-700 flex items-center justify-center shrink-0 border border-teal-200/60 group-hover:bg-teal-500/20 transition-all">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <h4 class="text-sm font-bold text-slate-800 group-hover:text-teal-700 transition-colors">
+                            {g.jenisJabatan}
+                          </h4>
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100/80 text-teal-800 border border-teal-200">
+                            {g.filteredList.length} Jabatan
+                          </span>
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                            {g.totalCount.toLocaleString("id-ID")} Pegawai
+                          </span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">
+                          {((g.totalCount / (stats?.total || 1)) * 100).toFixed(1)}% dari total seluruh pegawai aktif
+                        </p>
+                      </div>
+                    </button>
+
+                    <!-- Group Gender Ratio & Toggle -->
+                    <div class="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                      <div class="flex items-center gap-1.5 text-xs bg-white px-2.5 py-1 rounded-lg border border-slate-200/70 shadow-2xs">
+                        <span class="inline-flex items-center gap-1 font-semibold text-indigo-700">
+                          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                          L: {g.totalLaki.toLocaleString("id-ID")} ({g.persenLaki}%)
+                        </span>
+                        <span class="text-slate-300">|</span>
+                        <span class="inline-flex items-center gap-1 font-semibold text-rose-600">
+                          <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                          P: {g.totalPerempuan.toLocaleString("id-ID")} ({g.persenPerempuan}%)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        on:click={() => toggleJenisJabatan(g.jenisJabatan)}
+                        class="p-1 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+                        aria-label="Toggle section"
+                      >
+                        <svg
+                          class="w-5 h-5 transition-transform duration-200 {expanded ? 'rotate-180' : ''}"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Group Items List -->
+                  {#if expanded}
+                    <div class="p-4 sm:p-5 space-y-3 bg-slate-50/30">
+                      {#each g.filteredList as item, jIdx}
+                        {@const pct = maxGroupCount > 0 ? (item.count / maxGroupCount) * 100 : 0}
+                        {@const groupPct = g.totalCount > 0 ? ((item.count / g.totalCount) * 100).toFixed(1) : 0}
+                        {@const hrefAll = `/data-p3k?jabatanNama=${encodeURIComponent(item.label)}&jenisJabatan=${encodeURIComponent(g.jenisJabatan)}`}
+                        {@const hrefLaki = `/data-p3k?jabatanNama=${encodeURIComponent(item.label)}&jenisJabatan=${encodeURIComponent(g.jenisJabatan)}&jenisKelamin=L`}
+                        {@const hrefPerempuan = `/data-p3k?jabatanNama=${encodeURIComponent(item.label)}&jenisJabatan=${encodeURIComponent(g.jenisJabatan)}&jenisKelamin=P`}
+
+                        <div class="group p-3 sm:p-3.5 rounded-xl border border-slate-200/70 bg-white hover:border-teal-300 hover:shadow-xs transition-all">
+                          <div class="flex items-center justify-between mb-2 gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <span class="text-slate-400 font-mono text-xs flex-shrink-0">
+                                {String(jIdx + 1).padStart(2, "0")}
+                              </span>
+                              <a
+                                href={hrefAll}
+                                class="text-sm font-semibold text-slate-800 hover:text-teal-600 truncate transition-colors"
+                                title="Lihat semua data {item.label}"
+                              >
+                                {item.label}
+                              </a>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                              <span class="text-xs text-slate-400 font-medium">{groupPct}% di jenis ini</span>
+                              <a
+                                href={hrefAll}
+                                class="text-sm font-bold text-slate-800 hover:text-teal-600 transition-colors"
+                                title="Lihat semua data {item.label}"
+                              >
+                                {item.count.toLocaleString("id-ID")} <span class="text-xs font-normal text-slate-400">pegawai</span>
+                              </a>
+                            </div>
+                          </div>
+
+                          <!-- Stacked Dual Bar -->
+                          <div
+                            class="w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-2"
+                            title="{item.label}: Total {item.count} pegawai (Laki-laki: {item.laki} [{item.persenLaki}%], Perempuan: {item.perempuan} [{item.persenPerempuan}%])"
+                          >
+                            <div
+                              class="h-full rounded-full overflow-hidden flex transition-all duration-700 ease-out"
+                              style="width: {pct}%"
+                            >
+                              <div
+                                class="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:brightness-110 transition-all"
+                                style="width: {item.persenLaki}%"
+                              ></div>
+                              <div
+                                class="h-full bg-gradient-to-r from-rose-400 to-pink-500 hover:brightness-110 transition-all"
+                                style="width: {item.persenPerempuan}%"
+                              ></div>
+                            </div>
+                          </div>
+
+                          <!-- Gender Badges with Interactive Filter Links -->
+                          <div class="flex items-center justify-between text-xs pt-0.5">
+                            <div class="flex items-center gap-2 flex-wrap">
+                              <a
+                                href={hrefLaki}
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors font-medium border border-indigo-200/50"
+                                title="Lihat data Laki-laki untuk {item.label}"
+                              >
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                <span>Laki-laki: <strong>{item.laki?.toLocaleString("id-ID") ?? 0}</strong></span>
+                                <span class="text-indigo-400">({item.persenLaki ?? 0}%)</span>
+                              </a>
+                              <a
+                                href={hrefPerempuan}
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors font-medium border border-rose-200/50"
+                                title="Lihat data Perempuan untuk {item.label}"
+                              >
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                <span>Perempuan: <strong>{item.perempuan?.toLocaleString("id-ID") ?? 0}</strong></span>
+                                <span class="text-rose-400">({item.persenPerempuan ?? 0}%)</span>
+                              </a>
+                            </div>
+                            <a
+                              href={hrefAll}
+                              class="text-[11px] text-slate-400 hover:text-teal-600 transition-colors inline-flex items-center gap-0.5"
+                            >
+                              Filter data →
+                            </a>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
         {:else}
           <div class="space-y-3">
             {#each paginatedData as item, idx}
@@ -441,13 +733,17 @@
                   ? `/data-p3k?pendidikan=${encodeURIComponent(item.label)}&jenisKelamin=L`
                   : activeStatTab === "golongan"
                     ? `/data-p3k?golongan=${encodeURIComponent(item.label)}&jenisKelamin=L`
-                    : null}
+                    : activeStatTab === "jenisJabatan"
+                      ? `/data-p3k?jenisJabatan=${encodeURIComponent(item.label)}&jenisKelamin=L`
+                      : null}
               {@const hrefPerempuan =
                 activeStatTab === "pendidikan"
                   ? `/data-p3k?pendidikan=${encodeURIComponent(item.label)}&jenisKelamin=P`
                   : activeStatTab === "golongan"
                     ? `/data-p3k?golongan=${encodeURIComponent(item.label)}&jenisKelamin=P`
-                    : null}
+                    : activeStatTab === "jenisJabatan"
+                      ? `/data-p3k?jenisJabatan=${encodeURIComponent(item.label)}&jenisKelamin=P`
+                      : null}
 
               {#if isGenderTab}
                 <!-- Card Container with Gender Breakdown -->
@@ -655,7 +951,7 @@
               <span
                 class="text-xs font-medium px-2 py-0.5 rounded-full {getBadgeColor(
                   tab.id,
-                )}">{tabData.length}</span
+                )}">{tab.id === 'jabatan' ? `${totalJabatanAll} Jabatan` : tabData.length}</span
               >
             {/if}
           </div>
@@ -671,7 +967,11 @@
           {:else}
             <div class="space-y-2">
               {#each tabData.slice(0, 5) as item}
-                {@const isTabWithGender = tab.id === "pendidikan" || tab.id === "golongan"}
+                {@const isTabWithGender =
+                  tab.id === "pendidikan" ||
+                  tab.id === "golongan" ||
+                  tab.id === "jenisJabatan" ||
+                  tab.id === "jabatan"}
                 {@const itemHref =
                   tab.id === "pengangkatan"
                     ? `/data-p3k?tmtCpns=${encodeURIComponent(item.filterValue || item.label)}`
@@ -685,7 +985,9 @@
                           ? `/data-p3k?golongan=${encodeURIComponent(item.label)}`
                           : tab.id === "jenisJabatan"
                             ? `/data-p3k?jenisJabatan=${encodeURIComponent(item.label)}`
-                            : null}
+                            : tab.id === "jabatan"
+                              ? `/data-p3k?jenisJabatan=${encodeURIComponent(item.label)}`
+                              : null}
                 <div
                   class="group {itemHref
                     ? 'hover:bg-slate-50 -mx-1 p-1.5 rounded-lg transition-colors'

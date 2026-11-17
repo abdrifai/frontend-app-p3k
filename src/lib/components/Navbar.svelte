@@ -1560,6 +1560,18 @@
           <div
             class="hidden lg:flex items-center gap-2 pl-3 border-l border-slate-200 shrink-0 whitespace-nowrap"
           >
+            {#if userRoles.includes('pegawai')}
+              <a
+                href="/portal"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xs hover:shadow-md hover:brightness-105 transition-all shrink-0 cursor-pointer"
+                title="Beralih ke Portal Mandiri Pegawai (TTE Kontrak / Profil)"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7 7z" />
+                </svg>
+                <span>Portal Pegawai</span>
+              </a>
+            {/if}
             <a
               href="/profile"
               class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors shrink-0 whitespace-nowrap {isActive(
@@ -3064,6 +3076,19 @@
               </p>
             </div>
           </div>
+
+          {#if userRoles.includes('pegawai')}
+            <a
+              href="/portal"
+              onclick={closeMobile}
+              class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-sm mt-3 hover:brightness-105 transition-all"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7 7z" />
+              </svg>
+              <span>Beralih ke Portal Pegawai</span>
+            </a>
+          {/if}
 
           <div class="grid grid-cols-2 gap-2 mt-2">
             <a
