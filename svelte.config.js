@@ -5,7 +5,14 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		csrf: {
-			trustedOrigins: ['http://33.33.33.5', 'http://36.92.162.234:8585', 'http://localhost:5173', 'http://localhost:3001']
+			trustedOrigins: [
+				'https://sipppk.tojounauna.go.id',
+				'http://sipppk.tojounauna.go.id',
+				'http://33.33.33.5',
+				'http://36.92.162.234',
+				'http://localhost:5173',
+				'http://localhost:3001'
+			]
 		}
 	}
 };
