@@ -83,7 +83,7 @@
             bind:value={username}
             required
             class="input-field"
-            placeholder="Masukkan username"
+            placeholder="Masukkan username atau NIP"
           />
         </div>
         <div>
