@@ -73,7 +73,7 @@
           <label
             for="username"
             class="block text-sm font-medium text-slate-700 mb-1.5"
-            >Username atau Email</label
+            >Username</label
           >
           <input
             id="username"
@@ -83,7 +83,7 @@
             bind:value={username}
             required
             class="input-field"
-            placeholder="Masukkan username atau email"
+            placeholder="Masukkan username"
           />
         </div>
         <div>
