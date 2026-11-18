@@ -134,6 +134,7 @@
     isActive("/setting/kegiatan") ||
     isActive("/setting/activity-log") ||
     isActive("/setting/backup") ||
+    isActive("/setting/kuota-email") ||
     isActive("/ref-unor");
 
   const isPerpanjanganActive = () =>
@@ -1176,7 +1177,7 @@
           {/if}
 
           <!-- Dropdown: Setting -->
-          {#if canAccess('pengaturan') && canAccessAny(['setting-p3k-import', 'setting-statistik-import', 'setting-import-csv', 'setting-task-peremajaan', 'setting-task-usulan-pk', 'setting-ref-unor', 'setting-ref-gaji', 'setting-kegiatan', 'setting-manajemen-user', 'setting-hak-akses', 'setting-activity-log', 'setting-backup'])}
+          {#if canAccess('pengaturan') && canAccessAny(['setting-p3k-import', 'setting-statistik-import', 'setting-import-csv', 'setting-task-peremajaan', 'setting-task-usulan-pk', 'setting-ref-unor', 'setting-ref-gaji', 'setting-kegiatan', 'setting-manajemen-user', 'setting-hak-akses', 'setting-activity-log', 'setting-backup', 'setting-kuota-email'])}
             <div
               class="relative"
               role="group"
@@ -1538,6 +1539,22 @@
                             <div>
                               <p class="font-medium leading-tight">Backup & Restore</p>
                               <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Ekspor database & arsip</p>
+                            </div>
+                          </a>
+                        {/if}
+                        {#if canAccess('setting-kuota-email')}
+                          <a href="/setting/kuota-email"
+                            class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/kuota-email') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                            onclick={() => (settingMenuOpen = false)}>
+                            <div class="w-7 h-7 rounded-lg bg-sky-50 flex items-center justify-center flex-shrink-0">
+                              <svg class="w-3.5 h-3.5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p class="font-medium leading-tight">Kuota Email</p>
+                              <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Monitoring kuota SMTP</p>
                             </div>
                           </a>
                         {/if}
@@ -3042,6 +3059,26 @@
                           </svg>
                         </div>
                         Backup & Restore
+                      </a>
+                    {/if}
+                    {#if canAccess('setting-kuota-email')}
+                      <a
+                        href="/setting/kuota-email"
+                        onclick={closeMobile}
+                        class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                          '/setting/kuota-email',
+                        )
+                          ? 'text-blue-700 bg-blue-50 font-semibold'
+                          : 'text-slate-600 hover:bg-slate-50'}"
+                      >
+                        <div
+                          class="w-6 h-6 rounded-md bg-sky-50 flex items-center justify-center shrink-0"
+                        >
+                          <svg class="w-3.5 h-3.5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        Kuota Email
                       </a>
                     {/if}
                   {/if}
