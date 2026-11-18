@@ -43,7 +43,12 @@ export const apiRequest = async (endpoint, method = 'GET', body = null, isFormDa
 
     try {
         const response = await fetch(url, config);
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+
+        let data = null;
+        if (contentType.includes('application/json')) {
+            data = await response.json().catch(() => null);
+        }
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -52,7 +57,12 @@ export const apiRequest = async (endpoint, method = 'GET', body = null, isFormDa
                     window.location.href = '/login';
                 }
             }
-            const errMessage = data.message || 'Something went wrong';
+            const defaultMsg = response.status === 504
+                ? 'Server time-out (504): Proses membutuhkan waktu terlalu lama. Periksa log server.'
+                : response.status === 502
+                ? 'Bad Gateway (502): Backend tidak merespons.'
+                : `Terjadi kesalahan pada server (${response.status} ${response.statusText})`;
+            const errMessage = data?.message || defaultMsg;
             addToast(errMessage, 'error');
             throw new Error(errMessage);
         }

@@ -12,9 +12,9 @@
     errorMsg = '';
     try {
       const res = await fetch(`/api/v1/portal/verifikasi/${usulanId}`);
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.message || 'Gagal memverifikasi dokumen');
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || `Gagal memverifikasi dokumen (Status: ${res.status})`);
       }
       dataVerifikasi = json.data;
     } catch (err) {

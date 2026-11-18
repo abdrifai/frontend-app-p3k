@@ -68,8 +68,8 @@
     loadingStats = true;
     try {
       const res  = await authFetch('/api/backup/stats');
-      const json = await res.json();
-      if (json.success) stats = json.data;
+      const json = await res.json().catch(() => ({}));
+      if (json?.success) stats = json.data;
     } catch (e) {
       console.error(e);
     } finally {
@@ -83,8 +83,8 @@
     loadingHistory = true;
     try {
       const res  = await authFetch('/api/backup/history');
-      const json = await res.json();
-      if (json.success) backupHistory = json.data;
+      const json = await res.json().catch(() => ({}));
+      if (json?.success) backupHistory = json.data;
     } catch (e) {
       console.error(e);
     } finally {
@@ -96,12 +96,12 @@
     triggeringBackup = true;
     try {
       const res  = await authFetch('/api/backup/trigger', { method: 'POST' });
-      const json = await res.json();
-      if (json.success) {
+      const json = await res.json().catch(() => ({}));
+      if (json?.success) {
         addToast('Backup database berhasil dibuat!', 'success');
         await fetchBackupHistory();
       } else {
-        addToast(json.message || 'Gagal membuat backup', 'error');
+        addToast(json?.message || `Gagal membuat backup (Status: ${res.status})`, 'error');
       }
     } catch (e) {
       addToast('Gagal membuat backup: ' + e.message, 'error');
@@ -132,12 +132,12 @@
     deletingFile = { ...deletingFile, [filename]: true };
     try {
       const res  = await authFetch(`/api/backup/delete/${encodeURIComponent(filename)}`, { method: 'DELETE' });
-      const json = await res.json();
-      if (json.success) {
+      const json = await res.json().catch(() => ({}));
+      if (json?.success) {
         addToast('File backup berhasil dihapus', 'success');
         await fetchBackupHistory();
       } else {
-        addToast(json.message || 'Gagal menghapus file', 'error');
+        addToast(json?.message || `Gagal menghapus file (Status: ${res.status})`, 'error');
       }
     } catch (e) {
       addToast('Gagal menghapus file: ' + e.message, 'error');
