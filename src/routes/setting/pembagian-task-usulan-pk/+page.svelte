@@ -343,9 +343,12 @@
     </div>
 
     <!-- Year Filter Selector -->
-    <div class="flex items-center gap-2.5 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-sm self-start sm:self-auto">
+    <div
+      class="flex items-center gap-2.5 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 shadow-sm self-start sm:self-auto"
+      title="Pemilihan tahun saat ini dinonaktifkan dan akan diaktifkan untuk periode usulan berikutnya"
+    >
       <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
@@ -353,8 +356,8 @@
       </span>
       <select
         value={selectedYear}
-        on:change={(e) => handleYearChange(e.target.value)}
-        class="text-sm font-bold text-blue-700 bg-blue-50/70 border border-blue-200 rounded-lg px-3 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+        disabled
+        class="text-sm font-bold text-slate-600 bg-slate-100 border border-slate-200 rounded-lg px-3 py-1 cursor-not-allowed opacity-80 focus:outline-none"
       >
         {#each yearOptions as yr}
           <option value={yr}>Tahun {yr}</option>
