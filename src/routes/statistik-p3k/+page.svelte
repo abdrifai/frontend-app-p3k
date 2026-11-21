@@ -107,10 +107,11 @@
     </div>
   </div>
 
-  <!-- Dynamic View Container -->
-  {#if activeType === 'paruh-waktu'}
-    <StatistikParuhWaktuView />
-  {:else}
+  <!-- Dynamic View Container (Keep-Alive via CSS Display for Instant Tab Switch) -->
+  <div class={activeType === 'penuh-waktu' ? 'block' : 'hidden'}>
     <StatistikPenuhWaktuView />
-  {/if}
+  </div>
+  <div class={activeType === 'paruh-waktu' ? 'block' : 'hidden'}>
+    <StatistikParuhWaktuView />
+  </div>
 </div>

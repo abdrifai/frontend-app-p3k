@@ -10,6 +10,11 @@
   let isLoading = true;
   let isSubmitting = false;
 
+  // Tahun Usulan state
+  const currentYear = new Date().getFullYear();
+  let selectedYear = currentYear;
+  let yearOptions = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
+
   // Assignment states
   let assignMode = "auto"; // 'auto' or 'manual'
   let autoAmount = 10;
@@ -35,13 +40,24 @@
   let isSearchingPegawai = false;
   let searchMeta = { page: 1, limit: 10, total: 0, totalPages: 1 };
 
+  const handleYearChange = (newYear) => {
+    selectedYear = parseInt(newYear);
+    tmtFilters = [];
+    fetchReports();
+    fetchUnassignedStats();
+    if (activeTab === "search") {
+      handleSearchPegawai(1);
+    }
+  };
+
   const handleSearchPegawai = async (page = 1) => {
     isSearchingPegawai = true;
     try {
       const params = new URLSearchParams({
         page: String(page),
         limit: String(searchMeta.limit),
-        search: searchPegawaiQuery
+        search: searchPegawaiQuery,
+        tahun: String(selectedYear)
       });
       const result = await apiRequest(`/api/tasks-usulan/search-assigned?${params.toString()}`);
       if (result.success) {
@@ -77,7 +93,7 @@
   const fetchUnassignedStats = async () => {
     isLoadingStats = true;
     try {
-      const result = await apiRequest("/api/tasks-usulan/unassigned-stats");
+      const result = await apiRequest(`/api/tasks-usulan/unassigned-stats?tahun=${selectedYear}`);
       if (result.success) {
         unassignedStats = result.data;
       }
@@ -91,7 +107,7 @@
   const fetchReports = async () => {
     isLoading = true;
     try {
-      const result = await apiRequest("/api/tasks-usulan/report");
+      const result = await apiRequest(`/api/tasks-usulan/report?tahun=${selectedYear}`);
       if (result.success) {
         reports = result.data;
       }
@@ -174,6 +190,7 @@
         userIds: selectedIds,
         amountPerUser: finalAmount,
         tmtFilters: tmtFilters,
+        tahun: selectedYear,
       });
       if (result.success) {
         addToast(result.message, "success");
@@ -211,6 +228,7 @@
         {
           assignments: validAssignments,
           tmtFilters: tmtFilters,
+          tahun: selectedYear,
         },
       );
       if (result.success) {
@@ -230,7 +248,7 @@
   const revokeTasks = async (userId) => {
     if (
       !confirm(
-        "Tarik (Unassign) sisa tugas usulan yang belum selesai dari user ini?",
+        `Tarik (Unassign) sisa tugas usulan tahun ${selectedYear} yang belum selesai dari user ini?`,
       )
     )
       return;
@@ -239,6 +257,7 @@
       const result = await apiRequest(
         `/api/tasks-usulan/reset/${userId}`,
         "POST",
+        { tahun: selectedYear }
       );
       if (result.success) {
         addToast(result.message, "success");
@@ -253,13 +272,15 @@
   const resetAllTasks = async () => {
     if (
       !confirm(
-        "Tarik SEMUA sisa tugas usulan yang belum selesai dari SELURUH user?",
+        `Tarik SEMUA sisa tugas usulan tahun ${selectedYear} yang belum selesai dari SELURUH user?`,
       )
     )
       return;
 
     try {
-      const result = await apiRequest("/api/tasks-usulan/reset-all", "POST");
+      const result = await apiRequest("/api/tasks-usulan/reset-all", "POST", {
+        tahun: selectedYear
+      });
       if (result.success) {
         addToast(result.message, "success");
         fetchReports();
@@ -317,8 +338,28 @@
       <h1 class="text-2xl font-bold text-slate-800">Task Usulan PK</h1>
       <p class="mt-1 text-sm text-slate-500">
         Bagikan data pegawai P3K aktif ke user untuk dibuatkan usulan
-        perpanjangan kontrak.
+        perpanjangan kontrak tahunan.
       </p>
+    </div>
+
+    <!-- Year Filter Selector -->
+    <div class="flex items-center gap-2.5 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-sm self-start sm:self-auto">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Tahun Usulan:
+      </span>
+      <select
+        value={selectedYear}
+        on:change={(e) => handleYearChange(e.target.value)}
+        class="text-sm font-bold text-blue-700 bg-blue-50/70 border border-blue-200 rounded-lg px-3 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        {#each yearOptions as yr}
+          <option value={yr}>Tahun {yr}</option>
+        {/each}
+      </select>
     </div>
   </div>
 
@@ -474,7 +515,7 @@
             <div
               class="mb-4 gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg flex justify-between items-center text-xs"
             >
-              <span class="text-slate-500 italic">Sisa Pegawai Aktif</span>
+              <span class="text-slate-500 italic">Sisa Belum Dibagi ({selectedYear})</span>
               <strong class="text-slate-700"
                 >{(totalAvailable || 0).toLocaleString("id-ID")} Data</strong
               >
@@ -638,7 +679,7 @@
           <div
             class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50"
           >
-            <h3 class="font-semibold text-slate-800">Laporan Tugas Usulan</h3>
+            <h3 class="font-semibold text-slate-800">Laporan Tugas Usulan ({selectedYear})</h3>
             <div class="flex gap-2">
               <button
                 on:click={resetAllTasks}

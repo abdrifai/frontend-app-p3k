@@ -18,6 +18,7 @@
   let filterJenisJabatan = "";
   let filterJabatanNama = "";
   let filterJenisKelamin = "";
+  let filterKelompokJabatan = "";
   let showFilters = false;
   let meta = {
     page: 1,
@@ -70,7 +71,8 @@
     filterGolongan ||
     filterJenisJabatan ||
     filterJabatanNama ||
-    filterJenisKelamin;
+    filterJenisKelamin ||
+    filterKelompokJabatan;
 
   $: hasUrlParams =
     $page.url.searchParams.has("tmtCpns") ||
@@ -79,7 +81,8 @@
     $page.url.searchParams.has("golongan") ||
     $page.url.searchParams.has("jenisJabatan") ||
     $page.url.searchParams.has("jabatanNama") ||
-    $page.url.searchParams.has("jenisKelamin");
+    $page.url.searchParams.has("jenisKelamin") ||
+    $page.url.searchParams.has("kelompokJabatan");
 
   const calculateAge = (birthDateStr) => {
     if (!birthDateStr) return "-";
@@ -468,6 +471,12 @@
       showFilters = true;
     }
 
+    const kelompokJabatanQuery = $page.url.searchParams.get("kelompokJabatan");
+    if (kelompokJabatanQuery) {
+      filterKelompokJabatan = kelompokJabatanQuery;
+      showFilters = true;
+    }
+
     fetchData();
   });
 
@@ -487,6 +496,8 @@
       if (filterJenisJabatan) queryParams.append("jenisJabatan", filterJenisJabatan);
       if (filterJabatanNama) queryParams.append("jabatanNama", filterJabatanNama);
       if (filterJenisKelamin) queryParams.append("jenisKelamin", filterJenisKelamin);
+      if (filterKelompokJabatan) queryParams.append("kelompokJabatan", filterKelompokJabatan);
+      if (filterKelompokJabatan) queryParams.append("kelompokJabatan", filterKelompokJabatan);
 
       const result = await apiRequest(`/api/v1/data-p3k?${queryParams.toString()}`, "GET");
       if (result.success) {
@@ -519,6 +530,7 @@
       if (filterJenisJabatan) queryParams.append("jenisJabatan", filterJenisJabatan);
       if (filterJabatanNama) queryParams.append("jabatanNama", filterJabatanNama);
       if (filterJenisKelamin) queryParams.append("jenisKelamin", filterJenisKelamin);
+      if (filterKelompokJabatan) queryParams.append("kelompokJabatan", filterKelompokJabatan);
 
       const result = await apiRequest(`/api/v1/data-p3k?${queryParams.toString()}`, "GET");
       if (result.success) {
@@ -570,6 +582,7 @@
     filterJenisJabatan = "";
     filterJabatanNama = "";
     filterJenisKelamin = "";
+    filterKelompokJabatan = "";
     // remove from url if present
     if (hasUrlParams) {
       const newUrl = new URL($page.url);
@@ -580,6 +593,7 @@
       newUrl.searchParams.delete("jenisJabatan");
       newUrl.searchParams.delete("jabatanNama");
       newUrl.searchParams.delete("jenisKelamin");
+      newUrl.searchParams.delete("kelompokJabatan");
       goto(newUrl.toString(), { replaceState: true, keepFocus: true });
     }
     meta.page = 1;

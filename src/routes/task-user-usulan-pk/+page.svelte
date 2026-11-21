@@ -14,6 +14,10 @@
     totalPages: 1,
   };
 
+  const currentYear = new Date().getFullYear();
+  let selectedYear = currentYear;
+  let yearOptions = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
+
   let stats = [];
   let statsLoading = false;
   let activeTmtFilter = "";
@@ -49,10 +53,17 @@
     fetchStats();
   });
 
+  const handleYearChange = (newYear) => {
+    selectedYear = parseInt(newYear);
+    activeTmtFilter = "";
+    fetchMyTasks(1);
+    fetchStats();
+  };
+
   const fetchStats = async () => {
     statsLoading = true;
     try {
-      const result = await apiRequest("/api/tasks-usulan/my-stats");
+      const result = await apiRequest(`/api/tasks-usulan/my-stats?tahun=${selectedYear}`);
       if (result.success) {
         stats = result.data;
       }
@@ -66,7 +77,7 @@
   const fetchMyTasks = async (page = 1) => {
     isLoading = true;
     try {
-      let url = `/api/tasks-usulan/my-tasks?page=${page}&limit=${meta.limit}`;
+      let url = `/api/tasks-usulan/my-tasks?page=${page}&limit=${meta.limit}&tahun=${selectedYear}`;
       if (activeTmtFilter) {
         url += `&search=${encodeURIComponent(activeTmtFilter)}`;
       }
@@ -109,6 +120,18 @@
       );
       if (res.success) {
         form.nomorKontrak = res.data.nomorKontrak;
+        if (!form.kontrakKe && res.data.suggestedKontrakKe) {
+          form.kontrakKe = String(res.data.suggestedKontrakKe);
+        }
+        if (!form.tanggalMulai && res.data.suggestedTanggalMulai) {
+          form.tanggalMulai = res.data.suggestedTanggalMulai;
+        }
+        if (!form.tanggalSelesai && res.data.suggestedTanggalSelesai) {
+          form.tanggalSelesai = res.data.suggestedTanggalSelesai;
+        }
+        if (!form.tanggalTtd && res.data.suggestedTanggalTtd) {
+          form.tanggalTtd = res.data.suggestedTanggalTtd;
+        }
       } else {
         form.nomorKontrak = "";
       }
@@ -247,17 +270,36 @@
         Daftar usulan perpanjangan kontrak yang ditugaskan untuk Anda buat.
       </p>
     </div>
-    <div
-      class="bg-white/10 backdrop-blur-md rounded-xl p-4 sm:min-w-[160px] flex flex-col items-center justify-center border border-white/20 shadow-inner"
-    >
-      <span
-        class="text-blue-100 text-xs font-semibold uppercase tracking-wider mb-1"
-        >Sisa Tugas</span
+    <div class="flex items-center gap-3">
+      <!-- Year Selector -->
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 flex flex-col justify-center">
+        <label for="taskYearSelect" class="text-blue-100 text-[10px] font-semibold uppercase tracking-wider mb-1">
+          Tahun Tugas
+        </label>
+        <select
+          id="taskYearSelect"
+          value={selectedYear}
+          on:change={(e) => handleYearChange(e.target.value)}
+          class="bg-white text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
+        >
+          {#each yearOptions as yr}
+            <option value={yr}>Tahun {yr}</option>
+          {/each}
+        </select>
+      </div>
+
+      <div
+        class="bg-white/10 backdrop-blur-md rounded-xl p-4 sm:min-w-[140px] flex flex-col items-center justify-center border border-white/20 shadow-inner"
       >
-      <span
-        class="text-3xl font-extrabold text-white tracking-tight leading-none"
-        >{meta.total}</span
-      >
+        <span
+          class="text-blue-100 text-xs font-semibold uppercase tracking-wider mb-1"
+          >Sisa Tugas</span
+        >
+        <span
+          class="text-3xl font-extrabold text-white tracking-tight leading-none"
+          >{meta.total}</span
+        >
+      </div>
     </div>
   </div>
 

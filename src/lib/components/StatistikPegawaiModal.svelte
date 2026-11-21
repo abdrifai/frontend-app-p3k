@@ -80,6 +80,9 @@
         case "jabatan":
           params.set("jabatanNama", value);
           break;
+        case "kelompokJabatan":
+          params.set("kelompokJabatan", filterValue || value);
+          break;
         case "unitKerja":
           params.set("unorNama", value);
           break;

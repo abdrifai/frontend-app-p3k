@@ -129,6 +129,7 @@
     isActive("/setting/import-per-unit-kerja") ||
     isActive("/setting/pembagian-task-peremajaan") ||
     isActive("/setting/pembagian-task-usulan-pk") ||
+    isActive("/setting/template-kontrak") ||
     isActive("/setting/referensi-gaji") ||
     isActive("/setting/kategori-masalah") ||
     isActive("/setting/kegiatan") ||
@@ -1411,6 +1412,20 @@
                             </div>
                           </a>
                         {/if}
+                        <a href="/setting/template-kontrak"
+                          class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/template-kontrak') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
+                          onclick={() => (settingMenuOpen = false)}>
+                          <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <p class="font-medium leading-tight">Template Kontrak</p>
+                            <p class="text-[10px] text-slate-400 leading-tight mt-0.5">Master template dokumen kontrak</p>
+                          </div>
+                        </a>
                         <a href="/setting/kategori-masalah"
                           class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-all {isActive('/setting/kategori-masalah') ? 'text-blue-700 bg-blue-50 font-medium' : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}"
                           onclick={() => (settingMenuOpen = false)}>
@@ -2883,6 +2898,34 @@
                         Ref Unit Kerja
                       </a>
                     {/if}
+                    <a
+                      href="/setting/template-kontrak"
+                      onclick={closeMobile}
+                      class="flex items-center gap-2.5 py-2 px-2.5 rounded-lg text-sm transition-colors {isActive(
+                        '/setting/template-kontrak',
+                      )
+                        ? 'text-blue-700 bg-blue-50 font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'}"
+                    >
+                      <div
+                        class="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center shrink-0"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5 text-indigo-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      Template Kontrak
+                    </a>
                     <a
                       href="/setting/kategori-masalah"
                       onclick={closeMobile}

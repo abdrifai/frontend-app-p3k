@@ -6,10 +6,23 @@
 
   let stats = null;
   let statsLoading = true;
-  let activeTab = "pendidikan";
+  let activeTab = "kelompokJabatan";
   let currentPage = 1;
   const itemsPerPage = 10;
   let searchTabFilter = "";
+
+  $: rekapGuru = stats?.byKelompokJabatan?.find((k) => k.label?.toLowerCase() === 'guru') || stats?.rekapKelompok?.guru;
+  $: rekapNakes = stats?.byKelompokJabatan?.find((k) => k.label?.toLowerCase() === 'kesehatan') || stats?.rekapKelompok?.kesehatan;
+  $: rekapTeknis = stats?.byKelompokJabatan?.find((k) => k.label?.toLowerCase() === 'teknis') || stats?.rekapKelompok?.teknis;
+
+  $: guruCount = rekapGuru?.count ?? rekapGuru?.totalCount ?? rekapGuru?.total ?? 0;
+  $: nakesCount = rekapNakes?.count ?? rekapNakes?.totalCount ?? rekapNakes?.total ?? 0;
+  $: teknisCount = rekapTeknis?.count ?? rekapTeknis?.totalCount ?? rekapTeknis?.total ?? 0;
+
+  $: totalPegawai = stats?.summary?.total || stats?.total || 1;
+  $: guruPersen = rekapGuru?.persenTotal ?? (totalPegawai > 0 ? Number(((guruCount / totalPegawai) * 100).toFixed(1)) : 0);
+  $: nakesPersen = rekapNakes?.persenTotal ?? (totalPegawai > 0 ? Number(((nakesCount / totalPegawai) * 100).toFixed(1)) : 0);
+  $: teknisPersen = rekapTeknis?.persenTotal ?? (totalPegawai > 0 ? Number(((teknisCount / totalPegawai) * 100).toFixed(1)) : 0);
 
   // Modal Pegawai State
   let showEmployeeModal = false;
@@ -29,6 +42,7 @@
   }
 
   const statTabs = [
+    { id: "kelompokJabatan", label: "Guru, Nakes & Teknis", color: "indigo", icon: "briefcase" },
     { id: "pendidikan", label: "Pendidikan", color: "violet", icon: "academic" },
     { id: "jabatan", label: "Jabatan", color: "blue", icon: "briefcase" },
     { id: "unitKerja", label: "Unit Kerja", color: "emerald", icon: "office" },
@@ -53,6 +67,7 @@
   );
 
   $: isGenderTab = [
+    "kelompokJabatan",
     "pendidikan",
     "jabatan",
     "jenisJabatan",
@@ -64,6 +79,8 @@
   function getRawTabData(tab, s) {
     if (!s) return [];
     switch (tab) {
+      case "kelompokJabatan":
+        return s.byKelompokJabatan || [];
       case "pendidikan":
         return s.byPendidikan || [];
       case "jabatan":
@@ -99,12 +116,16 @@
     return Math.max(...data.map((d) => d.count || 0));
   }
 
-  export const fetchStatistics = async () => {
+  export const fetchStatistics = async (force = false) => {
     statsLoading = true;
     try {
-      const result = await apiRequest("/api/v1/p3k-paruh-waktu/stats?source=master", "GET");
+      const url = force
+        ? "/api/v1/p3k-paruh-waktu/stats?source=master&refresh=true"
+        : "/api/v1/p3k-paruh-waktu/stats?source=master";
+      const result = await apiRequest(url, "GET");
       if (result && result.success) {
         stats = result.data;
+        if (force) addToast("Data statistik berhasil diperbarui dari database", "success");
       } else {
         addToast(result?.message || "Gagal memuat statistik P3K Paruh Waktu", "error");
       }
@@ -147,36 +168,79 @@
     addToast("Laporan statistik CSV berhasil diunduh", "success");
   };
 
+  let isSyncing = false;
+
+  function formatSyncTime(dateStr) {
+    if (!dateStr) return "-";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  async function handleSync() {
+    isSyncing = true;
+    try {
+      const result = await apiRequest("/api/v1/p3k-paruh-waktu/stats/sync", "POST");
+      if (result && result.success) {
+        stats = result.data;
+        addToast("Data statistik P3K Paruh Waktu berhasil dihitung ulang dan disimpan ke tabel snapshot", "success");
+      } else {
+        addToast(result?.message || "Gagal sinkronisasi statistik", "error");
+      }
+    } catch (err) {
+      console.error("Sync error:", err);
+      addToast("Terjadi kesalahan sistem saat sinkronisasi", "error");
+    } finally {
+      isSyncing = false;
+    }
+  }
+
   onMount(() => {
     fetchStatistics();
   });
 </script>
 
 <div class="space-y-6">
-  <!-- Actions Bar -->
+  <!-- Actions Bar & Snapshot Sync Info -->
   <div class="flex items-center justify-between gap-3 flex-wrap bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200/70">
-    <div class="flex items-center gap-2">
-      <span class="w-2.5 h-2.5 rounded-full bg-violet-600"></span>
-      <p class="text-xs font-bold text-slate-700">Dataset: PPPK Paruh Waktu (Master BKN)</p>
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <span class="w-2.5 h-2.5 rounded-full {stats?.syncInfo?.isStale ? 'bg-amber-500 animate-pulse' : 'bg-violet-600'}"></span>
+      <p class="text-xs font-bold text-slate-700">Tabel Snapshot Statistik: P3K Paruh Waktu</p>
+      {#if stats?.syncInfo}
+        <span class="text-slate-300">|</span>
+        <span class="text-xs {stats.syncInfo.isStale ? 'text-amber-700 font-semibold' : 'text-slate-500'}">
+          {stats.syncInfo.isStale ? '⚠️ Perlu Sinkronisasi' : '✓ Sinkron Terakhir'}: {formatSyncTime(stats.syncInfo.lastSyncedAt)}
+        </span>
+      {/if}
     </div>
     <div class="flex items-center gap-2">
       <button
         type="button"
-        onclick={fetchStatistics}
-        class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-2xs hover:border-slate-300"
-        aria-label="Refresh data statistik"
+        onclick={handleSync}
+        disabled={isSyncing}
+        class="px-3.5 py-1.5 {stats?.syncInfo?.isStale ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'} rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+        aria-label="Sinkronkan data statistik"
       >
-        <svg class="w-3.5 h-3.5 text-slate-500 {statsLoading ? 'animate-spin' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="w-3.5 h-3.5 {isSyncing ? 'animate-spin' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        Refresh
+        {isSyncing ? 'Menyinkronkan...' : stats?.syncInfo?.isStale ? 'Sinkronkan Sekarang' : 'Sinkronkan Ulang'}
       </button>
 
       <button
         type="button"
         onclick={exportSummaryCsv}
         disabled={!stats}
-        class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+        class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
       >
         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -185,6 +249,36 @@
       </button>
     </div>
   </div>
+
+  <!-- Alert Banner If Stale -->
+  {#if stats?.syncInfo?.isStale}
+    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-700 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-amber-950">Perubahan Data Pegawai Terdeteksi</h4>
+          <p class="text-xs text-amber-800/90 mt-0.5">
+            Ada data pegawai Paruh Waktu yang telah diubah sejak sinkronisasi terakhir ({formatSyncTime(stats?.syncInfo?.lastSyncedAt)}). Silakan sinkronkan agar tabel statistik di database merefleksikan data terkini.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onclick={handleSync}
+        disabled={isSyncing}
+        class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+      >
+        <svg class="w-4 h-4 {isSyncing ? 'animate-spin' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Sekarang'}
+      </button>
+    </div>
+  {/if}
 
   <!-- Summary Cards Row (KPIs) -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -309,6 +403,279 @@
           <p class="text-xs text-slate-500 mt-1">
             Tersebar di <span class="font-bold text-slate-700">{stats?.summary?.totalUnitKerja ?? 0}</span> Unit Kerja
           </p>
+        {/if}
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 Kartu Rekap Formasi Utama (Guru, Kesehatan, Teknis) -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Kartu Guru -->
+    <div class="bg-white rounded-2xl border border-indigo-100 hover:border-indigo-300 p-5 relative overflow-hidden shadow-xs transition-all group">
+      <div class="absolute top-0 right-0 w-28 h-28 transform translate-x-8 -translate-y-8 rounded-full bg-indigo-50/70 group-hover:scale-110 transition-transform"></div>
+      <div class="relative space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200/50">Formasi P3K</span>
+              <h4 class="text-sm font-bold text-slate-800 mt-0.5">Tenaga Guru</h4>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+            {guruPersen}%
+          </span>
+        </div>
+
+        {#if statsLoading}
+          <div class="h-8 bg-slate-100 rounded animate-pulse"></div>
+        {:else}
+          <div>
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-extrabold text-slate-800">
+                {guruCount.toLocaleString("id-ID")}
+              </span>
+              <span class="text-xs font-semibold text-slate-400">pegawai</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Guru di satuan pendidikan daerah
+            </p>
+          </div>
+
+          <!-- Dual Gender Bar -->
+          <div class="space-y-1.5 pt-1">
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
+              <div
+                class="bg-indigo-500 h-full transition-all duration-700"
+                style="width: {rekapGuru?.persenLaki ?? 0}%"
+                title="Laki-laki: {rekapGuru?.laki ?? 0} ({rekapGuru?.persenLaki ?? 0}%)"
+              ></div>
+              <div
+                class="bg-rose-400 h-full transition-all duration-700"
+                style="width: {rekapGuru?.persenPerempuan ?? 0}%"
+                title="Perempuan: {rekapGuru?.perempuan ?? 0} ({rekapGuru?.persenPerempuan ?? 0}%)"
+              ></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <button
+                type="button"
+                onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Guru", "Guru", "GURU", "L")}
+                class="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-800"
+              >
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                L: {(rekapGuru?.laki ?? 0).toLocaleString("id-ID")} ({rekapGuru?.persenLaki ?? 0}%)
+              </button>
+              <button
+                type="button"
+                onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Guru", "Guru", "GURU", "P")}
+                class="inline-flex items-center gap-1 font-semibold text-rose-500 hover:text-rose-700"
+              >
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                P: {(rekapGuru?.perempuan ?? 0).toLocaleString("id-ID")} ({rekapGuru?.persenPerempuan ?? 0}%)
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <button
+              type="button"
+              onclick={() => { activeTab = "kelompokJabatan"; searchTabFilter = "guru"; }}
+              class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline inline-flex items-center gap-1"
+            >
+              Lihat di Tab Distribusi →
+            </button>
+            <button
+              type="button"
+              onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Guru", "Guru", "GURU")}
+              class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition-colors"
+            >
+              Daftar Pegawai
+            </button>
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <!-- Kartu Kesehatan -->
+    <div class="bg-white rounded-2xl border border-teal-100 hover:border-teal-300 p-5 relative overflow-hidden shadow-xs transition-all group">
+      <div class="absolute top-0 right-0 w-28 h-28 transform translate-x-8 -translate-y-8 rounded-full bg-teal-50/70 group-hover:scale-110 transition-transform"></div>
+      <div class="relative space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-teal-500/20">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </div>
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/50">Formasi P3K</span>
+              <h4 class="text-sm font-bold text-slate-800 mt-0.5">Tenaga Kesehatan</h4>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-full">
+            {nakesPersen}%
+          </span>
+        </div>
+
+        {#if statsLoading}
+          <div class="h-8 bg-slate-100 rounded animate-pulse"></div>
+        {:else}
+          <div>
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-extrabold text-slate-800">
+                {nakesCount.toLocaleString("id-ID")}
+              </span>
+              <span class="text-xs font-semibold text-slate-400">pegawai</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Tenaga medis, perawat, bidan & sanitarian
+            </p>
+          </div>
+
+          <!-- Dual Gender Bar -->
+          <div class="space-y-1.5 pt-1">
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
+              <div
+                class="bg-indigo-500 h-full transition-all duration-700"
+                style="width: {rekapNakes?.persenLaki ?? 0}%"
+                title="Laki-laki: {rekapNakes?.laki ?? 0} ({rekapNakes?.persenLaki ?? 0}%)"
+              ></div>
+              <div
+                class="bg-rose-400 h-full transition-all duration-700"
+                style="width: {rekapNakes?.persenPerempuan ?? 0}%"
+                title="Perempuan: {rekapNakes?.perempuan ?? 0} ({rekapNakes?.persenPerempuan ?? 0}%)"
+              ></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <button
+                type="button"
+                onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Kesehatan", "Kesehatan", "KESEHATAN", "L")}
+                class="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-800"
+              >
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                L: {(rekapNakes?.laki ?? 0).toLocaleString("id-ID")} ({rekapNakes?.persenLaki ?? 0}%)
+              </button>
+              <button
+                type="button"
+                onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Kesehatan", "Kesehatan", "KESEHATAN", "P")}
+                class="inline-flex items-center gap-1 font-semibold text-rose-500 hover:text-rose-700"
+              >
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                P: {(rekapNakes?.perempuan ?? 0).toLocaleString("id-ID")} ({rekapNakes?.persenPerempuan ?? 0}%)
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <button
+              type="button"
+              onclick={() => { activeTab = "kelompokJabatan"; searchTabFilter = "kesehatan"; }}
+              class="text-xs font-semibold text-teal-600 hover:text-teal-700 hover:underline inline-flex items-center gap-1"
+            >
+              Lihat di Tab Distribusi →
+            </button>
+            <button
+              type="button"
+              onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Kesehatan", "Kesehatan", "KESEHATAN")}
+              class="text-xs font-bold px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 transition-colors"
+            >
+              Daftar Pegawai
+            </button>
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <!-- Kartu Teknis -->
+    <div class="bg-white rounded-2xl border border-cyan-100 hover:border-cyan-300 p-5 relative overflow-hidden shadow-xs transition-all group">
+      <div class="absolute top-0 right-0 w-28 h-28 transform translate-x-8 -translate-y-8 rounded-full bg-cyan-50/70 group-hover:scale-110 transition-transform"></div>
+      <div class="relative space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <span class="text-[10px] font-extrabold uppercase tracking-wider text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-200/50">Formasi P3K</span>
+              <h4 class="text-sm font-bold text-slate-800 mt-0.5">Tenaga Teknis</h4>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-cyan-600 bg-cyan-50 px-2.5 py-1 rounded-full">
+            {teknisPersen}%
+          </span>
+        </div>
+
+        {#if statsLoading}
+          <div class="h-8 bg-slate-100 rounded animate-pulse"></div>
+        {:else}
+          <div>
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-extrabold text-slate-800">
+                {teknisCount.toLocaleString("id-ID")}
+              </span>
+              <span class="text-xs font-semibold text-slate-400">pegawai</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Administrasi, TI, operasional & layanan umum
+            </p>
+          </div>
+
+          <!-- Dual Gender Bar -->
+          <div class="space-y-1.5 pt-1">
+            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
+              <div
+                class="bg-indigo-500 h-full transition-all duration-700"
+                style="width: {rekapTeknis?.persenLaki ?? 0}%"
+                title="Laki-laki: {rekapTeknis?.laki ?? 0} ({rekapTeknis?.persenLaki ?? 0}%)"
+              ></div>
+              <div
+                class="bg-rose-400 h-full transition-all duration-700"
+                style="width: {rekapTeknis?.persenPerempuan ?? 0}%"
+                title="Perempuan: {rekapTeknis?.perempuan ?? 0} ({rekapTeknis?.persenPerempuan ?? 0}%)"
+              ></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <button
+                type="button"
+                onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Teknis", "Teknis", "TEKNIS", "L")}
+                class="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-800"
+              >
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                L: {(rekapTeknis?.laki ?? 0).toLocaleString("id-ID")} ({rekapTeknis?.persenLaki ?? 0}%)
+              </button>
+              <button
+                type="button"
+                onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Teknis", "Teknis", "TEKNIS", "P")}
+                class="inline-flex items-center gap-1 font-semibold text-rose-500 hover:text-rose-700"
+              >
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                P: {(rekapTeknis?.perempuan ?? 0).toLocaleString("id-ID")} ({rekapTeknis?.persenPerempuan ?? 0}%)
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <button
+              type="button"
+              onclick={() => { activeTab = "kelompokJabatan"; searchTabFilter = "teknis"; }}
+              class="text-xs font-semibold text-cyan-600 hover:text-cyan-700 hover:underline inline-flex items-center gap-1"
+            >
+              Lihat di Tab Distribusi →
+            </button>
+            <button
+              type="button"
+              onclick={() => openEmployeeModal("kelompokJabatan", "Tenaga Teknis", "Teknis", "TEKNIS")}
+              class="text-xs font-bold px-2.5 py-1 rounded-lg bg-cyan-50 hover:bg-cyan-100 text-cyan-700 transition-colors"
+            >
+              Daftar Pegawai
+            </button>
+          </div>
         {/if}
       </div>
     </div>
@@ -548,6 +915,47 @@
                     </button>
                   </div>
                 {/if}
+
+                {#if activeTab === 'kelompokJabatan' && item.jabatanList && item.jabatanList.length > 0}
+                  <div class="mt-2.5 pt-2.5 border-t border-slate-100 space-y-2">
+                    <div class="text-[11px] font-semibold text-slate-500 flex items-center justify-between">
+                      <span class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+                        Rincian Formasi Jabatan ({item.label}):
+                      </span>
+                      <span class="text-violet-600 font-bold bg-violet-50 px-2 py-0.5 rounded-full border border-violet-100">
+                        {item.jabatanList.length} Jabatan
+                      </span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1.5">
+                      {#each item.jabatanList as j}
+                        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-violet-50/50 border border-slate-100 hover:border-violet-200 transition-colors text-xs">
+                          <button
+                            type="button"
+                            onclick={() => openEmployeeModal("jabatan", "Jabatan", j.label, j.label)}
+                            class="font-medium text-slate-700 hover:text-violet-700 truncate text-left cursor-pointer flex-1 mr-2"
+                            title="Lihat data pegawai {j.label}"
+                          >
+                            {j.label}
+                          </button>
+                          <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-[11px] text-slate-400">
+                              <span class="text-indigo-600 font-semibold">L: {j.laki}</span> · <span class="text-rose-500 font-semibold">P: {j.perempuan}</span>
+                            </span>
+                            <button
+                              type="button"
+                              onclick={() => openEmployeeModal("jabatan", "Jabatan", j.label, j.label)}
+                              class="px-2 py-0.5 rounded-lg bg-white border border-slate-200/80 font-bold text-slate-800 text-[11px] hover:border-violet-400 hover:text-violet-700 transition-colors cursor-pointer shadow-2xs"
+                              title="Lihat pegawai {j.label}"
+                            >
+                              {j.count.toLocaleString("id-ID")} orang
+                            </button>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                {/if}
               </div>
             {/each}
           </div>
@@ -709,11 +1117,12 @@
 <!-- Modal Drill Down Pegawai -->
 {#if showEmployeeModal}
   <StatistikPegawaiModal
-    bind:show={showEmployeeModal}
+    isOpen={showEmployeeModal}
     category={modalCategory}
     categoryLabel={modalCategoryLabel}
     value={modalValue}
     filterValue={modalFilterValue}
-    genderFilter={modalGender}
+    initialGender={modalGender}
+    onClose={() => (showEmployeeModal = false)}
   />
 {/if}

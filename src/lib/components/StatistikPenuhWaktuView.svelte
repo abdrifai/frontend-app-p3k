@@ -5,17 +5,22 @@
 
   let stats = null;
   let statsLoading = true;
-  let activeStatTab = "pendidikan";
+  let activeStatTab = "kelompokJabatan";
   let currentPage = 1;
   const itemsPerPage = 10;
   let selectedJenisJabatan = "ALL";
   let searchJabatanQuery = "";
   let expandedJenisJabatan = {};
 
+  let selectedKelompokFilter = "Guru";
+  let searchKelompokQuery = "";
+  let expandedKelompok = {};
+
   $: {
     if (activeStatTab) {
       currentPage = 1;
       searchJabatanQuery = "";
+      searchKelompokQuery = "";
     }
   }
 
@@ -27,6 +32,38 @@
   function isExpanded(nama) {
     return expandedJenisJabatan[nama] !== false; // default true
   }
+
+  function toggleKelompok(nama) {
+    expandedKelompok[nama] = !isKelompokExpanded(nama);
+    expandedKelompok = { ...expandedKelompok };
+  }
+
+  function isKelompokExpanded(nama) {
+    return expandedKelompok[nama] !== false; // default true
+  }
+
+  $: totalJabatanInKelompok = (stats?.byKelompokJabatan || []).reduce(
+    (sum, g) => sum + (g.jabatanList ? g.jabatanList.length : 0),
+    0
+  );
+
+  $: displayedKelompokGroups = (stats?.byKelompokJabatan || [])
+    .filter(
+      (g) => selectedKelompokFilter === "ALL" || g.label === selectedKelompokFilter
+    )
+    .map((g) => {
+      const q = searchKelompokQuery.toLowerCase().trim();
+      const filteredList = q
+        ? (g.jabatanList || []).filter((j) =>
+            (j.label || "").toLowerCase().includes(q)
+          )
+        : g.jabatanList || [];
+      return {
+        ...g,
+        filteredList
+      };
+    })
+    .filter((g) => g.filteredList.length > 0);
 
   $: totalJabatanAll = (stats?.byJabatan || []).reduce(
     (sum, g) => sum + (g.jabatanList ? g.jabatanList.length : 0),
@@ -53,6 +90,7 @@
     .filter((g) => g.filteredList.length > 0);
 
   const statTabs = [
+    { id: "kelompokJabatan", label: "Guru, Nakes & Teknis", color: "indigo" },
     { id: "pendidikan", label: "Pendidikan", color: "blue" },
     { id: "unitKerja", label: "Unit Kerja", color: "emerald" },
     { id: "golongan", label: "Golongan", color: "violet" },
@@ -68,14 +106,21 @@
     currentPage * itemsPerPage,
   );
   $: isGenderTab =
+    activeStatTab === "kelompokJabatan" ||
     activeStatTab === "pendidikan" ||
     activeStatTab === "golongan" ||
     activeStatTab === "jenisJabatan" ||
     activeStatTab === "jabatan";
 
+  $: rekapGuru = stats?.byKelompokJabatan?.find((k) => k.label?.toLowerCase() === 'guru') || stats?.rekapKelompok?.guru;
+  $: rekapNakes = stats?.byKelompokJabatan?.find((k) => k.label?.toLowerCase() === 'kesehatan') || stats?.rekapKelompok?.kesehatan;
+  $: rekapTeknis = stats?.byKelompokJabatan?.find((k) => k.label?.toLowerCase() === 'teknis') || stats?.rekapKelompok?.teknis;
+
   function getActiveStatData(tab, s) {
     if (!s) return [];
     switch (tab) {
+      case "kelompokJabatan":
+        return s.byKelompokJabatan || [];
       case "pendidikan":
         return s.byPendidikan || [];
       case "unitKerja":
@@ -100,6 +145,8 @@
 
   function getBarColor(tab) {
     switch (tab) {
+      case "kelompokJabatan":
+        return "bg-indigo-500";
       case "pendidikan":
         return "bg-blue-500";
       case "unitKerja":
@@ -119,6 +166,8 @@
 
   function getBarBg(tab) {
     switch (tab) {
+      case "kelompokJabatan":
+        return "bg-indigo-50";
       case "pendidikan":
         return "bg-blue-50";
       case "unitKerja":
@@ -138,6 +187,8 @@
 
   function getBadgeColor(tab) {
     switch (tab) {
+      case "kelompokJabatan":
+        return "text-indigo-600 bg-indigo-50";
       case "pendidikan":
         return "text-blue-600 bg-blue-50";
       case "unitKerja":
@@ -155,12 +206,50 @@
     }
   }
 
-  export const fetchStatistics = async () => {
-    statsLoading = true;
+  let isSyncing = false;
+
+  function formatSyncTime(dateStr) {
+    if (!dateStr) return "-";
     try {
-      const result = await apiRequest("/api/v1/data-p3k/statistics", "GET");
+      const d = new Date(dateStr);
+      return d.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  async function handleSync() {
+    isSyncing = true;
+    try {
+      const result = await apiRequest("/api/v1/data-p3k/statistics/sync", "POST");
       if (result.success) {
         stats = result.data;
+        addToast("Data statistik berhasil dihitung ulang dan disimpan ke tabel snapshot", "success");
+      } else {
+        addToast(result.message || "Gagal sinkronisasi statistik", "error");
+      }
+    } catch (err) {
+      console.error("Sync error:", err);
+      addToast("Terjadi kesalahan sistem saat sinkronisasi", "error");
+    } finally {
+      isSyncing = false;
+    }
+  }
+
+  export const fetchStatistics = async (force = false) => {
+    statsLoading = true;
+    try {
+      const url = force ? "/api/v1/data-p3k/statistics?refresh=true" : "/api/v1/data-p3k/statistics";
+      const result = await apiRequest(url, "GET");
+      if (result.success) {
+        stats = result.data;
+        if (force) addToast("Data statistik berhasil diperbarui", "success");
       } else {
         addToast(result.message || "Gagal memuat statistik", "error");
       }
@@ -178,6 +267,64 @@
 </script>
 
 <div class="space-y-6">
+  <!-- Actions Bar & Snapshot Sync Info -->
+  <div class="flex items-center justify-between gap-3 flex-wrap bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200/70">
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <span class="w-2.5 h-2.5 rounded-full {stats?.syncInfo?.isStale ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}"></span>
+      <p class="text-xs font-bold text-slate-700">Tabel Snapshot Statistik: Data Utama P3K</p>
+      {#if stats?.syncInfo}
+        <span class="text-slate-300">|</span>
+        <span class="text-xs {stats.syncInfo.isStale ? 'text-amber-700 font-semibold' : 'text-slate-500'}">
+          {stats.syncInfo.isStale ? '⚠️ Perlu Sinkronisasi' : '✓ Sinkron Terakhir'}: {formatSyncTime(stats.syncInfo.lastSyncedAt)}
+        </span>
+      {/if}
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        onclick={handleSync}
+        disabled={isSyncing}
+        class="px-3.5 py-1.5 {stats?.syncInfo?.isStale ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'} rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+        aria-label="Sinkronkan data statistik"
+      >
+        <svg class="w-3.5 h-3.5 {isSyncing ? 'animate-spin' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        {isSyncing ? 'Menyinkronkan...' : stats?.syncInfo?.isStale ? 'Sinkronkan Sekarang' : 'Sinkronkan Ulang'}
+      </button>
+    </div>
+  </div>
+
+  <!-- Alert Banner If Stale -->
+  {#if stats?.syncInfo?.isStale}
+    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-700 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-amber-950">Perubahan Data Pegawai Terdeteksi</h4>
+          <p class="text-xs text-amber-800/90 mt-0.5">
+            Ada data pegawai yang telah diubah sejak sinkronisasi terakhir ({formatSyncTime(stats?.syncInfo?.lastSyncedAt)}). Silakan sinkronkan agar tabel statistik di database merefleksikan data terkini.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onclick={handleSync}
+        disabled={isSyncing}
+        class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+      >
+        <svg class="w-4 h-4 {isSyncing ? 'animate-spin' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Sekarang'}
+      </button>
+    </div>
+  {/if}
+
   <!-- Summary Cards Row -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <!-- Total -->
@@ -371,72 +518,285 @@
     </div>
   </div>
 
+  <!-- Rekap Jabatan Utama: Guru, Kesehatan, Teknis -->
+  <div class="space-y-3">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div>
+        <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+          Rekapitulasi Formasi Jabatan (Guru, Kesehatan, Teknis)
+        </h2>
+        <p class="text-xs text-slate-500">
+          Pembagian formasi PPPK Pemerintah Kabupaten Tojo Una-Una berdasarkan 3 rumpun jabatan utama.
+        </p>
+      </div>
+      <button
+        type="button"
+        onclick={() => (activeStatTab = 'kelompokJabatan')}
+        class="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+      >
+        Buka Tab Rincian Jabatan →
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- 1. Tenaga Guru -->
+      <div class="card p-5 relative overflow-hidden border border-emerald-200/80 hover:border-emerald-400 hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-emerald-50/30">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">Tenaga Guru</h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  {rekapGuru?.totalJabatan ?? 1} Jabatan
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400">Pendidikan & Tenaga Pengajar</p>
+            </div>
+          </div>
+          <a
+            href="/data-p3k?kelompokJabatan=GURU"
+            class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all text-xs"
+            title="Filter data Guru di Data Utama"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+
+        {#if statsLoading}
+          <div class="h-8 w-24 bg-slate-200 rounded animate-pulse my-2"></div>
+        {:else}
+          <div class="flex items-baseline justify-between">
+            <p class="text-2xl sm:text-3xl font-extrabold text-slate-800">
+              {(rekapGuru?.count ?? 0).toLocaleString("id-ID")}
+              <span class="text-xs font-normal text-slate-400">orang</span>
+            </p>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">
+              {stats?.total ? (((rekapGuru?.count ?? 0) / stats.total) * 100).toFixed(1) : 0}% total
+            </span>
+          </div>
+
+          <!-- Dual Gender Bar -->
+          <div class="w-full h-2.5 bg-slate-100 rounded-full mt-3 overflow-hidden flex">
+            <div class="h-full bg-indigo-500" style="width: {rekapGuru?.persenLaki ?? 0}%" title="Laki-laki: {rekapGuru?.laki} ({rekapGuru?.persenLaki}%)"></div>
+            <div class="h-full bg-rose-400" style="width: {rekapGuru?.persenPerempuan ?? 0}%" title="Perempuan: {rekapGuru?.perempuan} ({rekapGuru?.persenPerempuan}%)"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs mt-2 pt-1 border-t border-slate-100">
+            <span class="text-indigo-600 font-semibold inline-flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> L: {rekapGuru?.laki?.toLocaleString("id-ID") ?? 0} ({rekapGuru?.persenLaki ?? 0}%)
+            </span>
+            <span class="text-rose-600 font-semibold inline-flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> P: {rekapGuru?.perempuan?.toLocaleString("id-ID") ?? 0} ({rekapGuru?.persenPerempuan ?? 0}%)
+            </span>
+          </div>
+        {/if}
+      </div>
+
+      <!-- 2. Tenaga Kesehatan -->
+      <div class="card p-5 relative overflow-hidden border border-teal-200/80 hover:border-teal-400 hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-teal-50/30">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-white shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-800 group-hover:text-teal-700 transition-colors">Tenaga Kesehatan</h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800 border border-teal-200">
+                  {rekapNakes?.totalJabatan ?? 32} Jabatan
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400">Medis, Perawat, Bidan, Nakes</p>
+            </div>
+          </div>
+          <a
+            href="/data-p3k?kelompokJabatan=KESEHATAN"
+            class="p-1.5 rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition-all text-xs"
+            title="Filter data Kesehatan di Data Utama"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+
+        {#if statsLoading}
+          <div class="h-8 w-24 bg-slate-200 rounded animate-pulse my-2"></div>
+        {:else}
+          <div class="flex items-baseline justify-between">
+            <p class="text-2xl sm:text-3xl font-extrabold text-slate-800">
+              {(rekapNakes?.count ?? 0).toLocaleString("id-ID")}
+              <span class="text-xs font-normal text-slate-400">orang</span>
+            </p>
+            <span class="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-lg border border-teal-100">
+              {stats?.total ? (((rekapNakes?.count ?? 0) / stats.total) * 100).toFixed(1) : 0}% total
+            </span>
+          </div>
+
+          <!-- Dual Gender Bar -->
+          <div class="w-full h-2.5 bg-slate-100 rounded-full mt-3 overflow-hidden flex">
+            <div class="h-full bg-indigo-500" style="width: {rekapNakes?.persenLaki ?? 0}%" title="Laki-laki: {rekapNakes?.laki} ({rekapNakes?.persenLaki}%)"></div>
+            <div class="h-full bg-rose-400" style="width: {rekapNakes?.persenPerempuan ?? 0}%" title="Perempuan: {rekapNakes?.perempuan} ({rekapNakes?.persenPerempuan}%)"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs mt-2 pt-1 border-t border-slate-100">
+            <span class="text-indigo-600 font-semibold inline-flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> L: {rekapNakes?.laki?.toLocaleString("id-ID") ?? 0} ({rekapNakes?.persenLaki ?? 0}%)
+            </span>
+            <span class="text-rose-600 font-semibold inline-flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> P: {rekapNakes?.perempuan?.toLocaleString("id-ID") ?? 0} ({rekapNakes?.persenPerempuan ?? 0}%)
+            </span>
+          </div>
+        {/if}
+      </div>
+
+      <!-- 3. Tenaga Teknis -->
+      <div class="card p-5 relative overflow-hidden border border-indigo-200/80 hover:border-indigo-400 hover:shadow-md transition-all group bg-gradient-to-br from-white via-white to-indigo-50/30">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">Tenaga Teknis</h3>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  {rekapTeknis?.totalJabatan ?? 53} Jabatan
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400">Administrasi & Teknis Operasional</p>
+            </div>
+          </div>
+          <a
+            href="/data-p3k?kelompokJabatan=TEKNIS"
+            class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all text-xs"
+            title="Filter data Teknis di Data Utama"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+
+        {#if statsLoading}
+          <div class="h-8 w-24 bg-slate-200 rounded animate-pulse my-2"></div>
+        {:else}
+          <div class="flex items-baseline justify-between">
+            <p class="text-2xl sm:text-3xl font-extrabold text-slate-800">
+              {(rekapTeknis?.count ?? 0).toLocaleString("id-ID")}
+              <span class="text-xs font-normal text-slate-400">orang</span>
+            </p>
+            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">
+              {stats?.total ? (((rekapTeknis?.count ?? 0) / stats.total) * 100).toFixed(1) : 0}% total
+            </span>
+          </div>
+
+          <!-- Dual Gender Bar -->
+          <div class="w-full h-2.5 bg-slate-100 rounded-full mt-3 overflow-hidden flex">
+            <div class="h-full bg-indigo-500" style="width: {rekapTeknis?.persenLaki ?? 0}%" title="Laki-laki: {rekapTeknis?.laki} ({rekapTeknis?.persenLaki}%)"></div>
+            <div class="h-full bg-rose-400" style="width: {rekapTeknis?.persenPerempuan ?? 0}%" title="Perempuan: {rekapTeknis?.perempuan} ({rekapTeknis?.persenPerempuan}%)"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs mt-2 pt-1 border-t border-slate-100">
+            <span class="text-indigo-600 font-semibold inline-flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> L: {rekapTeknis?.laki?.toLocaleString("id-ID") ?? 0} ({rekapTeknis?.persenLaki ?? 0}%)
+            </span>
+            <span class="text-rose-600 font-semibold inline-flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> P: {rekapTeknis?.perempuan?.toLocaleString("id-ID") ?? 0} ({rekapTeknis?.persenPerempuan ?? 0}%)
+            </span>
+          </div>
+        {/if}
+      </div>
+    </div>
+  </div>
+
   <!-- Distribution Section -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Main Chart Area -->
-    <div class="lg:col-span-2 card overflow-hidden">
-      <!-- Tabs -->
-      <div class="border-b border-slate-100">
-        <nav class="flex overflow-x-auto" aria-label="Tabs distribusi">
+    <div class="lg:col-span-2 card overflow-hidden flex flex-col">
+      <!-- Tabs Bar -->
+      <div class="border-b border-slate-100 bg-slate-50/50 p-2 sm:p-2.5">
+        <nav class="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0" aria-label="Tabs distribusi">
           {#each statTabs as tab}
+            {@const count = tab.id === 'jabatan' ? totalJabatanAll : getActiveStatData(tab.id, stats).length}
             <button
               type="button"
-              on:click={() => (activeStatTab = tab.id)}
-              class="flex-1 min-w-0 flex items-center justify-center gap-2 px-4 py-3.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap
-                     {activeStatTab === tab.id
-                ? 'border-blue-500 text-blue-600 bg-blue-50/50'
-                : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-200'}"
+              onclick={() => (activeStatTab = tab.id)}
+              class="whitespace-nowrap shrink-0 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 {activeStatTab === tab.id
+                ? 'bg-white text-blue-700 shadow-xs border border-slate-200/70'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}"
             >
               {tab.label}
+              {#if !statsLoading}
+                <span class="text-[10px] px-1.5 py-0.2 rounded-full {activeStatTab === tab.id ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600'}">
+                  {count}
+                </span>
+              {/if}
             </button>
           {/each}
         </nav>
       </div>
 
       <div class="p-5 sm:p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-          <div>
-            <h3 class="text-sm font-semibold text-slate-700">
-              Distribusi berdasarkan {statTabs.find((t) => t.id === activeStatTab)
-                ?.label}
-            </h3>
-            {#if activeStatTab === 'jabatan'}
-              <p class="text-xs text-slate-500 mt-0.5">
-                Rincian jabatan yang dikelompokkan per Jenis Jabatan dan dipisahkan per jenis kelamin (Laki-laki & Perempuan).
-              </p>
-            {:else if isGenderTab}
-              <p class="text-xs text-slate-500 mt-0.5">
-                Rincian komposisi jenis kelamin (Laki-laki & Perempuan) untuk setiap kelompok.
-              </p>
-            {/if}
-          </div>
-          <div class="flex items-center gap-2 flex-wrap">
-            {#if isGenderTab}
-              <div class="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60 text-xs">
-                <span class="inline-flex items-center gap-1 font-medium text-indigo-700">
-                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                  Laki-laki
+        {#if activeStatTab !== 'kelompokJabatan'}
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-700">
+                Distribusi berdasarkan {statTabs.find((t) => t.id === activeStatTab)
+                  ?.label}
+              </h3>
+              {#if activeStatTab === 'jabatan'}
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Rincian jabatan yang dikelompokkan per Jenis Jabatan dan dipisahkan per jenis kelamin (Laki-laki & Perempuan).
+                </p>
+              {:else if isGenderTab}
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Rincian komposisi jenis kelamin (Laki-laki & Perempuan) untuk setiap kelompok.
+                </p>
+              {/if}
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              {#if isGenderTab}
+                <div class="flex items-center gap-2 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60 text-xs">
+                  <span class="inline-flex items-center gap-1 font-medium text-indigo-700">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    Laki-laki
+                  </span>
+                  <span class="text-slate-300">|</span>
+                  <span class="inline-flex items-center gap-1 font-medium text-rose-600">
+                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                    Perempuan
+                  </span>
+                </div>
+              {/if}
+              {#if !statsLoading && activeStatData.length > 0}
+                <span
+                  class="text-xs font-medium px-2.5 py-1 rounded-full {getBadgeColor(
+                    activeStatTab,
+                  )}"
+                >
+                  {activeStatTab === 'jabatan'
+                    ? `${totalJabatanAll} Jabatan (${activeStatData.length} Jenis)`
+                    : `${activeStatData.length} ${statTabs.find((t) => t.id === activeStatTab)?.label}`}
                 </span>
-                <span class="text-slate-300">|</span>
-                <span class="inline-flex items-center gap-1 font-medium text-rose-600">
-                  <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                  Perempuan
-                </span>
-              </div>
-            {/if}
-            {#if !statsLoading && activeStatData.length > 0}
-              <span
-                class="text-xs font-medium px-2.5 py-1 rounded-full {getBadgeColor(
-                  activeStatTab,
-                )}"
-              >
-                {activeStatTab === 'jabatan'
-                  ? `${totalJabatanAll} Jabatan (${activeStatData.length} Jenis)`
-                  : `${activeStatData.length} ${statTabs.find((t) => t.id === activeStatTab)?.label}`}
-              </span>
-            {/if}
+              {/if}
+            </div>
           </div>
-        </div>
+        {/if}
 
         {#if statsLoading}
           <div class="space-y-4">
@@ -470,6 +830,250 @@
             </div>
             <p class="text-sm text-slate-400">Tidak ada data distribusi.</p>
           </div>
+        {:else if activeStatTab === 'kelompokJabatan'}
+          <!-- Sub-filters: Rumpun Pills & Search Input -->
+          <div class="space-y-3 mb-6 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
+            <!-- Search Input -->
+            <div class="relative">
+              <input
+                type="text"
+                bind:value={searchKelompokQuery}
+                placeholder="Cari nama jabatan dalam rumpun Guru, Kesehatan, atau Teknis..."
+                class="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 pl-9 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-2xs"
+              />
+              <svg
+                class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              {#if searchKelompokQuery}
+                <button
+                  type="button"
+                  onclick={() => (searchKelompokQuery = "")}
+                  class="absolute right-3 top-2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                >
+                  ✕
+                </button>
+              {/if}
+            </div>
+
+            <!-- Kelompok Filter Pills -->
+            <div class="flex items-center gap-1.5 flex-wrap pt-1">
+              <span class="text-[11px] font-semibold text-slate-500 mr-1">Rumpun Formasi:</span>
+              {#each stats?.byKelompokJabatan || [] as g}
+                <button
+                  type="button"
+                  onclick={() => (selectedKelompokFilter = g.label)}
+                  class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer {selectedKelompokFilter === g.label
+                    ? 'bg-indigo-600 text-white shadow-xs font-semibold'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'}"
+                >
+                  {g.label} ({g.totalCount?.toLocaleString('id-ID') ?? g.count} Pegawai)
+                </button>
+              {/each}
+            </div>
+          </div>
+
+          <!-- Grouped Accordion Cards for Guru, Kesehatan, Teknis -->
+          {#if displayedKelompokGroups.length === 0}
+            <div class="py-12 text-center">
+              <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-2 text-slate-400">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p class="text-sm font-semibold text-slate-600">Tidak ada jabatan yang sesuai</p>
+              <p class="text-xs text-slate-400 mt-0.5">Coba ubah kata kunci pencarian atau ganti filter rumpun jabatan.</p>
+            </div>
+          {:else}
+            <div class="space-y-5">
+              {#each displayedKelompokGroups as g, groupIdx}
+                {@const maxGroupCount = Math.max(...g.filteredList.map((j) => j.count), 1)}
+                {@const expanded = isKelompokExpanded(g.label)}
+
+                <div class="rounded-2xl border border-slate-200/90 bg-white shadow-xs overflow-hidden transition-all">
+                  <!-- Group Header -->
+                  <div
+                    class="p-4 bg-gradient-to-r from-slate-50/90 via-white to-indigo-50/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b {expanded ? 'border-slate-200/80' : 'border-transparent'}"
+                  >
+                    <button
+                      type="button"
+                      onclick={() => toggleKelompok(g.label)}
+                      class="flex items-center gap-2.5 text-left group cursor-pointer flex-1"
+                    >
+                      <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200/60 group-hover:bg-indigo-500/20 transition-all">
+                        {#if g.label === 'Guru'}
+                          <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                          </svg>
+                        {:else if g.label === 'Kesehatan'}
+                          <svg class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        {:else}
+                          <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        {/if}
+                      </div>
+                      <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <h4 class="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors">
+                            Rumpun {g.label}
+                          </h4>
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100/80 text-indigo-800 border border-indigo-200">
+                            {g.filteredList.length} Jabatan
+                          </span>
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                            {g.totalCount.toLocaleString("id-ID")} Pegawai
+                          </span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">
+                          {((g.totalCount / (stats?.total || 1)) * 100).toFixed(1)}% dari seluruh pegawai aktif
+                        </p>
+                      </div>
+                    </button>
+
+                    <!-- Group Gender Ratio & Toggle -->
+                    <div class="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                      <div class="flex items-center gap-1.5 text-xs bg-white px-2.5 py-1 rounded-lg border border-slate-200/70 shadow-2xs">
+                        <span class="inline-flex items-center gap-1 font-semibold text-indigo-700">
+                          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                          L: {g.totalLaki.toLocaleString("id-ID")} ({g.persenLaki}%)
+                        </span>
+                        <span class="text-slate-300">|</span>
+                        <span class="inline-flex items-center gap-1 font-semibold text-rose-600">
+                          <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                          P: {g.totalPerempuan.toLocaleString("id-ID")} ({g.persenPerempuan}%)
+                        </span>
+                      </div>
+                      <a
+                        href="/data-p3k?kelompokJabatan={encodeURIComponent(g.label.toUpperCase())}"
+                        class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white transition-all border border-indigo-200/60"
+                        title="Filter semua pegawai {g.label}"
+                      >
+                        Filter Data →
+                      </a>
+                      <button
+                        type="button"
+                        onclick={() => toggleKelompok(g.label)}
+                        class="p-1 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
+                        aria-label="Toggle section"
+                      >
+                        <svg
+                          class="w-5 h-5 transition-transform duration-200 {expanded ? 'rotate-180' : ''}"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Group Items List -->
+                  {#if expanded}
+                    <div class="p-4 sm:p-5 space-y-3 bg-slate-50/30">
+                      {#each g.filteredList as item, jIdx}
+                        {@const pct = maxGroupCount > 0 ? (item.count / maxGroupCount) * 100 : 0}
+                        {@const groupPct = g.totalCount > 0 ? ((item.count / g.totalCount) * 100).toFixed(1) : 0}
+                        {@const hrefAll = `/data-p3k?jabatanNama=${encodeURIComponent(item.label)}`}
+                        {@const hrefLaki = `/data-p3k?jabatanNama=${encodeURIComponent(item.label)}&jenisKelamin=L`}
+                        {@const hrefPerempuan = `/data-p3k?jabatanNama=${encodeURIComponent(item.label)}&jenisKelamin=P`}
+
+                        <div class="group p-3 sm:p-3.5 rounded-xl border border-slate-200/70 bg-white hover:border-indigo-300 hover:shadow-xs transition-all">
+                          <div class="flex items-center justify-between mb-2 gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <span class="text-slate-400 font-mono text-xs flex-shrink-0">
+                                {String(jIdx + 1).padStart(2, "0")}
+                              </span>
+                              <a
+                                href={hrefAll}
+                                class="text-sm font-semibold text-slate-800 hover:text-indigo-600 truncate transition-colors"
+                                title="Lihat semua data {item.label}"
+                              >
+                                {item.label}
+                              </a>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                              <span class="text-xs text-slate-400 font-medium">{groupPct}% di {g.label}</span>
+                              <a
+                                href={hrefAll}
+                                class="text-sm font-bold text-slate-800 hover:text-indigo-600 transition-colors"
+                                title="Lihat semua data {item.label}"
+                              >
+                                {item.count.toLocaleString("id-ID")} <span class="text-xs font-normal text-slate-400">pegawai</span>
+                              </a>
+                            </div>
+                          </div>
+
+                          <!-- Stacked Dual Bar -->
+                          <div
+                            class="w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-2"
+                            title="{item.label}: Total {item.count} pegawai (Laki-laki: {item.laki} [{item.persenLaki}%], Perempuan: {item.perempuan} [{item.persenPerempuan}%])"
+                          >
+                            <div
+                              class="h-full rounded-full overflow-hidden flex transition-all duration-700 ease-out"
+                              style="width: {pct}%"
+                            >
+                              <div
+                                class="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:brightness-110 transition-all"
+                                style="width: {item.persenLaki}%"
+                              ></div>
+                              <div
+                                class="h-full bg-gradient-to-r from-rose-400 to-pink-500 hover:brightness-110 transition-all"
+                                style="width: {item.persenPerempuan}%"
+                              ></div>
+                            </div>
+                          </div>
+
+                          <!-- Gender Badges with Interactive Filter Links -->
+                          <div class="flex items-center justify-between text-xs pt-0.5">
+                            <div class="flex items-center gap-2 flex-wrap">
+                              <a
+                                href={hrefLaki}
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors font-medium border border-indigo-200/50"
+                                title="Lihat data Laki-laki untuk {item.label}"
+                              >
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                <span>Laki-laki: <strong>{item.laki?.toLocaleString("id-ID") ?? 0}</strong></span>
+                                <span class="text-indigo-400">({item.persenLaki ?? 0}%)</span>
+                              </a>
+                              <a
+                                href={hrefPerempuan}
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors font-medium border border-rose-200/50"
+                                title="Lihat data Perempuan untuk {item.label}"
+                              >
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                <span>Perempuan: <strong>{item.perempuan?.toLocaleString("id-ID") ?? 0}</strong></span>
+                                <span class="text-rose-400">({item.persenPerempuan ?? 0}%)</span>
+                              </a>
+                            </div>
+                            <a
+                              href={hrefAll}
+                              class="text-[11px] text-slate-400 hover:text-indigo-600 transition-colors inline-flex items-center gap-0.5"
+                            >
+                              Filter data →
+                            </a>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
         {:else if activeStatTab === 'jabatan'}
           <!-- Sub-filters: Jenis Jabatan Pills & Search Input -->
           <div class="space-y-3 mb-6 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/70">
@@ -497,7 +1101,7 @@
               {#if searchJabatanQuery}
                 <button
                   type="button"
-                  on:click={() => (searchJabatanQuery = "")}
+                  onclick={() => (searchJabatanQuery = "")}
                   class="absolute right-3 top-2 text-slate-400 hover:text-slate-600 text-xs font-bold"
                 >
                   ✕
@@ -510,7 +1114,7 @@
               <span class="text-[11px] font-semibold text-slate-500 mr-1">Filter Jenis:</span>
               <button
                 type="button"
-                on:click={() => (selectedJenisJabatan = "ALL")}
+                onclick={() => (selectedJenisJabatan = "ALL")}
                 class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {selectedJenisJabatan === 'ALL'
                   ? 'bg-teal-600 text-white shadow-xs font-semibold'
                   : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'}"
@@ -520,7 +1124,7 @@
               {#each stats?.byJabatan || [] as g}
                 <button
                   type="button"
-                  on:click={() => (selectedJenisJabatan = g.jenisJabatan)}
+                  onclick={() => (selectedJenisJabatan = g.jenisJabatan)}
                   class="px-2.5 py-1 rounded-lg text-xs font-medium transition-all {selectedJenisJabatan === g.jenisJabatan
                     ? 'bg-teal-600 text-white shadow-xs font-semibold'
                     : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'}"
@@ -555,7 +1159,7 @@
                   >
                     <button
                       type="button"
-                      on:click={() => toggleJenisJabatan(g.jenisJabatan)}
+                      onclick={() => toggleJenisJabatan(g.jenisJabatan)}
                       class="flex items-center gap-2.5 text-left group cursor-pointer flex-1"
                     >
                       <div class="w-8 h-8 rounded-xl bg-teal-500/10 text-teal-700 flex items-center justify-center shrink-0 border border-teal-200/60 group-hover:bg-teal-500/20 transition-all">
@@ -596,7 +1200,7 @@
                       </div>
                       <button
                         type="button"
-                        on:click={() => toggleJenisJabatan(g.jenisJabatan)}
+                        onclick={() => toggleJenisJabatan(g.jenisJabatan)}
                         class="p-1 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 transition-all cursor-pointer"
                         aria-label="Toggle section"
                       >
@@ -887,7 +1491,7 @@
               <div class="flex items-center gap-2">
                 <button
                   type="button"
-                  on:click={() => (currentPage = Math.max(1, currentPage - 1))}
+                  onclick={() => (currentPage = Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                   aria-label="Halaman sebelumnya"
@@ -910,7 +1514,7 @@
                 </div>
                 <button
                   type="button"
-                  on:click={() =>
+                  onclick={() =>
                     (currentPage = Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
@@ -971,9 +1575,12 @@
                   tab.id === "pendidikan" ||
                   tab.id === "golongan" ||
                   tab.id === "jenisJabatan" ||
-                  tab.id === "jabatan"}
+                  tab.id === "jabatan" ||
+                  tab.id === "kelompokJabatan"}
                 {@const itemHref =
-                  tab.id === "pengangkatan"
+                  tab.id === "kelompokJabatan"
+                    ? `/data-p3k?kelompokJabatan=${encodeURIComponent((item.label || "").toUpperCase())}`
+                    : tab.id === "pengangkatan"
                     ? `/data-p3k?tmtCpns=${encodeURIComponent(item.filterValue || item.label)}`
                     : tab.id === "unitKerja"
                       ? item.label === "Kosong / Belum Diset"
@@ -1025,7 +1632,7 @@
               {#if tabData.length > 5}
                 <button
                   type="button"
-                  on:click={() => (activeStatTab = tab.id)}
+                  onclick={() => (activeStatTab = tab.id)}
                   class="text-xs text-blue-600 hover:text-blue-700 font-medium mt-1"
                 >
                   Lihat semua ({tabData.length}) →
